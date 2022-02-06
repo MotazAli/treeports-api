@@ -8,8 +8,6 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
 using TreePorts.DTO;
 using TreePorts.Hubs;
-using TreePorts.Infrastructure;
-using TreePorts.Infrastructure.Services;
 using TreePorts.Models;
 using TreePorts.Utilities;
 
@@ -49,7 +47,7 @@ namespace TreePorts.Presentation
                     _ = await _notify.ChangeOrderStatusAndNotify(OrderStatusTypes.SearchingForCaptain, order.Id,
 						(long)order.AgentId);
 
-					var captain = await _unitOfWork.UserRepository.GetUserNearestLocationAsync(order.PickupLocationLat, order.PickupLocationLong);
+					var captain = await _unitOfWork.CaptainRepository.GetUserNearestLocationAsync(order.PickupLocationLat, order.PickupLocationLong);
 					if (captain == null)
 					{
 						_ = await _notify.ChangeOrderStatusAndNotify(OrderStatusTypes.NotAssignedToCaptain, order.Id,
@@ -68,11 +66,11 @@ namespace TreePorts.Presentation
 						CreationDate = DateTime.Now
 					};
 
-					var insertNewRequestResult = await _unitOfWork.UserRepository.InsertUserNewRequestAsync(driverRequest);
+					var insertNewRequestResult = await _unitOfWork.CaptainRepository.InsertUserNewRequestAsync(driverRequest);
 					var result = await _unitOfWork.Save();
 					if (result <= 0) return false;
 
-					var usersMessageHub = await _unitOfWork.UserRepository.GetUsersMessageHubsByAsync(u => u.UserId == captain.Id);
+					var usersMessageHub = await _unitOfWork.CaptainRepository.GetUsersMessageHubsByAsync(u => u.UserId == captain.Id);
 					var userMessageHub = usersMessageHub.FirstOrDefault();
 					if (userMessageHub != null && userMessageHub.Id > 0)
 					{
@@ -82,7 +80,7 @@ namespace TreePorts.Presentation
 
 
 					int time = 1000;
-					Timer timer1 = new Timer
+                    System.Timers.Timer timer1 = new System.Timers.Timer
 					{
 						Interval = 1000 // one second
 					};
@@ -103,13 +101,13 @@ namespace TreePorts.Presentation
 						if (orderAssign != null)
 							isDriverAcceptOrder = true;
 
-						var ordersReject = await _unitOfWork.UserRepository.GetUsersRejectedRequestsByAsync(r => r.OrderId == order.Id);
+						var ordersReject = await _unitOfWork.CaptainRepository.GetUsersRejectedRequestsByAsync(r => r.OrderId == order.Id);
 						var rejectedOrder = ordersReject.FirstOrDefault();
 						if (rejectedOrder != null)
 							isDriverRejectOrIgnoredOrder = true;
 
 
-						var ordersIgnored = await _unitOfWork.UserRepository.GetUsersIgnoredRequestsByAsync(r => r.OrderId == order.Id);
+						var ordersIgnored = await _unitOfWork.CaptainRepository.GetUsersIgnoredRequestsByAsync(r => r.OrderId == order.Id);
 						var ignoredOrder = ordersIgnored.FirstOrDefault();
 						if (ignoredOrder != null)
 							isDriverRejectOrIgnoredOrder = true;

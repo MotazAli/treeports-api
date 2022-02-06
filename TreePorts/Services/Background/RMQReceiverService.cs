@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using TreePorts.DTO;
-using TreePorts.Infrastructure.services;
+using TreePorts.Interfaces.Services;
 using TreePorts.Utilities;
 using System;
 using System.Collections.Generic;
@@ -214,11 +214,11 @@ public class RMQReceiverService : BackgroundService
     }
 
 
-    private User ConvertRabbitMQUserToCaptainUser(RabbitMQUser rabbitMQUser) 
+    private CaptainUser ConvertRabbitMQUserToCaptainUser(RabbitMQUser rabbitMQUser) 
     {
         long Id = -1;
         long.TryParse(rabbitMQUser.CoreUserId, out Id);
-        var user = new User
+        var user = new CaptainUser
         {
             Id = Id,
             CityId = rabbitMQUser.CityId,
@@ -230,7 +230,7 @@ public class RMQReceiverService : BackgroundService
             StcPay = rabbitMQUser.StcPay,
             NationalNumber = rabbitMQUser.NationalNumber,
             PersonalImage = rabbitMQUser.Image,
-            CurrentStatusId = rabbitMQUser.Status.StatusTypeId
+            //StatusTypeId = rabbitMQUser.Status.StatusTypeId
         };
         return user;
     }
@@ -251,8 +251,8 @@ public class RMQReceiverService : BackgroundService
             NationalNumber = rabbitMQUser.NationalNumber,
             Image = rabbitMQUser.Image,
             Email = rabbitMQUser.Email,
-            Password = rabbitMQUser.Password,
-            CurrentStatusId = rabbitMQUser.Status.StatusTypeId
+           // Password = rabbitMQUser.Password,
+            //CurrentStatusId = rabbitMQUser.Status.StatusTypeId
         };
         return user;
     }
@@ -273,8 +273,8 @@ public class RMQReceiverService : BackgroundService
             NationalNumber = rabbitMQUser.NationalNumber,
             Image = rabbitMQUser.Image,
             Email = rabbitMQUser.Email,
-            Password = rabbitMQUser.Password,
-            CurrentStatusId = rabbitMQUser.Status.StatusTypeId
+            //Password = rabbitMQUser.Password,
+            //CurrentStatusId = rabbitMQUser.Status.StatusTypeId
         };
         return user;
     }
@@ -293,7 +293,7 @@ public class RMQReceiverService : BackgroundService
             Mobile = rabbitMQUser.Mobile,
             Email = rabbitMQUser.Email,
             Image = rabbitMQUser.Image,
-            CurrentStatusId = rabbitMQUser.Status.StatusTypeId
+           // CurrentStatusId = rabbitMQUser.Status.StatusTypeId
         };
         return user;
     }
@@ -302,13 +302,13 @@ public class RMQReceiverService : BackgroundService
     private async Task HandleSavingCaptainUser(IUnitOfWork _unitOfWork, RabbitMQUser userData) 
     {
         var user = ConvertRabbitMQUserToCaptainUser(userData);
-        var insertedUser = await _unitOfWork.UserRepository.InsertUserAsync(user);
+        var insertedUser = await _unitOfWork.CaptainRepository.InsertUserAsync(user);
         var result = await _unitOfWork.Save();
 
         if (result <= 0) return;
 
         userData.CoreUserId = insertedUser.Id.ToString(); 
-        var account = new UserAccount
+        var account = new CaptainUserAccount
         {
             UserId = insertedUser.Id,
             Mobile = insertedUser.Mobile,
@@ -318,15 +318,15 @@ public class RMQReceiverService : BackgroundService
             CreationDate = DateTime.Now
         };
 
-        var userAccount = await _unitOfWork.UserRepository.InsertUserAccountAsync(account);
-        UserCurrentStatus userStatus_Review = new UserCurrentStatus()
+        var userAccount = await _unitOfWork.CaptainRepository.InsertUserAccountAsync(account);
+        CaptainUserCurrentStatus userStatus_Review = new CaptainUserCurrentStatus()
         {
             UserId = insertedUser.Id,
             StatusTypeId = (long)StatusTypes.Reviewing,
             IsCurrent = true,
             CreationDate = DateTime.Now
         };
-        var insertedUserCurrentStatusResult = await _unitOfWork.UserRepository.InsertUserCurrentStatusAsync(userStatus_Review);
+        var insertedUserCurrentStatusResult = await _unitOfWork.CaptainRepository.InsertUserCurrentStatusAsync(userStatus_Review);
         result = await _unitOfWork.Save();
 
         if (result <= 0) return;
@@ -342,7 +342,7 @@ public class RMQReceiverService : BackgroundService
     {
         var user = ConvertRabbitMQUserToAdminUser(userData);
         byte[] passwordHash, passwordSalt;
-        var password = user.Password;
+        var password = "";// user.Password;
         Utility.CreatePasswordHash(password, out passwordHash, out passwordSalt);
         AdminUserAccount account = new AdminUserAccount()
         {
@@ -354,7 +354,7 @@ public class RMQReceiverService : BackgroundService
         };
         if (user.AdminUserAccounts == null) user.AdminUserAccounts = new List<AdminUserAccount>();
         user.AdminUserAccounts.Add(account);
-        user.CurrentStatusId = (long)userData.Status.StatusTypeId;
+        //user.CurrentStatusId = (long)userData.Status.StatusTypeId;
         user = await _unitOfWork.AdminRepository.InsertAdminUserAsync(user);
         var result = await _unitOfWork.Save();
         if (result <= 0) return;
@@ -386,12 +386,12 @@ public class RMQReceiverService : BackgroundService
         var user = ConvertRabbitMQUserToSupportUser(userData);
         user.Email = user.Email.ToLower();
         byte[] passwordHash, passwordSalt;
-        //var password = Utility.GeneratePassword();
-        Utility.CreatePasswordHash(user.Password, out passwordHash, out passwordSalt);
+        var password = ""; // Utility.GeneratePassword();
+        Utility.CreatePasswordHash(password, out passwordHash, out passwordSalt);
         SupportUserAccount account = new SupportUserAccount()
         {
             Email = user.Email,
-            Token = user.Token,
+            //Token = user.Token,
             PasswordHash = passwordHash,
             PasswordSalt = passwordSalt,
             StatusTypeId = (long)userData.Status.StatusTypeId
@@ -523,7 +523,7 @@ public class RMQReceiverService : BackgroundService
         try
         {
             var user = ConvertRabbitMQUserToCaptainUser(userData);
-            var updateResult = await _unitOfWork.UserRepository.UpdateUserAsync(user);
+            var updateResult = await _unitOfWork.CaptainRepository.UpdateUserAsync(user);
             var result = await _unitOfWork.Save();
             if (result == 0) return;
         }
@@ -584,7 +584,7 @@ public class RMQReceiverService : BackgroundService
         try
         {
             var user = ConvertRabbitMQUserToCaptainUser(userData);
-            var updateResult = await _unitOfWork.UserRepository.DeleteUserAsync(user.Id);
+            var updateResult = await _unitOfWork.CaptainRepository.DeleteUserAsync(user.Id);
             var result = await _unitOfWork.Save();
             if (result == 0) return;
         }

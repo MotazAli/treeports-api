@@ -1566,7 +1566,7 @@ Message : {content} ";
 				name = admin.Fullname,
 				email = admin.Email,
 				mobile = admin.Mobile,
-				password = admin.Password,
+				//password = admin.Password,
 				reference_id = admin.Id.ToString()
 			};
 

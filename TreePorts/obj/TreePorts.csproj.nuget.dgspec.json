@@ -1,23 +1,24 @@
 {
   "format": 1,
   "restore": {
-    "D:\\work\\aion8\\backend\\private_repos\\dot_net_core\\treeports-api\\TreePorts\\TreePorts.csproj": {}
+    "C:\\Users\\motaz\\work\\dot_net\\aion8\\backend\\treeports-api\\TreePorts\\TreePorts.csproj": {}
   },
   "projects": {
-    "D:\\work\\aion8\\backend\\private_repos\\dot_net_core\\treeports-api\\TreePorts\\TreePorts.csproj": {
+    "C:\\Users\\motaz\\work\\dot_net\\aion8\\backend\\treeports-api\\TreePorts\\TreePorts.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\work\\aion8\\backend\\private_repos\\dot_net_core\\treeports-api\\TreePorts\\TreePorts.csproj",
+        "projectUniqueName": "C:\\Users\\motaz\\work\\dot_net\\aion8\\backend\\treeports-api\\TreePorts\\TreePorts.csproj",
         "projectName": "TreePorts",
-        "projectPath": "D:\\work\\aion8\\backend\\private_repos\\dot_net_core\\treeports-api\\TreePorts\\TreePorts.csproj",
-        "packagesPath": "C:\\Users\\Motaz\\.nuget\\packages\\",
-        "outputPath": "D:\\work\\aion8\\backend\\private_repos\\dot_net_core\\treeports-api\\TreePorts\\obj\\",
+        "projectPath": "C:\\Users\\motaz\\work\\dot_net\\aion8\\backend\\treeports-api\\TreePorts\\TreePorts.csproj",
+        "packagesPath": "C:\\Users\\motaz\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\motaz\\work\\dot_net\\aion8\\backend\\treeports-api\\TreePorts\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
-          "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\Motaz\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\motaz\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -170,7 +171,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.100\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.101\\RuntimeIdentifierGraph.json"
         }
       }
     }

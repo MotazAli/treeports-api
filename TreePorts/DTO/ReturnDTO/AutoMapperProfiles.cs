@@ -13,7 +13,7 @@ namespace TreePorts.DTO.ReturnDTO
 		public AutoMapperProfiles()
 		{
 			/* User Mapping*/
-			CreateMap<User, UserResponse>()
+			CreateMap<CaptainUser, UserResponse>()
 
 					.ForMember(dest => dest.CountryArabicName, opt => opt.MapFrom(src => src.Country.ArabicName))
 					.ForMember(dest => dest.CountryName, opt => opt.MapFrom(src => src.Country.Name))
@@ -71,7 +71,7 @@ namespace TreePorts.DTO.ReturnDTO
 		    CreateMap<OrderItem, OrderItemResponse>();
 			CreateMap<OrderAssignment, OrderAssignReponse>();
 
-			CreateMap<UserAcceptedRequest, UserAcceptedResponse>();
+			CreateMap<CaptainUserAcceptedRequest, UserAcceptedResponse>();
 					
 			CreateMap<Order, OrderResponse>()
 				.ForMember(dest => dest.AgnetName, opt => opt.MapFrom(src => src.Agent.Fullname))

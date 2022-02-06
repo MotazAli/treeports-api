@@ -69,8 +69,8 @@ namespace TreePorts.DTO.ReturnDTO
         //public List<OrderItem> OrdersItem { get; set; }
         
         //public List<OrderStatusHistory> OrderStatusHistories { get; set; }
-        public User Captain { get; set; }
-        public UserPayment DeliveryPayment { get; set; }
+        public CaptainUser Captain { get; set; }
+        public CaptainUserPayment DeliveryPayment { get; set; }
         public Qrcode QrCode { get; set; }
         public Agent Agent { get; set; }
         public Country Country { get; set; }

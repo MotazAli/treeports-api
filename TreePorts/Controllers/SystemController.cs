@@ -12,7 +12,6 @@ using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
 using TreePorts.DTO;
 using TreePorts.Hubs;
-using TreePorts.Infrastructure;
 using TreePorts.Models;
 using TreePorts.Utilities;
 
@@ -1314,7 +1313,7 @@ namespace TreePorts.Controllers
                 {
                     case "driver":
                         {
-                            var users = await _unitOfWork.UserRepository.GetUsersAccountsByAsync(u => u.UserId == statusAction.UserId);
+                            var users = await _unitOfWork.CaptainRepository.GetUsersAccountsByAsync(u => u.UserId == statusAction.UserId);
                             var user = users.FirstOrDefault();
                             if (user == null) return NotFound();
 
@@ -1341,11 +1340,11 @@ namespace TreePorts.Controllers
                                     IsCurrent = true,
                                     CreationDate = DateTime.Now
                                 };
-                                var insertedUserActivity = await _unitOfWork.UserRepository.InsertUserActivityAsync(userActivity);
+                                var insertedUserActivity = await _unitOfWork.CaptainRepository.InsertUserActivityAsync(userActivity);
                             }
 
-                            var insertResult = await _unitOfWork.UserRepository.InsertUserCurrentStatusAsync(userCurrentStatus);
-                            var updateResult = await _unitOfWork.UserRepository.UpdateUserAccountAsync(user);
+                            var insertResult = await _unitOfWork.CaptainRepository.InsertUserCurrentStatusAsync(userCurrentStatus);
+                            var updateResult = await _unitOfWork.CaptainRepository.UpdateUserAccountAsync(user);
                             var result = await _unitOfWork.Save();
 
                             if (result == 0)
@@ -1477,7 +1476,7 @@ namespace TreePorts.Controllers
                 {
                     case "driver":
                         {
-                            var insertedUser = await _unitOfWork.UserRepository.InsertUserMessageHubAsync(userHubToken.UserId, userHubToken.Token);
+                            var insertedUser = await _unitOfWork.CaptainRepository.InsertUserMessageHubAsync(userHubToken.UserId, userHubToken.Token);
                             var result = await _unitOfWork.Save();
                             if (result == 0) new ObjectResult("Service Unavailable") { StatusCode = 503 };
 
@@ -1501,7 +1500,7 @@ namespace TreePorts.Controllers
                         }
                     case "agent":
                         {
-                            var insertedUser = await _unitOfWork.UserRepository.InsertUserMessageHubAsync(userHubToken.UserId, userHubToken.Token);
+                            var insertedUser = await _unitOfWork.CaptainRepository.InsertUserMessageHubAsync(userHubToken.UserId, userHubToken.Token);
                             var result = await _unitOfWork.Save();
                             if (result == 0) return new ObjectResult("Service Unavailable") { StatusCode = 503 };
 
@@ -1509,7 +1508,7 @@ namespace TreePorts.Controllers
                         }
                     case "admin":
                         {
-                            var insertedUser = await _unitOfWork.UserRepository.InsertUserMessageHubAsync(userHubToken.UserId, userHubToken.Token);
+                            var insertedUser = await _unitOfWork.CaptainRepository.InsertUserMessageHubAsync(userHubToken.UserId, userHubToken.Token);
                             var result = await _unitOfWork.Save();
                             if (result == 0) return new ObjectResult("Service Unavailable") { StatusCode = 503 };
 
@@ -1547,7 +1546,7 @@ namespace TreePorts.Controllers
                 switch (resetPassword.UserType.ToLower())
                 {
                     case "driver": {
-                            var accounts = await _unitOfWork.UserRepository.GetUsersAccountsByAsync(d => d.Mobile == resetPassword.Username);
+                            var accounts = await _unitOfWork.CaptainRepository.GetUsersAccountsByAsync(d => d.Mobile == resetPassword.Username);
                             if(accounts == null || accounts?.Count <= 0)
                                 return Unauthorized();
 
@@ -1555,7 +1554,7 @@ namespace TreePorts.Controllers
                             if (account?.StatusTypeId == (long)StatusTypes.Stopped || account?.StatusTypeId == (long)StatusTypes.Suspended)
                                 return Unauthorized();
 
-                            var user = await _unitOfWork.UserRepository.GetUserByIdAsync(account.Id);
+                            var user = await _unitOfWork.CaptainRepository.GetUserByIdAsync(account.Id);
                             var country = await _unitOfWork.CountryRepository.GetCountryByIdAsync((long)user.ResidenceCountryId);
 
                             byte[] passwordHash, passwordSalt;
@@ -1568,7 +1567,7 @@ namespace TreePorts.Controllers
 
                             
 
-                            var updatedUser = await _unitOfWork.UserRepository.UpdateUserAccountAsync(account);
+                            var updatedUser = await _unitOfWork.CaptainRepository.UpdateUserAccountAsync(account);
                             var result = await _unitOfWork.Save();
 
                             if (result == 0)
@@ -1618,7 +1617,7 @@ namespace TreePorts.Controllers
                             {
                                 if (fbNotify.UserId > 0)
                                 {
-                                    var usersMessageHub = await _unitOfWork.UserRepository.GetUsersMessageHubsByAsync(u => u.UserId == fbNotify.UserId);
+                                    var usersMessageHub = await _unitOfWork.CaptainRepository.GetUsersMessageHubsByAsync(u => u.UserId == fbNotify.UserId);
                                     var userMessageHub = usersMessageHub.FirstOrDefault();
                                     if (userMessageHub != null && userMessageHub.Id > 0)
                                     {
@@ -1627,7 +1626,7 @@ namespace TreePorts.Controllers
                                 }
                                 else if (fbNotify.UserIds?.Count > 0)
                                 {
-                                    var usersMessageHub = await _unitOfWork.UserRepository.GetUsersMessageHubsByAsync(u => fbNotify.UserIds.Contains((long)u.UserId));
+                                    var usersMessageHub = await _unitOfWork.CaptainRepository.GetUsersMessageHubsByAsync(u => fbNotify.UserIds.Contains((long)u.UserId));
                                     if (usersMessageHub != null && usersMessageHub?.Count > 0)
                                     {
                                         var tokens = usersMessageHub.Select(u => u.ConnectionId).ToList();

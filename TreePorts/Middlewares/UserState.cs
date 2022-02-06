@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Memory;
 using TreePorts.DTO;
-using TreePorts.Infrastructure;
 
 namespace TreePorts.Utilities
 {
@@ -136,7 +135,7 @@ namespace TreePorts.Utilities
             if (userType.ToString() == "Driver")
             {
 
-                var users = await unitOfWork.UserRepository.GetUsersAccountsByAsync(u => u.Token == token);
+                var users = await unitOfWork.CaptainRepository.GetUsersAccountsByAsync(u => u.Token == token);
                 var user = users.FirstOrDefault();
                 if (user != null && isValidStatus(user.StatusTypeId)) return true;
             }

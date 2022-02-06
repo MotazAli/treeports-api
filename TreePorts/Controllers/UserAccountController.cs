@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using TreePorts.Infrastructure;
 using TreePorts.Models;
 
 namespace TreePorts.Controllers

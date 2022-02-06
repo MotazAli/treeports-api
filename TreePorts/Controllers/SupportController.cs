@@ -13,7 +13,6 @@ using RestSharp.Extensions;
 using TreePorts.DTO;
 using TreePorts.DTO.ReturnDTO;
 using TreePorts.Hubs;
-using TreePorts.Infrastructure;
 using TreePorts.Models;
 using TreePorts.Utilities;
 
@@ -86,14 +85,14 @@ namespace TreePorts.Controllers
 
                 if (user.SupportUserAccounts?.Count > 0)
                 {
-                    user.CurrentStatusId = (long)user.SupportUserAccounts.FirstOrDefault().StatusTypeId;
+                    //user.CurrentStatusId = (long)user.SupportUserAccounts.FirstOrDefault().StatusTypeId;
                 }
                 else
                 {
                     var userAccounts = await _unitOfWork.SupportRepository.GetSupportUsersAccountsByAsync(u => u.SupportUserId == user.Id);
                     var userAccount = userAccounts.FirstOrDefault();
-                    if (userAccount?.StatusTypeId != null)
-                        user.CurrentStatusId = (long)userAccount.StatusTypeId;
+                    //if (userAccount?.StatusTypeId != null)
+                    //    user.CurrentStatusId = (long)userAccount.StatusTypeId;
                 }
 
                 return Ok(user);
@@ -552,12 +551,13 @@ namespace TreePorts.Controllers
 
                 user.Email = user.Email.ToLower();
                 byte[] passwordHash, passwordSalt;
-                //var password = Utility.GeneratePassword();
-                Utility.CreatePasswordHash(user.Password, out passwordHash, out passwordSalt);
+                var password = Utility.GeneratePassword();
+                //Utility.CreatePasswordHash(user.Password, out passwordHash, out passwordSalt);
+                Utility.CreatePasswordHash(password, out passwordHash, out passwordSalt);
                 SupportUserAccount account = new SupportUserAccount()
                 {
                     Email = user.Email,
-                    Token = user.Token,
+                    //Token = user.Token,
                     PasswordHash = passwordHash,
                     PasswordSalt = passwordSalt,
                     StatusTypeId = (long)StatusTypes.Working
@@ -591,7 +591,7 @@ namespace TreePorts.Controllers
                           + "<br>"
                        + "<p> here is your account information, please keep it secure </p>"
                        + "<p>" + "<strong> your username is: </strong> " + user.Email + "</p>"
-                       + "<p>" + "<strong> your password is: </strong> " + user.Password + "</p>"
+                       //+ "<p>" + "<strong> your password is: </strong> " + user.Password + "</p>"
                        + "<br>"
                        + "<p>Now you can login to Sender manage website </p>"
                        + "<p><a target='_blank' href='http://manage.sender.world'>visit Sender Manage </a></p>";
@@ -602,7 +602,8 @@ namespace TreePorts.Controllers
 
 
 
-                return Ok(new { SupportId = user.Id, Password = user.Password });
+                //return Ok(new { SupportId = user.Id, Password = user.Password });
+                return Ok(new { SupportId = user.Id});
             }
             catch (Exception e)
             {
@@ -742,7 +743,7 @@ namespace TreePorts.Controllers
                 else
                 {
 
-                    var usersMessageHub = await _unitOfWork.UserRepository.GetUsersMessageHubsByAsync(u => u.UserId == supportAssgin.UserId);
+                    var usersMessageHub = await _unitOfWork.CaptainRepository.GetUsersMessageHubsByAsync(u => u.UserId == supportAssgin.UserId);
                     var userMessageHub = usersMessageHub.FirstOrDefault();
                     if (userMessageHub != null && userMessageHub.Id > 0)
                     {
@@ -963,17 +964,17 @@ namespace TreePorts.Controllers
                 IQueryable<Order> ignoredOrders;
                 if (reportParameters.FilterByDriverId == 0)
                 {
-                    //rejectedOrders = _unitOfWork.UserRepository.GetAllRejectedRequestByQuerable().Select(o => o.Order);
-                    acceptedOrders = _unitOfWork.UserRepository.GetAllAcceptedRequestByQuerable().Select(o => o.Order);
-                    //ignoredOrders = _unitOfWork.UserRepository.GetAllIgnoredRequestByQuerable().Select(o => o.Order);
+                    //rejectedOrders = _unitOfWork.CaptainRepository.GetAllRejectedRequestByQuerable().Select(o => o.Order);
+                    acceptedOrders = _unitOfWork.CaptainRepository.GetAllAcceptedRequestByQuerable().Select(o => o.Order);
+                    //ignoredOrders = _unitOfWork.CaptainRepository.GetAllIgnoredRequestByQuerable().Select(o => o.Order);
 
                 }
                 else
                 {
 
-                    //rejectedOrders = _unitOfWork.UserRepository.GetUserRejectedRequestByQuerable(u => u.UserId == reportParameters.FilterByDriverId).Select(o => o.Order);
-                    acceptedOrders = _unitOfWork.UserRepository.GetUserAcceptedRequestByQuerable(u => u.UserId == reportParameters.FilterByDriverId).Select(o => o.Order);
-                    //ignoredOrders = _unitOfWork.UserRepository.GetUserIgnoredRequestByQuerable(u => u.UserId == reportParameters.FilterByDriverId).Select(o => o.Order);
+                    //rejectedOrders = _unitOfWork.CaptainRepository.GetUserRejectedRequestByQuerable(u => u.UserId == reportParameters.FilterByDriverId).Select(o => o.Order);
+                    acceptedOrders = _unitOfWork.CaptainRepository.GetUserAcceptedRequestByQuerable(u => u.UserId == reportParameters.FilterByDriverId).Select(o => o.Order);
+                    //ignoredOrders = _unitOfWork.CaptainRepository.GetUserIgnoredRequestByQuerable(u => u.UserId == reportParameters.FilterByDriverId).Select(o => o.Order);
 
                 }
 

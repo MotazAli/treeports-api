@@ -1,5 +1,4 @@
 ﻿using RabbitMQ.Client;
-using TreePorts.Infrastructure.services;
 using System;
 using System.Text;
 

@@ -13,8 +13,6 @@ using Microsoft.AspNetCore.SignalR;
 using TreePorts.DTO;
 using TreePorts.DTO.ReturnDTO;
 using TreePorts.Hubs;
-using TreePorts.Infrastructure;
-using TreePorts.Infrastructure.Services;
 using TreePorts.Models;
 using TreePorts.Presentation;
 using TreePorts.Utilities;
@@ -85,7 +83,7 @@ namespace TreePorts.Controllers
 				var orderAssign = orderAssigns.FirstOrDefault();
 				if (orderAssign == null) NotFound("Driver not available, Please try again");
 
-				var driverLocations = await _unitOfWork.UserRepository.GetUsersCurrentLocationsByAsync(u => u.UserId == orderAssign.UserId);
+				var driverLocations = await _unitOfWork.CaptainRepository.GetUsersCurrentLocationsByAsync(u => u.UserId == orderAssign.UserId);
 				var driverCurrentLoation = driverLocations.FirstOrDefault();
 				if (driverCurrentLoation == null) NotFound("Driver not available, Please try again");
 
@@ -956,7 +954,7 @@ namespace TreePorts.Controllers
 				var orderAssigns = await _unitOfWork.OrderRepository.GetOrdersAssignmentsByAsync(r => r.OrderId == id);
 				var orderAssign = orderAssigns.FirstOrDefault();
 
-				var usersMessageHub = await _unitOfWork.UserRepository.GetUsersMessageHubsByAsync(u => u.UserId == orderAssign.UserId);
+				var usersMessageHub = await _unitOfWork.CaptainRepository.GetUsersMessageHubsByAsync(u => u.UserId == orderAssign.UserId);
 				var userMessageHub = usersMessageHub.FirstOrDefault();
 				if (userMessageHub != null && userMessageHub.Id > 0)
 				{

@@ -19,9 +19,6 @@ using Newtonsoft.Json.Linq;
 using TreePorts.DTO;
 using TreePorts.DTO.ReturnDTO;
 using TreePorts.Hubs;
-using TreePorts.Infrastructure;
-using TreePorts.Infrastructure.Services;
-using TreePorts.Maoun;
 using TreePorts.Models;
 using TreePorts.Presentation;
 using TreePorts.Utilities;
@@ -211,18 +208,18 @@ namespace TreePorts.Controllers
             {
                 var resullt = await _unitOfWork.OrderRepository.GetOrderById_oldBehaviourAsync(id);
 
-                var userPayments = await _unitOfWork.UserRepository.GetUsersPaymentsByAsync(p => p.OrderId == resullt.Id);
+                var userPayments = await _unitOfWork.CaptainRepository.GetUsersPaymentsByAsync(p => p.OrderId == resullt.Id);
                 var userPayment = userPayments.FirstOrDefault();
                 if (userPayment != null)
                     resullt.OrderDeliveryPaymentAmount = userPayment.Value;
-                var qrCodes = await _unitOfWork.UserRepository.GetQRCodeByAsync(p => p.OrderId == resullt.Id);
+                var qrCodes = await _unitOfWork.CaptainRepository.GetQRCodeByAsync(p => p.OrderId == resullt.Id);
                 var qrCode = qrCodes.FirstOrDefault();
                 if (qrCode != null && qrCode.Code.Length != 0)
                 {
                     qrCode.QrCodeUrl = Utility.ConvertImgToString(qrCode.Code);
                     resullt.Qrcodes.Add(qrCode);
                 }
-                var userAcceptedRequests = await _unitOfWork.UserRepository.GetUsersAcceptedRequestsByAsync(u => u.OrderId == resullt.Id);
+                var userAcceptedRequests = await _unitOfWork.CaptainRepository.GetUsersAcceptedRequestsByAsync(u => u.OrderId == resullt.Id);
 
                 if (userAcceptedRequests != null)
                 {
@@ -231,7 +228,7 @@ namespace TreePorts.Controllers
                 }
 
 
-                //var requests = await _unitOfWork.UserRepository.GetUserNewRequestBy(r => r.OrderId == id);
+                //var requests = await _unitOfWork.CaptainRepository.GetUserNewRequestBy(r => r.OrderId == id);
                 //var userRequest = re
                 return Ok(resullt);
             }
@@ -259,11 +256,11 @@ namespace TreePorts.Controllers
                 var items = await _unitOfWork.OrderRepository.GetOrdersItemsByAsync(i => i.OrderId == orderId);
                 resullt.OrderItems = items.ToList();
 
-                var locations = await _unitOfWork.UserRepository.GetUsersCurrentLocationsByAsync(l => l.UserId == captainId);
+                var locations = await _unitOfWork.CaptainRepository.GetUsersCurrentLocationsByAsync(l => l.UserId == captainId);
                 var userLocation = locations.FirstOrDefault();
 
                 var system = await _unitOfWork.SystemRepository.GetCurrentSystemSettingAsync();
-                var user = await _unitOfWork.UserRepository.GetUserByIdAsync(captainId);
+                var user = await _unitOfWork.CaptainRepository.GetUserByIdAsync(captainId);
 
                 
 
@@ -396,13 +393,13 @@ namespace TreePorts.Controllers
                 }
 
 
-                var userPayments = await _unitOfWork.UserRepository.GetUsersPaymentsByAsync(p => p.OrderId == resullt.Id);
+                var userPayments = await _unitOfWork.CaptainRepository.GetUsersPaymentsByAsync(p => p.OrderId == resullt.Id);
                 var userPayment = userPayments.FirstOrDefault();
 
                 if (userPayment != null && userPayment.Id > 0)
                 {
                     userPayment.Value = amount;
-                    var updatePaymentResult = await _unitOfWork.UserRepository.UpdateUserPaymentAsync(userPayment);
+                    var updatePaymentResult = await _unitOfWork.CaptainRepository.UpdateUserPaymentAsync(userPayment);
                 }
                 else
                 {
@@ -416,7 +413,7 @@ namespace TreePorts.Controllers
                         Value = amount,
                         CreationDate = DateTime.Now
                     };
-                    var insertPaymentResult = await _unitOfWork.UserRepository.InsertUserPaymentAsync(payment);
+                    var insertPaymentResult = await _unitOfWork.CaptainRepository.InsertUserPaymentAsync(payment);
                 }
                 
                 
@@ -461,7 +458,7 @@ namespace TreePorts.Controllers
                 
                 //return await this.GetOrderDetails(orderRequest);
 
-                //var acceptedRequsts = await _unitOfWork.UserRepository.GetUserAcceptedRequestBy(a => a.UserId == id);
+                //var acceptedRequsts = await _unitOfWork.CaptainRepository.GetUserAcceptedRequestBy(a => a.UserId == id);
 
                 //if (acceptedRequsts == null || acceptedRequsts.Count <= 0)
                 //    return new ObjectResult("No running requests") { StatusCode = 998 };
@@ -504,11 +501,11 @@ namespace TreePorts.Controllers
 
                 //resullt.OrderCurrentStatus = ordersCurrentStatus.ToList();
 
-                //var locations = await _unitOfWork.UserRepository.GetUserCurrentLocationBy(l => l.UserId == id);
+                //var locations = await _unitOfWork.CaptainRepository.GetUserCurrentLocationBy(l => l.UserId == id);
                 //var userLocation = locations.FirstOrDefault();
 
                 //var system = await _unitOfWork.SystemRepository.GetCurrent();
-                //var user = await _unitOfWork.UserRepository.GetUserByID(id);
+                //var user = await _unitOfWork.CaptainRepository.GetUserByID(id);
 
 
                 //double agentDistance = Utility.distance(double.Parse(userLocation.Lat), double.Parse(userLocation.Long),
@@ -517,7 +514,7 @@ namespace TreePorts.Controllers
                 //              double.Parse(resullt.DropLocationLat), double.Parse(resullt.DropLocationLong));
 
 
-                //var payments = await _unitOfWork.UserRepository.GetUserPaymentBy(p => p.OrderId == orderCurrentStatus.OrderId);
+                //var payments = await _unitOfWork.CaptainRepository.GetUserPaymentBy(p => p.OrderId == orderCurrentStatus.OrderId);
                 //var payment = payments.FirstOrDefault();
 
 
@@ -545,12 +542,12 @@ namespace TreePorts.Controllers
             try
             {
 
-                var userNewRequests = await _unitOfWork.UserRepository.DeleteUserNewRequestByOrderIdAsync(orderRequest.OrderId);
-                var deleteResult = await _unitOfWork.UserRepository.DeleteUserPaymentByOrderIdAsync(orderRequest.OrderId);
+                var userNewRequests = await _unitOfWork.CaptainRepository.DeleteUserNewRequestByOrderIdAsync(orderRequest.OrderId);
+                var deleteResult = await _unitOfWork.CaptainRepository.DeleteUserPaymentByOrderIdAsync(orderRequest.OrderId);
 
-                //var userNewRequests = await _unitOfWork.UserRepository.DeleteUserNewRequestByUserID(orderRequest.UserId);
-                //var oldOrderPayment = await _unitOfWork.UserRepository.GetUserPaymentBy(p => p.OrderId == orderRequest.OrderId);
-                //var deleteResult = await _unitOfWork.UserRepository.DeleteUserPayment(oldOrderPayment.FirstOrDefault().Id);
+                //var userNewRequests = await _unitOfWork.CaptainRepository.DeleteUserNewRequestByUserID(orderRequest.UserId);
+                //var oldOrderPayment = await _unitOfWork.CaptainRepository.GetUserPaymentBy(p => p.OrderId == orderRequest.OrderId);
+                //var deleteResult = await _unitOfWork.CaptainRepository.DeleteUserPayment(oldOrderPayment.FirstOrDefault().Id);
 
 
                 CaptainUserIgnoredRequest driverRequest = new CaptainUserIgnoredRequest()
@@ -561,7 +558,7 @@ namespace TreePorts.Controllers
                     CreatedBy = 1,
                     CreationDate = DateTime.Now };
 
-                var insertNewRequestResult = await _unitOfWork.UserRepository.InsertUserIgnoredRequestAsync(driverRequest);
+                var insertNewRequestResult = await _unitOfWork.CaptainRepository.InsertUserIgnoredRequestAsync(driverRequest);
                 var result = await _unitOfWork.Save();
                 if (result == 0) return new ObjectResult("Service Unavailable") { StatusCode = 503 };
 
@@ -574,7 +571,7 @@ namespace TreePorts.Controllers
                 //{
                 //    if (systemSetting.IgnorPerTypeId == (long)IgnorPer.Days)
                 //    {
-                //        var userIgnoredRequests = await _unitOfWork.UserRepository.GetUserIgnoredRequestBy(u => u.UserId == orderRequest.UserId &&
+                //        var userIgnoredRequests = await _unitOfWork.CaptainRepository.GetUserIgnoredRequestBy(u => u.UserId == orderRequest.UserId &&
                 //       u.CreationDate.Value.Day == DateTime.Now.Day &&
                 //       u.CreationDate.Value.Month == DateTime.Now.Month &&
                 //       u.CreationDate.Value.Year == DateTime.Now.Year);
@@ -591,7 +588,7 @@ namespace TreePorts.Controllers
 
                 //            };
 
-                //            var insertUserIgnoredPenalty_result = await _unitOfWork.UserRepository.InsertUserIgnoredPenalty(userIgnoredPenalty);
+                //            var insertUserIgnoredPenalty_result = await _unitOfWork.CaptainRepository.InsertUserIgnoredPenalty(userIgnoredPenalty);
                 //            result = await _unitOfWork.Save();
                 //            if (result == 0) return new ObjectResult("Server not available") { StatusCode = 707 };
                 //        }
@@ -599,7 +596,7 @@ namespace TreePorts.Controllers
                 //    }
                 //    else if (systemSetting.IgnorPerTypeId == (long)IgnorPer.Months)
                 //    {
-                //        var userIgnoredRequests = await _unitOfWork.UserRepository.GetUserIgnoredRequestBy(u => u.UserId == orderRequest.UserId &&
+                //        var userIgnoredRequests = await _unitOfWork.CaptainRepository.GetUserIgnoredRequestBy(u => u.UserId == orderRequest.UserId &&
 
                 //      u.CreationDate.Value.Month == DateTime.Now.Month &&
                 //      u.CreationDate.Value.Year == DateTime.Now.Year);
@@ -616,14 +613,14 @@ namespace TreePorts.Controllers
 
                 //            };
 
-                //            var insertUserIgnoredPenalty_result = await _unitOfWork.UserRepository.InsertUserIgnoredPenalty(userIgnoredPenalty);
+                //            var insertUserIgnoredPenalty_result = await _unitOfWork.CaptainRepository.InsertUserIgnoredPenalty(userIgnoredPenalty);
                 //            result = await _unitOfWork.Save();
                 //            if (result == 0) return new ObjectResult("Server not available") { StatusCode = 707 };
                 //        }
                 //    }
                 //    else if (systemSetting.IgnorPerTypeId == (long)IgnorPer.Years)
                 //    {
-                //        var userIgnoredRequests = await _unitOfWork.UserRepository.GetUserIgnoredRequestBy(u => u.UserId == orderRequest.UserId &&
+                //        var userIgnoredRequests = await _unitOfWork.CaptainRepository.GetUserIgnoredRequestBy(u => u.UserId == orderRequest.UserId &&
 
                 //      u.CreationDate.Value.Year == DateTime.Now.Year);
 
@@ -639,7 +636,7 @@ namespace TreePorts.Controllers
 
                 //            };
 
-                //            var insertUserIgnoredPenalty_result = await _unitOfWork.UserRepository.InsertUserIgnoredPenalty(userIgnoredPenalty);
+                //            var insertUserIgnoredPenalty_result = await _unitOfWork.CaptainRepository.InsertUserIgnoredPenalty(userIgnoredPenalty);
                 //            result = await _unitOfWork.Save();
                 //            if (result == 0) return new ObjectResult("Server not available") { StatusCode = 707 };
                 //        }
@@ -671,7 +668,7 @@ namespace TreePorts.Controllers
             {
 
                 var usersMessageHub =
-                         await _unitOfWork.UserRepository.GetUsersMessageHubsByAsync(u => u.UserId == id);
+                         await _unitOfWork.CaptainRepository.GetUsersMessageHubsByAsync(u => u.UserId == id);
                 var userMessageHub = usersMessageHub.FirstOrDefault();
                 if (userMessageHub != null && userMessageHub.Id > 0)
                 {
@@ -710,7 +707,7 @@ namespace TreePorts.Controllers
                 if (order == null) return Ok(false);
                
                 var usersMessageHub =
-                         await _unitOfWork.UserRepository.GetUsersMessageHubsByAsync(u => u.UserId == orderRequest.UserId);
+                         await _unitOfWork.CaptainRepository.GetUsersMessageHubsByAsync(u => u.UserId == orderRequest.UserId);
                 var userMessageHub = usersMessageHub.FirstOrDefault();
                 if (userMessageHub != null && userMessageHub.Id > 0)
                 {
@@ -762,7 +759,7 @@ namespace TreePorts.Controllers
 
 
                 var order = await _unitOfWork.OrderRepository.GetOnlyOrderByIdAsync(orderRequest.OrderId);
-                var locations = await _unitOfWork.UserRepository.GetUsersCurrentLocationsByAsync(l => l.UserId == orderRequest.UserId);
+                var locations = await _unitOfWork.CaptainRepository.GetUsersCurrentLocationsByAsync(l => l.UserId == orderRequest.UserId);
                 var userLocation = locations.FirstOrDefault();
 
 
@@ -922,12 +919,12 @@ namespace TreePorts.Controllers
 
 
                 var updatedOrder = await _unitOfWork.OrderRepository.UpdateOrderCurrentStatusAsync(order.Id, (long)OrderStatusTypes.AssignedToCaptain);
-                var userNewRequests = await _unitOfWork.UserRepository.DeleteUserNewRequestByUserIdAsync(orderRequest.UserId);
+                var userNewRequests = await _unitOfWork.CaptainRepository.DeleteUserNewRequestByUserIdAsync(orderRequest.UserId);
                 var insertRunningOrderResult = await _unitOfWork.OrderRepository.InsertRunningOrderAsync(runningOrder);
                 var insertOrderStatusResult = await _unitOfWork.OrderRepository.InsertOrderStatusAsync(orderCurrentStatus);
                 var orderAssignmentResult = await _unitOfWork.OrderRepository.InsertOrderAssignmentAsync(orderAssignment);
-                var insertNewRequestResult = await _unitOfWork.UserRepository.InsertUserAcceptedRequestAsync(driverRequest);
-                var insertUserStatusResult = await _unitOfWork.UserRepository.InsertUserCurrentStatusAsync(userCurrentStatus);
+                var insertNewRequestResult = await _unitOfWork.CaptainRepository.InsertUserAcceptedRequestAsync(driverRequest);
+                var insertUserStatusResult = await _unitOfWork.CaptainRepository.InsertUserCurrentStatusAsync(userCurrentStatus);
                 var result = await _unitOfWork.Save();
                 if (result == 0) return new ObjectResult("Service Unavailable") { StatusCode = 503 };
 
@@ -976,7 +973,7 @@ namespace TreePorts.Controllers
                 //var maounOrder = maounOrders.FirstOrDefault();
                 //if (maounOrder?.Id > 0)
                 //{
-                //    User driverUser = await _unitOfWork.UserRepository.GetUserByID(orderRequest.UserId);
+                //    User driverUser = await _unitOfWork.CaptainRepository.GetUserByID(orderRequest.UserId);
                 //    Country country = await _unitOfWork.CountryRepository.GetByID((long)driverUser.CountryId);
                 //    MaounUser maounUser =
                 //        MaounUtility.ConvertDriverUserToMaounDriverUser(driverUser, country.Code.ToString());
@@ -999,7 +996,7 @@ namespace TreePorts.Controllers
 
 
                 var order = await _unitOfWork.OrderRepository.GetOnlyOrderByIdAsync(orderRequest.OrderId);
-                var locations = await _unitOfWork.UserRepository.GetUsersCurrentLocationsByAsync(l => l.UserId == orderRequest.UserId);
+                var locations = await _unitOfWork.CaptainRepository.GetUsersCurrentLocationsByAsync(l => l.UserId == orderRequest.UserId);
                 var userLocation = locations.FirstOrDefault();
 
 
@@ -1164,12 +1161,12 @@ namespace TreePorts.Controllers
 
 
                 var updatedOrder = await _unitOfWork.OrderRepository.UpdateOrderCurrentStatusAsync(order.Id, (long)OrderStatusTypes.AssignedToCaptain);
-                var userNewRequests = await _unitOfWork.UserRepository.DeleteUserNewRequestByUserIdAsync(orderRequest.UserId);
+                var userNewRequests = await _unitOfWork.CaptainRepository.DeleteUserNewRequestByUserIdAsync(orderRequest.UserId);
                 var insertRunningOrderResult = await _unitOfWork.OrderRepository.InsertRunningOrderAsync(runningOrder);
                 var insertOrderStatusResult = await _unitOfWork.OrderRepository.InsertOrderStatusAsync(orderCurrentStatus);
                 var orderAssignmentResult = await _unitOfWork.OrderRepository.InsertOrderAssignmentAsync(orderAssignment);
-                var insertNewRequestResult = await _unitOfWork.UserRepository.InsertUserAcceptedRequestAsync(driverRequest);
-                var insertUserStatusResult = await _unitOfWork.UserRepository.InsertUserCurrentStatusAsync(userCurrentStatus);
+                var insertNewRequestResult = await _unitOfWork.CaptainRepository.InsertUserAcceptedRequestAsync(driverRequest);
+                var insertUserStatusResult = await _unitOfWork.CaptainRepository.InsertUserCurrentStatusAsync(userCurrentStatus);
                 var result = await _unitOfWork.Save();
                 if (result == 0) return new ObjectResult("Service Unavailable") { StatusCode = 503 };
 
@@ -1205,9 +1202,9 @@ namespace TreePorts.Controllers
             {
 
                 
-                var userNewRequests = await _unitOfWork.UserRepository.DeleteUserNewRequestByOrderIdAsync(orderRequest.OrderId);
-                var deleteResult = await _unitOfWork.UserRepository.DeleteUserPaymentByOrderIdAsync(orderRequest.OrderId);
-                //var oldOrderPayment = await _unitOfWork.UserRepository.GetUserPaymentBy(p => p.OrderId == orderRequest.OrderId);
+                var userNewRequests = await _unitOfWork.CaptainRepository.DeleteUserNewRequestByOrderIdAsync(orderRequest.OrderId);
+                var deleteResult = await _unitOfWork.CaptainRepository.DeleteUserPaymentByOrderIdAsync(orderRequest.OrderId);
+                //var oldOrderPayment = await _unitOfWork.CaptainRepository.GetUserPaymentBy(p => p.OrderId == orderRequest.OrderId);
 
 
 
@@ -1220,7 +1217,7 @@ namespace TreePorts.Controllers
                     CreationDate = DateTime.Now
                 };
 
-                var insertNewRequestResult = await _unitOfWork.UserRepository.InsertUserRejectedRequestAsync(driverRequest);
+                var insertNewRequestResult = await _unitOfWork.CaptainRepository.InsertUserRejectedRequestAsync(driverRequest);
                 var result = await _unitOfWork.Save();
                 if (result == 0) return new ObjectResult("Service Unavailable") { StatusCode = 503 };
 
@@ -1231,7 +1228,7 @@ namespace TreePorts.Controllers
                 //{
                 //    if (systemSetting.RejectPerTypeId == (long)RejectPer.Days)
                 //    {
-                //        var userRejectedRequests = await _unitOfWork.UserRepository.GetUserRejectedRequestBy(u => u.UserId == orderRequest.UserId &&
+                //        var userRejectedRequests = await _unitOfWork.CaptainRepository.GetUserRejectedRequestBy(u => u.UserId == orderRequest.UserId &&
                 //       u.CreationDate.Value.Day == DateTime.Now.Day &&
                 //       u.CreationDate.Value.Month == DateTime.Now.Month &&
                 //       u.CreationDate.Value.Year == DateTime.Now.Year);
@@ -1248,7 +1245,7 @@ namespace TreePorts.Controllers
 
                 //            };
 
-                //            var insertUserRejectPenalty_result = await _unitOfWork.UserRepository.InsertUserRejectPenalty(userRejectPenalty);
+                //            var insertUserRejectPenalty_result = await _unitOfWork.CaptainRepository.InsertUserRejectPenalty(userRejectPenalty);
                 //            result = await _unitOfWork.Save();
                 //            if (result == 0) return new ObjectResult("Server not available") { StatusCode = 707 };
                 //        }
@@ -1256,7 +1253,7 @@ namespace TreePorts.Controllers
                 //    }
                 //    else if (systemSetting.RejectPerTypeId == (long)RejectPer.Months)
                 //    {
-                //       var userRejectedRequests = await _unitOfWork.UserRepository.GetUserRejectedRequestBy(u => u.UserId == orderRequest.UserId &&
+                //       var userRejectedRequests = await _unitOfWork.CaptainRepository.GetUserRejectedRequestBy(u => u.UserId == orderRequest.UserId &&
                 //      u.CreationDate.Value.Month == DateTime.Now.Month &&
                 //      u.CreationDate.Value.Year == DateTime.Now.Year);
 
@@ -1272,14 +1269,14 @@ namespace TreePorts.Controllers
 
                 //            };
 
-                //            var insertUserRejectPenalty_result = await _unitOfWork.UserRepository.InsertUserRejectPenalty(userRejectPenalty);
+                //            var insertUserRejectPenalty_result = await _unitOfWork.CaptainRepository.InsertUserRejectPenalty(userRejectPenalty);
                 //            result = await _unitOfWork.Save();
                 //            if (result == 0) return new ObjectResult("Server not available") { StatusCode = 707 };
                 //        }
                 //    }
                 //    else if (systemSetting.RejectPerTypeId == (long)RejectPer.Years)
                 //    {
-                //        var userRejectedRequests = await _unitOfWork.UserRepository.GetUserRejectedRequestBy(u => u.UserId == orderRequest.UserId &&
+                //        var userRejectedRequests = await _unitOfWork.CaptainRepository.GetUserRejectedRequestBy(u => u.UserId == orderRequest.UserId &&
 
                 //     u.CreationDate.Value.Year == DateTime.Now.Year);
 
@@ -1295,7 +1292,7 @@ namespace TreePorts.Controllers
 
                 //            };
 
-                //            var insertUserRejectPenalty_result = await _unitOfWork.UserRepository.InsertUserRejectPenalty(userRejectPenalty);
+                //            var insertUserRejectPenalty_result = await _unitOfWork.CaptainRepository.InsertUserRejectPenalty(userRejectPenalty);
                 //            result = await _unitOfWork.Save();
                 //            if (result == 0) return new ObjectResult("Server not available") { StatusCode = 707 };
                 //        }
@@ -1385,7 +1382,7 @@ namespace TreePorts.Controllers
                 }
 
                 var userId = orderAssgined.FirstOrDefault().UserId;
-                var userCurrentLocation = await _unitOfWork.UserRepository.GetUsersCurrentLocationsByAsync(l => l.UserId == userId);
+                var userCurrentLocation = await _unitOfWork.CaptainRepository.GetUsersCurrentLocationsByAsync(l => l.UserId == userId);
                 var currentLocation = userCurrentLocation.FirstOrDefault();
 
                 OrderStartLocation orderStartLocation = new OrderStartLocation()
@@ -1445,9 +1442,9 @@ namespace TreePorts.Controllers
 
                 var orderAssgined = await _unitOfWork.OrderRepository.GetOrdersAssignmentsByAsync(a => a.OrderId == id);
                 var userId = orderAssgined.FirstOrDefault().UserId;
-                var userCurrentLocation = await _unitOfWork.UserRepository.GetUsersCurrentLocationsByAsync(l => l.UserId == userId);
+                var userCurrentLocation = await _unitOfWork.CaptainRepository.GetUsersCurrentLocationsByAsync(l => l.UserId == userId);
                 var currentLocation = userCurrentLocation.FirstOrDefault();
-                var userPayments = await _unitOfWork.UserRepository.GetUsersPaymentsByAsync(p => p.OrderId == id);
+                var userPayments = await _unitOfWork.CaptainRepository.GetUsersPaymentsByAsync(p => p.OrderId == id);
                 var userPayment = userPayments.FirstOrDefault();
                 userPayment.StatusId = (long)PaymentStatusTypes.Complete;
                
@@ -1511,9 +1508,9 @@ namespace TreePorts.Controllers
 
                 var updatedOrder = await _unitOfWork.OrderRepository.UpdateOrderCurrentStatusAsync(id, (long)OrderStatusTypes.Delivered);
                 var insertedDeliveryBookkeeping = await _unitOfWork.PaymentRepository.InsertBookkeepingAsync(delivery_bookkeeping);
-                var insertPaymentResult = await _unitOfWork.UserRepository.UpdateUserPaymentAsync(userPayment);
+                var insertPaymentResult = await _unitOfWork.CaptainRepository.UpdateUserPaymentAsync(userPayment);
                 var insertOrderEndLocationResult = await _unitOfWork.OrderRepository.InsertOrderEndLocationAsync(orderEndLocation);
-                var insertUserStatusResult = await _unitOfWork.UserRepository.InsertUserCurrentStatusAsync(userCurrentStatus);
+                var insertUserStatusResult = await _unitOfWork.CaptainRepository.InsertUserCurrentStatusAsync(userCurrentStatus);
                 var insertOrderStatusResult = await _unitOfWork.OrderRepository.InsertOrderStatusAsync(orderCurrentStatus);
                 var oldRunningOrder = await _unitOfWork.OrderRepository.DeleteRunningOrderByOrderIdAsync(id);
                 var insertOrderDeliveredStatusResult = await _unitOfWork.OrderRepository.InsertOrderStatusAsync(orderDeliveredCurrentStatus);
@@ -1540,7 +1537,7 @@ namespace TreePorts.Controllers
                 //(s.StatusTypeId == (long)OrderStatusTypes.Dropped));
                 // var ordersCount = ordersStatus.Count();
                 // var userCountryId = orderAssgined.FirstOrDefault().User.ResidenceCountryId;
-                // var bonusPerCountry = await _unitOfWork.UserRepository.GetBonusByCountry(userCountryId);
+                // var bonusPerCountry = await _unitOfWork.CaptainRepository.GetBonusByCountry(userCountryId);
                 // if (ordersCount >= bonusPerCountry.OrdersPerDay)
                 // {
                 //     var userBonus = new UserBonus
@@ -1550,7 +1547,7 @@ namespace TreePorts.Controllers
                 //         CreationDate = DateTime.Now,
                 //         Amount = bonusPerCountry.BonusPerDay
                 //     };
-                //     var insertedBonus = await _unitOfWork.UserRepository.InsertBonus(userBonus);
+                //     var insertedBonus = await _unitOfWork.CaptainRepository.InsertBonus(userBonus);
                 // }
                 // // add the delivery amount to the captain wallet
                 // Bookkeeping deliveryBonus_bookkeeping = new Bookkeeping()
@@ -1615,9 +1612,9 @@ namespace TreePorts.Controllers
                 if (orderAssgined != null && orderAssgined.Id > 0)
                 {
                     var userId = orderAssgined.UserId;
-                    var userCurrentLocation = await _unitOfWork.UserRepository.GetUsersCurrentLocationsByAsync(l => l.UserId == userId);
+                    var userCurrentLocation = await _unitOfWork.CaptainRepository.GetUsersCurrentLocationsByAsync(l => l.UserId == userId);
                     var currentLocation = userCurrentLocation.FirstOrDefault();
-                    var userPayments = await _unitOfWork.UserRepository.GetUsersPaymentsByAsync(p => p.OrderId == id);
+                    var userPayments = await _unitOfWork.CaptainRepository.GetUsersPaymentsByAsync(p => p.OrderId == id);
                     var userPayment = userPayments.FirstOrDefault();
                     if (userPayment != null) 
                     {
@@ -1633,7 +1630,7 @@ namespace TreePorts.Controllers
                         };
 
                         var insertedDeliveryBookkeeping = await _unitOfWork.PaymentRepository.InsertBookkeepingAsync(delivery_bookkeeping);
-                        var insertPaymentResult = await _unitOfWork.UserRepository.UpdateUserPaymentAsync(userPayment);
+                        var insertPaymentResult = await _unitOfWork.CaptainRepository.UpdateUserPaymentAsync(userPayment);
                     }
                
                     OrderEndLocation orderEndLocation = new OrderEndLocation()
@@ -1664,7 +1661,7 @@ namespace TreePorts.Controllers
 
                     
                     var insertOrderEndLocationResult = await _unitOfWork.OrderRepository.InsertOrderEndLocationAsync(orderEndLocation);
-                    var insertUserStatusResult = await _unitOfWork.UserRepository.InsertUserCurrentStatusAsync(userCurrentStatus);
+                    var insertUserStatusResult = await _unitOfWork.CaptainRepository.InsertUserCurrentStatusAsync(userCurrentStatus);
                 }
 
                 
@@ -1801,7 +1798,7 @@ namespace TreePorts.Controllers
 
 
                 var captain =
-                    await _unitOfWork.UserRepository.GetUserNearestLocation(order.PickupLocationLat,
+                    await _unitOfWork.CaptainRepository.GetUserNearestLocation(order.PickupLocationLat,
                         order.PickupLocationLong);
                 if (captain is null)
                 {
@@ -1830,12 +1827,12 @@ namespace TreePorts.Controllers
                     CreationDate = DateTime.Now
                 };
 
-                var insertNewRequestResult = await _unitOfWork.UserRepository.InsertUserNewRequest(driverRequest);
+                var insertNewRequestResult = await _unitOfWork.CaptainRepository.InsertUserNewRequest(driverRequest);
                 result = await _unitOfWork.Save();
                 if (result <= 0) return new ObjectResult("Server not available") {StatusCode = 503};
 
                 var usersMessageHub =
-                    await _unitOfWork.UserRepository.GetUserMessageHubBy(u => u.UserId == captain.Id);
+                    await _unitOfWork.CaptainRepository.GetUserMessageHubBy(u => u.UserId == captain.Id);
                 var userMessageHub = usersMessageHub.FirstOrDefault();
                 if (userMessageHub != null && userMessageHub.Id > 0)
                 {
@@ -1871,7 +1868,7 @@ namespace TreePorts.Controllers
                         isDriverAcceptOrder = true;
 
                     var ordersReject =
-                        await _unitOfWork.UserRepository.GetUserRejectedRequestBy(r =>
+                        await _unitOfWork.CaptainRepository.GetUserRejectedRequestBy(r =>
                             r.OrderId == orderInsertResult.Id);
                     var rejectedOrder = ordersReject.FirstOrDefault();
                     if (rejectedOrder != null)
@@ -1879,7 +1876,7 @@ namespace TreePorts.Controllers
 
 
                     var ordersIgnored =
-                        await _unitOfWork.UserRepository.GetUserIgnoredRequestBy(r =>
+                        await _unitOfWork.CaptainRepository.GetUserIgnoredRequestBy(r =>
                             r.OrderId == orderInsertResult.Id);
                     var ignoredOrder = ordersIgnored.FirstOrDefault();
                     if (ignoredOrder != null)
@@ -1961,7 +1958,7 @@ namespace TreePorts.Controllers
         //             return new ObjectResult("Your request has no data") { StatusCode = 406 };
         //
         //
-        //         var driver = await _unitOfWork.UserRepository.GetUserNearestLocation(order.PickupLocationLat, order.PickupLocationLong);
+        //         var driver = await _unitOfWork.CaptainRepository.GetUserNearestLocation(order.PickupLocationLat, order.PickupLocationLong);
         //
         //         if (driver == null) return new ObjectResult("No Captains available, Plase try again") { StatusCode = 707 };
         //
@@ -2004,11 +2001,11 @@ namespace TreePorts.Controllers
         //         var qRCode = Utility.CreateQRCode(driver.Id, order.Id);
         //         var qRCodeResult = await _unitOfWork.OrderRepository.InsertQrCode(qRCode);
         //         /* Create QrCode and Insert*/
-        //         var insertNewRequestResult = await _unitOfWork.UserRepository.InsertUserNewRequest(driverRequest);
+        //         var insertNewRequestResult = await _unitOfWork.CaptainRepository.InsertUserNewRequest(driverRequest);
         //         result = await _unitOfWork.Save();
         //         if (result == 0) return new ObjectResult("Server not available") { StatusCode = 707 };
         //
-        //         var usersMessageHub = await _unitOfWork.UserRepository.GetUserMessageHubBy(u => u.UserId == driver.Id);
+        //         var usersMessageHub = await _unitOfWork.CaptainRepository.GetUserMessageHubBy(u => u.UserId == driver.Id);
         //         var userMessageHub = usersMessageHub.FirstOrDefault();
         //         if (userMessageHub != null && userMessageHub.Id > 0)
         //         {
@@ -2037,9 +2034,9 @@ namespace TreePorts.Controllers
         //             return new ObjectResult("Captain not available, Plase try again") { StatusCode = 707 };
         //         }
         //
-        //         var user = await _unitOfWork.UserRepository.GetUserByID((long)orderAssign.UserId);
+        //         var user = await _unitOfWork.CaptainRepository.GetUserByID((long)orderAssign.UserId);
         //
-        //         //var user = await _unitOfWork.UserRepository.GetUserByID((long)driver.Id);
+        //         //var user = await _unitOfWork.CaptainRepository.GetUserByID((long)driver.Id);
         //         //double customerDistance = Utility.distance(double.Parse(order.PickupLocationLat), double.Parse(order.PickupLocationLong),
         //         //             double.Parse(order.DropLocationLat), double.Parse(order.DropLocationLong));
         //         //var countriesPricies = await _unitOfWork.CountryRepository.GetCountryPriceBy(c => c.CountryId == user.ResidenceCountryId);
@@ -2099,18 +2096,18 @@ namespace TreePorts.Controllers
         //         //return Ok("done");
         //
         //
-        //         //var DriversIgnored = await _unitOfWork.UserRepository.GetUserIgnoredRequestBy( u => u.OrderId == order.Id );
+        //         //var DriversIgnored = await _unitOfWork.CaptainRepository.GetUserIgnoredRequestBy( u => u.OrderId == order.Id );
         //         //var list = DriversIgnored.Select(u => u.Id).ToList();
         //         //var agentCoordinate = new Geo(0, order.PickupLocationLat, order.PickupLocationLong);
         //
-        //         //var drivers = await _unitOfWork.UserRepository.GetAllUsersCurrentLocations();
+        //         //var drivers = await _unitOfWork.CaptainRepository.GetAllUsersCurrentLocations();
         //         //var nearst = drivers.Select(u => new Geo((long)u.UserId, u.Lat, u.Long)).Where( u => !list.Contains(u.UserID)  ).OrderBy(g => g.GetDistanceTo(agentCoordinate)).First();
         //
         //
         //
         //         //var agentCoordinate = new GeoCoordinate(double.Parse(order.PickupLocationLat), double.Parse(order.PickupLocationLong));
         //
-        //         //var drivers = await _unitOfWork.UserRepository.GetAllUsersCurrentLocations();
+        //         //var drivers = await _unitOfWork.CaptainRepository.GetAllUsersCurrentLocations();
         //         //var nearst = drivers.Select(u => new GeoCoordinate(double.Parse(u.Lat), double.Parse(u.Long))).OrderBy(g => g.GetDistanceTo(agentCoordinate)).First();
         //
         //
@@ -2223,7 +2220,7 @@ namespace TreePorts.Controllers
                 var orderAssign = orderAssigns.FirstOrDefault();
                 if (orderAssign == null) return NoContent();
 
-                var usersLocations = await _unitOfWork.UserRepository.GetUsersCurrentLocationsByAsync(u => u.UserId == orderAssign.UserId);
+                var usersLocations = await _unitOfWork.CaptainRepository.GetUsersCurrentLocationsByAsync(u => u.UserId == orderAssign.UserId);
                 var userLocation = usersLocations.FirstOrDefault();
                 if (userLocation == null) return NoContent();
 

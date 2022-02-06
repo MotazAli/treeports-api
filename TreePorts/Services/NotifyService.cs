@@ -228,7 +228,7 @@ namespace TreePorts.Presentation
 					var _unitOfWork = services.GetRequiredService<IUnitOfWork>();
 					if (_unitOfWork == null) return false;
 
-					var usersMessageHub = await _unitOfWork.UserRepository.GetUsersMessageHubsByAsync(u => u.UserId == userId);
+					var usersMessageHub = await _unitOfWork.CaptainRepository.GetUsersMessageHubsByAsync(u => u.UserId == userId);
 					var userMessageHub = usersMessageHub.FirstOrDefault();
 					if (userMessageHub != null && userMessageHub.Id > 0)
 					{

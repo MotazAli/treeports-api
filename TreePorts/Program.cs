@@ -1,3 +1,5 @@
+using TreePorts.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 ConfigurationManager configration = builder.Configuration;
 ConfigureServices(builder.Services, configration);
@@ -108,6 +110,9 @@ void AddDependancyInjectionServices(IServiceCollection services)
     services.AddTransient<IUnitOfWork, UnitOfWork>();
     services.AddTransient<IMailService, MailService>();
     services.AddTransient<INotifyService, NotifyService>();
+    services.AddTransient<IAdminService, AdminService>();
+    services.AddTransient<IAgentService, AgentService>();
+    services.AddTransient<ICaptainService, CaptainService>();
     services.AddTransient<IOrderService, OrderService>();
     services.AddTransient<IRMQService, RMQService>();
     services.AddHostedService<RMQReceiverService>();

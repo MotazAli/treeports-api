@@ -23,17 +23,11 @@ namespace TreePorts.Controllers
     [ApiController]
     public class SystemController : ControllerBase
     {
-        private IUnitOfWork _unitOfWork;
-        //private IHubContext<MessageHub> _HubContext;
-        private readonly IWebHostEnvironment _hostingEnvironment;
-        private readonly IMemoryCache _cache;
+        private readonly ISystemService _systemService;
 
-        public SystemController(IUnitOfWork unitOfWork, IMemoryCache cache, IWebHostEnvironment hostingEnvironment)//, IHubContext<MessageHub> hubcontext)
+        public SystemController(ISystemService systemService)
         {
-            _unitOfWork = unitOfWork;
-            _cache = cache;
-            //_HubContext = hubcontext;
-            _hostingEnvironment = hostingEnvironment;
+            _systemService = systemService;
         }
 
 
@@ -45,7 +39,7 @@ namespace TreePorts.Controllers
         {
             try 
             {
-                return  Ok( await _unitOfWork.SystemRepository.GetCurrentSystemSettingAsync());
+                return  Ok( await _systemService.GetSystemSettingAsync());
             } 
             catch (Exception e) 
             {
@@ -63,7 +57,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                return Ok(await _unitOfWork.SystemRepository.GetVehiclesAsync());
+                return Ok(await _systemService.GetVehiclesAsync());
             }
             catch (Exception e)
             {
@@ -80,7 +74,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                return Ok(await _unitOfWork.SystemRepository.GetBoxTypesAsync());
+                return Ok(await _systemService.GetBoxTypesAsync());
             }
             catch (Exception e)
             {
@@ -98,7 +92,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                return Ok(await _unitOfWork.SystemRepository.GetShiftsAsync());
+                return Ok(await _systemService.GetShiftsAsync());
             }
             catch (Exception e)
             {
@@ -117,34 +111,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-
-                /*if (page == null || objects == null) return NoContent();//
-
-
-                var skip = ((int)objects * ((int)page - 1));
-                var take = (int)objects;*/
-
-                var skip = (parameters.NumberOfObjectsPerPage * (parameters.Page - 1));
-                var take = parameters.NumberOfObjectsPerPage;
-                var result = await _unitOfWork.SystemRepository.GetAndroidVersionsPaginationAsync(skip,take);
-                return Ok(result);
-                //var AgentIDs = users.Select(s => s.AgentId);
-                //var newAgents = await _unitOfWork.AgentRepository.GetBy(a => AgentIDs.Contains(a.Id));
-
-                //var versions = await _unitOfWork.SystemRepository.GetAndroidVersionsAsync();
-                /*var total = versions.Count;
-                var skip = (pagination.NumberOfObjectsPerPage * (pagination.Page - 1));
-                var take = pagination.NumberOfObjectsPerPage;
-                var result = versions.Skip(skip).Take(take).ToList();*/
-
-
-
-                //var total =  Math.Ceiling(( ((decimal)users.Count) / ((decimal)pagination.NumberOfObjectsPerPage) ));
-                //var skip = (pagination.NumberOfObjectsPerPage * (pagination.Page - 1));
-                //var take = pagination.NumberOfObjectsPerPage;
-                //var result = users.Skip(skip).Take(take).ToList();
-
-                //return Ok(new { AndroidVersions = result, Total = total, Page = pagination.Page });
+                return Ok(await _systemService.GetAndroidVersionsPagingAsync(parameters));
             }
             catch (Exception e)
             {
@@ -161,11 +128,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                var current = await _unitOfWork.SystemRepository.GetCurrentAndroidVersionAsync();
-                //var current = result.FirstOrDefault();
-                //if (current == null) return NotFound("No current android version available");
-
-                return Ok(current);
+                return Ok(await _systemService.GetCurrentAndroidVersionAsync());
             }
             catch (Exception e)
             {
@@ -183,8 +146,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                var result = await _unitOfWork.SystemRepository.GetAndroidVersionsAsync();
-                return Ok(result);
+                return Ok(await _systemService.GetAndroidVersionsAsync());
             }
             catch (Exception e)
             {
@@ -202,10 +164,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                var result = await _unitOfWork.SystemRepository.GetAndroidVersionByIdAsync(id);
-                //if (result == null) return NotFound();
-
-                return Ok(result);
+                return Ok(await _systemService.GetAndroidVersionByIdAsync(id));
             }
             catch (Exception e)
             {
@@ -226,12 +185,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                var insertResult = await _unitOfWork.SystemRepository.InsertAndroidVersionAsync(androidVersion);
-                var result = await _unitOfWork.Save();
-                if (result == 0)
-                    return new ObjectResult("Service Unavailable") { StatusCode = 503 };
-
-                return Ok(insertResult);
+                return Ok(await _systemService.AddAndroidVersionAsync(androidVersion));
             }
             catch (Exception e)
             {
@@ -250,16 +204,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                if (id <= 0 || androidVersion == null || androidVersion.Id <= 0) return NoContent();
-
-
-
-                var updateResult = await _unitOfWork.SystemRepository.UpdateAndroidVersionAsync(androidVersion);
-                var result = await _unitOfWork.Save();
-                if (result == 0)
-                    return new ObjectResult("Service Unavailable") { StatusCode = 503 };
-
-                return Ok(updateResult);
+                return Ok(await _systemService.UpdateAndroidVersionsAsync(id,androidVersion));
             }
             catch (Exception e)
             {
@@ -279,47 +224,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                //var description = "";
-                //var AndroidVersionID = "";
-                //var request = HttpContext.Request;
-                //if(request.Form != null && request.Form["description"] != "")
-                //    description = request.Form["description"];
-
-
-                //if (request.Form != null && request.Form["AndroidVersionID"] != "" && request.Form["AndroidVersionID"].Count > 0)
-                //    AndroidVersionID = request.Form["AgentID"];
-                //else if (request.Form != null && request.Form.Files["AndroidVersionID"] != null)
-                //{
-                //    AndroidVersionID = request.Form.Files["AndroidVersionID"].FileName;
-
-                //}
-
-
-
-                var request = HttpContext.Request;
-
-                var files = HttpContext.Request.Form.Files;
-                foreach (var file in files)
-                {
-                    if (file.Length > 0)
-                    {
-
-                        var FolderPath = _hostingEnvironment.ContentRootPath + "/Assets/Apps/"+ file.Name;
-                        //FolderPath = FolderPath.Replace('/', '\\');
-                        if (!Directory.Exists(FolderPath))
-                            Directory.CreateDirectory(FolderPath);
-
-                        //var filePath = Path.Combine(uploads, file.FileName);
-                        string filePath = _hostingEnvironment.ContentRootPath + "/Assets/Apps/"+ file.Name + "/" + file.FileName;
-                        using (var fileStream = new FileStream(filePath, FileMode.Create))
-                        {
-                            await file.CopyToAsync(fileStream);
-                        }
-                    }
-                }
-
-
-                return Ok(true);
+                return Ok(await _systemService.UploadAndroidFileAsync(HttpContext));
             }
             catch (Exception e)
             {
@@ -341,47 +246,8 @@ namespace TreePorts.Controllers
         {
             try
             {
-                //var description = "";
-                //var AndroidVersionID = "";
-                //var request = HttpContext.Request;
-                //if(request.Form != null && request.Form["description"] != "")
-                //    description = request.Form["description"];
-
-
-                //if (request.Form != null && request.Form["AndroidVersionID"] != "" && request.Form["AndroidVersionID"].Count > 0)
-                //    AndroidVersionID = request.Form["AgentID"];
-                //else if (request.Form != null && request.Form.Files["AndroidVersionID"] != null)
-                //{
-                //    AndroidVersionID = request.Form.Files["AndroidVersionID"].FileName;
-
-                //}
-
-
-
-                var request = HttpContext.Request;
-
-                var files = HttpContext.Request.Form.Files;
-                foreach (var file in files)
-                {
-                    if (file.Length > 0)
-                    {
-
-                        var FolderPath = _hostingEnvironment.ContentRootPath + "/Assets/Images/" + file.Name;
-                        //FolderPath = FolderPath.Replace('/', '\\');
-                        if (!Directory.Exists(FolderPath))
-                            Directory.CreateDirectory(FolderPath);
-
-                        //var filePath = Path.Combine(uploads, file.FileName);
-                        string filePath = _hostingEnvironment.ContentRootPath + "/Assets/Images/" + file.Name + "/" + file.FileName;
-                        using (var fileStream = new FileStream(filePath, FileMode.Create))
-                        {
-                            await file.CopyToAsync(fileStream);
-                        }
-                    }
-                }
-
-
-                return Ok(true);
+                
+                return Ok(await _systemService.UploadPromotionFileAsync(HttpContext));
             }
             catch (Exception e)
             {
@@ -403,9 +269,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                var result = await _unitOfWork.CountryRepository.GetCountriesPricesAsync();
-
-                return Ok(result);
+                return Ok(await _systemService.GetCountriesPricesAsync());
             }
             catch (Exception e)
             {
@@ -421,9 +285,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                var result = await _unitOfWork.CountryRepository.GetCountryPriceByIdAsync(id);
-
-                return Ok(result);
+                return Ok(await _systemService.GetCountryPriceByIdAsync(id));
             }
             catch (Exception e)
             {
@@ -440,9 +302,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                var result = await _unitOfWork.CountryRepository.GetCountriesPricesByAsync(cp => cp.CountryId == id);
-
-                return Ok(result);
+                return Ok(await _systemService.GetCountryPricesByCountryIdAsync(id));
             }
             catch (Exception e)
             {
@@ -460,17 +320,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                long modifierID = -1;
-                string modifierType = "";
-                Utility.getRequestUserIdFromToken(HttpContext, out modifierID, out modifierType);
-                countryPrice.CreatedBy = modifierID;
-                var insertResult = await _unitOfWork.CountryRepository.InsertCountryPriceAsync(countryPrice);
-                var result = await _unitOfWork.Save();
-                if (result == 0)
-                    return new ObjectResult("Service Unavailable") { StatusCode = 503 };
-
-
-                return Ok(insertResult);
+                return Ok(await _systemService.AddCountryPriceAsync(HttpContext,countryPrice));
             }
             catch (Exception e)
             {
@@ -486,11 +336,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                var result = await _unitOfWork.CountryRepository.DeleteCountryPriceAsync(id);
-                if (result == null) return NoContent();
-
-
-                return Ok(true);
+                return Ok(await _systemService.DeleteCountriesPricesAsync(id));
             }
             catch (Exception e)
             {
@@ -509,8 +355,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                var result = await _unitOfWork.SystemRepository.GetShiftsByShiftDateAsync(shift);
-                return Ok(result);
+                return Ok(await _systemService.GetShiftsByShiftDateAsync(shift));
             }
             catch (Exception e)
             {
@@ -526,8 +371,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                var result = await _unitOfWork.SystemRepository.GetSystemSettingByIdAsync(id);
-                return Ok(result);
+                return Ok(await _systemService.GetSystemSettingByIdAsync(id));
             }
             catch (Exception e)
             {
@@ -543,18 +387,7 @@ namespace TreePorts.Controllers
         public async Task<IActionResult> AddSystemSetting([FromBody] SystemSetting setting)
         {
             try {
-                long modifierID = -1;
-                string modifierType = "";
-                Utility.getRequestUserIdFromToken(HttpContext, out modifierID,out modifierType);
-
-                setting.CreatedBy = modifierID;
-                var insertResult = await _unitOfWork.SystemRepository.InsertSystemSettingAsync(setting);
-                var result = await _unitOfWork.Save();
-                if (result == 0)
-                    return new ObjectResult("Service Unavailable") { StatusCode = 503 };
-
-
-                return Ok(insertResult);
+                return Ok(await _systemService.AddSystemSettingAsync(setting,HttpContext));
             } catch (Exception e) {
                 return NoContent();// new ObjectResult(e.Message) { StatusCode = 666 };
             }
@@ -575,18 +408,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                long modifierID = -1;
-                string modifierType = "";
-                Utility.getRequestUserIdFromToken(HttpContext, out modifierID, out modifierType);
-
-                cityPrice.CreatedBy = modifierID;
-                var insertResult = await _unitOfWork.CountryRepository.InsertCityPriceAsync(cityPrice);
-                var result = await _unitOfWork.Save();
-                if (result <= 0)
-                    return new ObjectResult("Service Unavailable") { StatusCode = 503 };
-
-
-                return Ok(insertResult);
+                return Ok(await _systemService.AddCityPriceAsync(cityPrice,HttpContext));
             }
             catch (Exception e)
             {
@@ -605,8 +427,7 @@ namespace TreePorts.Controllers
             try
             {
                 
-                var result = await _unitOfWork.CountryRepository.GetCitiesPricesAsync();
-                return Ok(result);
+                return Ok(await _systemService.GetCitiesPricesAsync());
             }
             catch (Exception e)
             {
@@ -624,8 +445,7 @@ namespace TreePorts.Controllers
             try
             {
                 
-                var result = await _unitOfWork.CountryRepository.GetCityPriceByIdAsync(id);
-                return Ok(result);
+                return Ok(await _systemService.GetCityPriceByIdAsync(id));
             }
             catch (Exception e)
             {
@@ -642,8 +462,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                var result = await _unitOfWork.CountryRepository.GetCitiesPricesByAsync(cp => cp.CityId == id && cp.IsDeleted == false);
-                return Ok(result);
+                return Ok(await _systemService.GetCitiesPricesByCityIdAsync(id));
             }
             catch (Exception e)
             {
@@ -660,10 +479,7 @@ namespace TreePorts.Controllers
             try
             {
                 
-                var result = await _unitOfWork.CountryRepository.DeleteCityPriceAsync(id);
-                if (result == null) return NoContent();
-
-                return Ok(true);
+                return Ok(await _systemService.DeleteCityPriceByIdAsync(id));
             }
             catch (Exception e)
             {
@@ -680,8 +496,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                var result = await _unitOfWork.SystemRepository.GetRejectPerTypesAsync();
-                return Ok(result);
+                return Ok(await _systemService.GetRejectPerTypesAsync());
             }
             catch (Exception e)
             {
@@ -699,8 +514,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                var result = await _unitOfWork.SystemRepository.GetIgnorPerTypesAsync();
-                return Ok(result);
+                 return Ok(await _systemService.IgnorePerTypesAsync());
             }
             catch (Exception e)
             {
@@ -718,8 +532,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                var result = await _unitOfWork.SystemRepository.GetPenaltyPerTypesAsync();
-                return Ok(result);
+                return Ok(await _systemService.PenaltyPerTypesAsync());
             }
             catch (Exception e)
             {
@@ -735,8 +548,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                var result = await _unitOfWork.SystemRepository.GetPromotionsAsync();
-                return Ok(result);
+                return Ok(await _systemService.GetPromotionsAsync());
             }
             catch (Exception e)
             {
@@ -752,13 +564,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                var result = await _unitOfWork.SystemRepository.GetPromotionsByAsync(p =>
-                p.ExpireDate.Value.Day >= DateTime.Now.Day &&
-                p.ExpireDate.Value.Month == DateTime.Now.Month &&
-                p.ExpireDate.Value.Year == DateTime.Now.Year);
-
-                var currentPromotion = result.FirstOrDefault();
-                return Ok(currentPromotion);
+                return Ok(await _systemService.GetCurrentPromotionAsync());
             }
             catch (Exception e)
             {
@@ -774,8 +580,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                var result = await _unitOfWork.SystemRepository.GetPromotionByIdAsync(id);
-                return Ok(result);
+                return Ok(await _systemService.GetPromotionByIdAsync(id));
             }
             catch (Exception e)
             {
@@ -793,34 +598,7 @@ namespace TreePorts.Controllers
             try
             {
 
-                /*if (page == null || objects == null) return NoContent();
-
-
-                var skip = ((int)objects * ((int)page - 1));
-                var take = (int)objects;*/
-
-                var skip = (parameters.NumberOfObjectsPerPage * (parameters.Page - 1));
-                var take = parameters.NumberOfObjectsPerPage;
-
-                var result = await _unitOfWork.SystemRepository.GetPromotionsPaginationAsync(skip,take);
-                return Ok(result);
-                //var promotions = await _unitOfWork.SystemRepository.GetAllPromotions();
-                //var AgentIDs = users.Select(s => s.AgentId);
-                //var newAgents = await _unitOfWork.AgentRepository.GetBy(a => AgentIDs.Contains(a.Id));
-
-                /*var total = promotions.Count;
-                var skip = (pagination.NumberOfObjectsPerPage * (pagination.Page - 1));
-                var take = pagination.NumberOfObjectsPerPage;
-                var result = promotions.Skip(skip).Take(take).ToList();*/
-
-
-
-                //var total =  Math.Ceiling(( ((decimal)users.Count) / ((decimal)pagination.NumberOfObjectsPerPage) ));
-                //var skip = (pagination.NumberOfObjectsPerPage * (pagination.Page - 1));
-                //var take = pagination.NumberOfObjectsPerPage;
-                //var result = users.Skip(skip).Take(take).ToList();
-
-                //return Ok(new { Promotions = result, Total = total, Page = pagination.Page });
+                return Ok(await _systemService.GetPromotionsPaginationAsync(parameters));
             }
             catch (Exception e)
             {
@@ -839,12 +617,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                var insertResult = await _unitOfWork.SystemRepository.InsertPromotionAsync(promotion);
-                var result = await _unitOfWork.Save();
-                if (result == 0)
-                    return new ObjectResult("Service Unavailable") { StatusCode = 503 };
-
-                return Ok(insertResult);
+                return Ok(await _systemService.AddPromotionAsync(promotion));
             }
             catch (Exception e)
             {
@@ -862,14 +635,7 @@ namespace TreePorts.Controllers
             try
             {
 
-                if (id <= 0 || promotion == null || promotion.Id <= 0) return NoContent();
-
-                var insertResult = await _unitOfWork.SystemRepository.UpdatePromotionAsync(promotion);
-                var result = await _unitOfWork.Save();
-                if (result == 0)
-                    return new ObjectResult("Service Unavailable") { StatusCode = 503 };
-
-                return Ok(insertResult);
+                return Ok(await _systemService.UpdatePromotionAsync(id,promotion));
             }
             catch (Exception e)
             {
@@ -886,12 +652,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                var insertResult = await _unitOfWork.SystemRepository.DeletePromotionAsync(id);
-                var result = await _unitOfWork.Save();
-                if (result == 0)
-                    return new ObjectResult("Server not available") { StatusCode = 707 };
-
-                return Ok(true);
+                return Ok(await _systemService.DeletePromotionById(id));
             }
             catch (Exception e)
             {
@@ -909,21 +670,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                string result = "";
-                FirebaseNotificationResponse responseResult = null;
-
-                result = FirebaseNotification.SendNotificationToTopic(FirebaseTopics.Captains, "newPromotion", id.ToString());
-
-                if (result != "")
-                    responseResult = JsonConvert.DeserializeObject<FirebaseNotificationResponse>(result);
-
-                if (responseResult == null || responseResult.messageId == "")
-                    return NotFound("Failed to publish the promotion");
-                else if (responseResult != null && responseResult.messageId != "")
-                    return Ok(new { Result = true, Message = "Promotion published successfuly" });
-                else
-                    return new ObjectResult("Service Unavailable") { StatusCode = 503 };
-                //await _HubContext.Clients.All.SendAsync("newPromotion", id.ToString());
+                return Ok(await _systemService.PublishPromotionByIdAsync(id));
 
                
             }
@@ -943,8 +690,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                var result = await _unitOfWork.SystemRepository.GetPromotionTypesAsync();
-                return Ok(result);
+                return Ok(await _systemService.PromotionTypesAsync());
             }
             catch (Exception e)
             {
@@ -960,8 +706,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                var result = await _unitOfWork.SystemRepository.GetPromotionTypeByIdAsync(id);
-                return Ok(result);
+                return Ok(await _systemService.GetPromotionTypeByIdAsync(id));
             }
             catch (Exception e)
             {
@@ -978,12 +723,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                var insertResult = await _unitOfWork.SystemRepository.InsertPromotionTypeAsync(promotionType);
-                var result = await _unitOfWork.Save();
-                if (result == 0)
-                    return new ObjectResult("Service Unavailable") { StatusCode = 503 };
-
-                return Ok(insertResult);
+                return Ok(await _systemService.AddPromotionTypeAsync(promotionType));
             }
             catch (Exception e)
             {
@@ -1001,14 +741,7 @@ namespace TreePorts.Controllers
             try
             {
 
-                if (id <= 0 || promotionType == null || promotionType.Id <= 0) return NoContent();//
-
-                var insertResult = await _unitOfWork.SystemRepository.UpdatePromotionTypeAsync(promotionType);
-                var result = await _unitOfWork.Save();
-                if (result == 0)
-                    return new ObjectResult("Service Unavailable") { StatusCode = 707 };
-
-                return Ok(insertResult);
+                return Ok(await _systemService.UpdatePromotionTypeAsync(id,promotionType));
             }
             catch (Exception e)
             {
@@ -1025,12 +758,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                var insertResult = await _unitOfWork.SystemRepository.DeletePromotionTypeAsync(id);
-                var result = await _unitOfWork.Save();
-                if (result == 0)
-                    return new ObjectResult("Service Unavailable") { StatusCode = 503 };
-
-                return Ok(true);
+                return Ok(await _systemService.DeletePromotionTypeAsync(id));
             }
             catch (Exception e)
             {
@@ -1045,51 +773,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                //var description = "";
-                //var UserID = "";
-                var request = HttpContext.Request;
-                //if(request.Form != null && request.Form["description"] != "")
-                //    description = request.Form["description"];
-
-
-                //if (request.Form != null && request.Form["UserID"] != "" && request.Form["UserID"].Count > 0)
-                //    UserID = request.Form["UserID"];
-                //else if (request.Form != null && request.Form.Files["UserID"] != null)
-                //{
-                //    UserID = request.Form.Files["UserID"].FileName;
-
-                //}
-
-
-                //var promotionFolderPath = _hostingEnvironment.ContentRootPath + "/Assets/Images/Promotions";
-                ////UserFolderPath = UserFolderPath.Replace('/', '\\');
-                //if (!Directory.Exists(promotionFolderPath))
-                //    Directory.CreateDirectory(promotionFolderPath);
-
-
-                var files = HttpContext.Request.Form.Files;
-                foreach (var file in files)
-                {
-                    if (file.Length > 0)
-                    {
-                        
-
-                        var FolderPath = _hostingEnvironment.ContentRootPath + "/Assets/Images/" + file.Name ;
-                        FolderPath = FolderPath.Replace('/', '\\');
-                        if (!Directory.Exists(FolderPath))
-                            Directory.CreateDirectory(FolderPath);
-
-                        //var filePath = Path.Combine(uploads, file.FileName);
-                        string filePath = _hostingEnvironment.ContentRootPath + "/Assets/Images/"+ file.Name + "/" + file.FileName;
-                        using (var fileStream = new FileStream(filePath, FileMode.Create))
-                        {
-                            await file.CopyToAsync(fileStream);
-                        }
-                    }
-                }
-
-
-                return Ok(true);
+                return Ok(await _systemService.UploadAsync(HttpContext));
             }
             catch (Exception e)
             {
@@ -1111,9 +795,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                var result = await _unitOfWork.SystemRepository.GetUserIgnoredPenaltyByUserIdAsync(userId);
-                
-                return Ok(result);
+                return Ok(await _systemService.GetCurrentUserIgnoredRequestsPenaltyByCaptainUserAccountIdAsync(userId));
             }
             catch (Exception e)
             {
@@ -1131,9 +813,7 @@ namespace TreePorts.Controllers
 
             try
             {
-                var result = await _unitOfWork.SystemRepository.GetUserRejectedPenaltyByUserIdAsync(userId);
-
-                return Ok(result);
+                return Ok(await _systemService.GetCurrentUserRejectedRequestsPenaltyByCaptainUserAccountIdAsync(userId));
             }
             catch (Exception e)
             {
@@ -1152,9 +832,7 @@ namespace TreePorts.Controllers
 
             try
             {
-                var result = await _unitOfWork.SystemRepository.GetUserIgnoredPenaltiesByUserIdAsync(userId);
-
-                return Ok(result);
+                return Ok(await _systemService.GetUserIgnoredRequestsPenaltiesByCaptainUserAccountIdAsync(userId));
             }
             catch (Exception e)
             {
@@ -1171,9 +849,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                var result = await _unitOfWork.SystemRepository.GetUserRejectedPenaltiesByUserIdAsync(userId);
-
-                return Ok(result);
+               return Ok(await _systemService.GetUserRejectedRequestsPenaltiesByCaptainUserAccountIdAsync(userId));
             }
             catch (Exception e)
             {
@@ -1221,8 +897,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                var result = await _unitOfWork.SystemRepository.GetPeniltyStatusTypesAsync();
-                return Ok(result);
+                return Ok(await _systemService.GetPeniltyStatusTypesAsync());
             }
             catch (Exception e)
             {
@@ -1246,12 +921,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                var deleteResult = await _unitOfWork.SystemRepository.DeleteSystemSettingAsync(id);
-                var result = await _unitOfWork.Save();
-                if (result == 0)
-                    return new ObjectResult("Service Unavailable") { StatusCode = 503 };
-
-                return Ok(true);
+                return Ok(await _systemService.DeleteSystemSettingAsync(id));
             }
             catch (Exception e)
             {
@@ -1270,21 +940,7 @@ namespace TreePorts.Controllers
             try
             {
 
-                string mailResult = await Utility.sendGridMail(
-                    contactMessage.Email,
-                    contactMessage.Name,
-                    contactMessage.Subject,
-                    contactMessage.Message,
-                    false
-                    );
-
-                var insertResult = await _unitOfWork.SystemRepository.InsertContactMessageAsync(contactMessage);
-                var result = await _unitOfWork.Save();
-
-                if (result == 0)
-                    return new ObjectResult("Service Unavailable") { StatusCode = 503 };
-
-                return Ok(true);
+                return Ok(await _systemService.AddContactMessageAsync(contactMessage));
             }
             catch (Exception e)
             {
@@ -1305,152 +961,7 @@ namespace TreePorts.Controllers
 
             try
             {
-                long modifierID = -1;
-                string modifierType = "";
-                Utility.getRequestUserIdFromToken(HttpContext, out modifierID, out modifierType);
-
-                switch (statusAction.UserType.ToLower())
-                {
-                    case "driver":
-                        {
-                            var users = await _unitOfWork.CaptainRepository.GetUsersAccountsByAsync(u => u.UserId == statusAction.UserId);
-                            var user = users.FirstOrDefault();
-                            if (user == null) return NotFound();
-
-                            user.StatusTypeId = statusAction.StatusTypeId;
-
-                            CaptainUserCurrentStatus userCurrentStatus = new CaptainUserCurrentStatus()
-                            {
-                                UserId = user.UserId,
-                                StatusTypeId = statusAction.StatusTypeId,
-                                IsCurrent = true,
-                                CreationDate = DateTime.Now,
-                                CreatedBy = modifierID,
-                                ModifiedBy = modifierID
-
-                            };
-
-                            if (statusAction.StatusTypeId == (long) StatusTypes.Suspended ||
-                                statusAction.StatusTypeId == (long) StatusTypes.Stopped)
-                            {
-                                CaptainUserActivity userActivity = new CaptainUserActivity()
-                                {
-                                    UserId = user.UserId,
-                                    StatusTypeId = (long) StatusTypes.Inactive,
-                                    IsCurrent = true,
-                                    CreationDate = DateTime.Now
-                                };
-                                var insertedUserActivity = await _unitOfWork.CaptainRepository.InsertUserActivityAsync(userActivity);
-                            }
-
-                            var insertResult = await _unitOfWork.CaptainRepository.InsertUserCurrentStatusAsync(userCurrentStatus);
-                            var updateResult = await _unitOfWork.CaptainRepository.UpdateUserAccountAsync(user);
-                            var result = await _unitOfWork.Save();
-
-                            if (result == 0)
-                                return new ObjectResult("Service Unavailable") { StatusCode = 503 };
-
-                            string statusCacheKey = $"{user.UserId}:driver:status";
-                            Utility.SetCacheForAuth(statusCacheKey, user.StatusTypeId, _cache);
-
-                            return Ok(true);
-                        }
-                    case "support":
-                        {
-                            var users = await _unitOfWork.SupportRepository.GetSupportUsersAccountsByAsync(u => u.SupportUserId == statusAction.UserId);
-                            var user = users.FirstOrDefault();
-                            if (user == null) return NotFound();
-
-                            user.StatusTypeId = statusAction.StatusTypeId;
-
-                            SupportUserCurrentStatus userCurrentStatus = new SupportUserCurrentStatus()
-                            {
-                                SupportUserId = user.SupportUserId,
-                                StatusTypeId = statusAction.StatusTypeId,
-                                IsCurrent = true,
-                                CreationDate = DateTime.Now,
-                                CreatedBy = modifierID,
-                                ModifiedBy = modifierID
-
-                            };
-
-                            var insertResult = await _unitOfWork.SupportRepository.InsertSupportUserCurrentStatusAsync(userCurrentStatus);
-                            var updateResult = await _unitOfWork.SupportRepository.UpdateSupportUserAccountAsync(user);
-                            var result = await _unitOfWork.Save();
-
-                            if (result == 0)
-                                return new ObjectResult("Service Unavailable") { StatusCode = 503 };
-
-                            string statusCacheKey = $"{user.SupportUserId}:support:status";
-                            Utility.SetCacheForAuth(statusCacheKey, user.StatusTypeId, _cache);
-
-                            return Ok(true);
-                        }
-                    case "admin":
-                        {
-                            var user = await _unitOfWork.AdminRepository.GetAdminUserAccountByAdminUserIdAsync(statusAction.UserId);
-                            //var user = users.FirstOrDefault();
-                            if (user == null) return NotFound();
-
-                            user.StatusTypeId = statusAction.StatusTypeId;
-
-                            AdminCurrentStatus userCurrentStatus = new AdminCurrentStatus()
-                            {
-                                AdminId = user.AdminUserId,
-                                StatusTypeId = statusAction.StatusTypeId,
-                                IsCurrent = true,
-                                CreationDate = DateTime.Now,
-                                CreatedBy = modifierID,
-                                ModifiedBy = modifierID
-
-                            };
-
-                            var insertResult = await _unitOfWork.AdminRepository.InsertAdminCurrentStatusAsync(userCurrentStatus);
-                            var updateResult = await _unitOfWork.AdminRepository.UpdateAdminUserAccountAsync(user);
-                            var result = await _unitOfWork.Save();
-
-                            if (result == 0)
-                                return new ObjectResult("Service Unavailable") { StatusCode = 503 };
-
-
-                            string statusCacheKey = $"{user.AdminUserId}:admin:status";
-                            Utility.SetCacheForAuth(statusCacheKey, user.StatusTypeId, _cache);
-
-                            return Ok(true);
-                        }
-                    case "agent":
-                        {
-                            var user = await _unitOfWork.AgentRepository.GetAgentByIdAsync(statusAction.UserId);
-                            if (user == null) return NotFound();
-
-                            user.StatusTypeId = statusAction.StatusTypeId;
-
-                            AgentCurrentStatus userCurrentStatus = new AgentCurrentStatus()
-                            {
-                               AgentId = user.Id,
-                                StatusId = statusAction.StatusTypeId,
-                                IsCurrent = true,
-                                CreationDate = DateTime.Now,
-                                CreatedBy = modifierID,
-                                ModifiedBy = modifierID
-
-                            };
-
-                            var insertResult = await _unitOfWork.AgentRepository.InsertAgentCurrentStatusAsync(userCurrentStatus);
-                            var updateResult = await _unitOfWork.AgentRepository.UpdateAgentAsync(user);
-                            var result = await _unitOfWork.Save();
-
-                            if (result == 0)
-                                return new ObjectResult("Service Unavailable") { StatusCode = 503 };
-
-                            string statusCacheKey = $"{user.Id}:agent:status";
-                            Utility.SetCacheForAuth(statusCacheKey, user.StatusTypeId, _cache);
-
-                            return Ok(true);
-                        }
-
-                    default: { return NotFound(" User not found"); }
-                }
+                return Ok(await _systemService.ChangeUserStatusAsync(statusAction,HttpContext));
                 
             }
             catch (Exception e)
@@ -1472,55 +983,7 @@ namespace TreePorts.Controllers
 
             try
             {
-                switch (userHubToken.UserType.ToLower())
-                {
-                    case "driver":
-                        {
-                            var insertedUser = await _unitOfWork.CaptainRepository.InsertUserMessageHubAsync(userHubToken.UserId, userHubToken.Token);
-                            var result = await _unitOfWork.Save();
-                            if (result == 0) new ObjectResult("Service Unavailable") { StatusCode = 503 };
-
-                            return Ok(true);
-                        }
-
-                    case "support":
-                        {
-
-                            SupportUserMessageHub supportUserMessageHub = new SupportUserMessageHub()
-                            {
-                                SupportUserId = userHubToken.UserId,
-                                ConnectionId = userHubToken.Token
-                            };
-
-                            var insertedUser = await _unitOfWork.SupportRepository.InsertSupportUserMessageHubAsync(supportUserMessageHub);
-                            var result = await _unitOfWork.Save();
-                            if (result == 0) return new ObjectResult("Service Unavailable") { StatusCode = 503 };
-
-                            return Ok(true);
-                        }
-                    case "agent":
-                        {
-                            var insertedUser = await _unitOfWork.CaptainRepository.InsertUserMessageHubAsync(userHubToken.UserId, userHubToken.Token);
-                            var result = await _unitOfWork.Save();
-                            if (result == 0) return new ObjectResult("Service Unavailable") { StatusCode = 503 };
-
-                            return Ok(true);
-                        }
-                    case "admin":
-                        {
-                            var insertedUser = await _unitOfWork.CaptainRepository.InsertUserMessageHubAsync(userHubToken.UserId, userHubToken.Token);
-                            var result = await _unitOfWork.Save();
-                            if (result == 0) return new ObjectResult("Service Unavailable") { StatusCode = 503 };
-
-                            return Ok(true);
-                        }
-                    default:
-                        {
-                            return NotFound("User not found");
-                        }
-
-                }
-
+                return Ok(await _systemService.AddUserMessageHubTokenAsync(userHubToken));
                 
             }
             catch (Exception e)
@@ -1543,47 +1006,7 @@ namespace TreePorts.Controllers
             try
             {
 
-                switch (resetPassword.UserType.ToLower())
-                {
-                    case "driver": {
-                            var accounts = await _unitOfWork.CaptainRepository.GetUsersAccountsByAsync(d => d.Mobile == resetPassword.Username);
-                            if(accounts == null || accounts?.Count <= 0)
-                                return Unauthorized();
-
-                            var account = accounts.FirstOrDefault();
-                            if (account?.StatusTypeId == (long)StatusTypes.Stopped || account?.StatusTypeId == (long)StatusTypes.Suspended)
-                                return Unauthorized();
-
-                            var user = await _unitOfWork.CaptainRepository.GetUserByIdAsync(account.Id);
-                            var country = await _unitOfWork.CountryRepository.GetCountryByIdAsync((long)user.ResidenceCountryId);
-
-                            byte[] passwordHash, passwordSalt;
-                            var password = Utility.GeneratePassword();
-                            Utility.CreatePasswordHash(password, out passwordHash, out passwordSalt);
-
-                            account.PasswordHash = passwordHash;
-                            account.PasswordSalt = passwordSalt;
-
-
-                            
-
-                            var updatedUser = await _unitOfWork.CaptainRepository.UpdateUserAccountAsync(account);
-                            var result = await _unitOfWork.Save();
-
-                            if (result == 0)
-                                return new ObjectResult("Service Unavailable") { StatusCode = 503 };
-
-                            var message = "Welcome to Sender, your password has reset, the password is " + password;
-                            var phone = country.Code + account.Mobile;
-                            var responseResult = Utility.SendSMS(message, phone);
-                            //if (!responseResult)
-                            //    return new ObjectResult("Server not available") { StatusCode = 707 };
-
-
-                            return Ok(true);
-                        }
-                    default: { return NoContent(); }
-                }
+                return Ok(await _systemService.ForgotPasswordAsync(resetPassword));
                 
 
             }
@@ -1604,71 +1027,10 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         public async Task<IActionResult> SendFirebaseNotification([FromBody] FBNotify fbNotify)
         {
-            string result = "";
-            FirebaseNotificationResponse responseResult = null;
+            
             try
             {
-                if (fbNotify?.Topic != null && fbNotify?.Topic != "")
-                {
-                    
-                    switch (fbNotify.Topic.ToLower())
-                    {
-                        case FirebaseTopics.Captains:
-                            {
-                                if (fbNotify.UserId > 0)
-                                {
-                                    var usersMessageHub = await _unitOfWork.CaptainRepository.GetUsersMessageHubsByAsync(u => u.UserId == fbNotify.UserId);
-                                    var userMessageHub = usersMessageHub.FirstOrDefault();
-                                    if (userMessageHub != null && userMessageHub.Id > 0)
-                                    {
-                                        result = FirebaseNotification.SendNotification(userMessageHub.ConnectionId, fbNotify.Title, fbNotify.Message);
-                                    }
-                                }
-                                else if (fbNotify.UserIds?.Count > 0)
-                                {
-                                    var usersMessageHub = await _unitOfWork.CaptainRepository.GetUsersMessageHubsByAsync(u => fbNotify.UserIds.Contains((long)u.UserId));
-                                    if (usersMessageHub != null && usersMessageHub?.Count > 0)
-                                    {
-                                        var tokens = usersMessageHub.Select(u => u.ConnectionId).ToList();
-                                        result = FirebaseNotification.SendNotificationToMultiple(tokens, fbNotify.Title, fbNotify.Message);
-                                    }
-                                }
-                                else
-                                {
-                                    result = FirebaseNotification.SendNotificationToTopic(fbNotify.Topic.ToLower(), fbNotify.Title, fbNotify.Message);
-                                }
-
-                                break;
-                            }
-                        case FirebaseTopics.Agents:
-                            {
-                                result = FirebaseNotification.SendNotificationToTopic(fbNotify.Topic.ToLower(), fbNotify.Title, fbNotify.Message);
-                                break;
-                            }
-                        case FirebaseTopics.Supports:
-                            {
-                                result = FirebaseNotification.SendNotificationToTopic(fbNotify.Topic.ToLower(), fbNotify.Title, fbNotify.Message);
-                                break;
-                            }
-                        case FirebaseTopics.Admins:
-                            {
-                                result = FirebaseNotification.SendNotificationToTopic(fbNotify.Topic.ToLower(), fbNotify.Title, fbNotify.Message);
-                                break;
-                            }
-                    }
-                }
-
-
-                if (result != "")
-                    responseResult = JsonConvert.DeserializeObject<FirebaseNotificationResponse>(result);
-
-                if (responseResult == null || responseResult.messageId == "")
-                    return NotFound("Failed to send the message") ;
-                else if (responseResult != null && responseResult.messageId != "")
-                    return Ok(new { Result = true, Message = "Message sent successfuly" });
-                else
-                    return new ObjectResult("Service Unavailable") { StatusCode = 503 };
-
+                return Ok(await _systemService.SendFirebaseNotificationAsync(fbNotify));
             }
             catch (Exception e)
             {

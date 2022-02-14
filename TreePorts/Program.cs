@@ -113,7 +113,10 @@ void AddDependancyInjectionServices(IServiceCollection services)
     services.AddTransient<IAdminService, AdminService>();
     services.AddTransient<IAgentService, AgentService>();
     services.AddTransient<ICaptainService, CaptainService>();
+    services.AddTransient<ICountryService, CountryService>();
     services.AddTransient<IOrderService, OrderService>();
+    services.AddTransient<ISupportService, SupportService>();
+    services.AddTransient<ISystemService, SystemService>();
     services.AddTransient<IRMQService, RMQService>();
     services.AddHostedService<RMQReceiverService>();
 }

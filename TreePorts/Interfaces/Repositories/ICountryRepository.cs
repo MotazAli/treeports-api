@@ -35,7 +35,7 @@ namespace TreePorts.Interfaces.Repositories
 
         Task<List<City>> InsertCitiesAsync(List<City> cities);
 
-        Task<IEnumerable> GetCountriesCitiesAsync();
+        Task<IEnumerable<object>> GetCountriesCitiesAsync();
 
 
         //Task<List<CountryPrice>> GetAllCountriesPrices();

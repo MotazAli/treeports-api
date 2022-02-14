@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using TreePorts.Models;
+﻿using Microsoft.AspNetCore.Mvc;
 
 namespace TreePorts.Controllers
 {
@@ -16,11 +8,11 @@ namespace TreePorts.Controllers
     [ApiController]
     public class CountryController : ControllerBase
     {
-        private IUnitOfWork _unitOfWork;
+        private ICountryService _countryService;
 
-        public CountryController(IUnitOfWork unitOfWork)
+        public CountryController(ICountryService countryService)
         {
-            _unitOfWork = unitOfWork;
+            _countryService = countryService;
         }
 
         // GET: Countries
@@ -31,7 +23,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                return Ok(await _unitOfWork.CountryRepository.GetCountriesAsync());
+                return Ok(await _countryService.GetCountriesAsync());
 
             }catch(Exception ex)
             {
@@ -39,17 +31,7 @@ namespace TreePorts.Controllers
             }
         }
 
-        // GET: Country
-        //[AllowAnonymous]
-        // [HttpGet]
-        // public async Task<List<Country>> Get()
-        // {
-        //     return await _unitOfWork.CountryRepository.GetAll();
-        // }
-
-        // GET: Countries/{id}/Cities/
-        //[AllowAnonymous]
-        //[HttpGet("GetCitiesByCountry/{id}")]
+        
         [HttpGet("{id}/Cities")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<City>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -57,7 +39,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                return Ok(await _unitOfWork.CountryRepository.GetCitiesByAsync(c => c.CountryId == id));
+                return Ok(await _countryService.GetCitiesByCountryIdAsync(id));
 
             }
             catch (Exception ex)
@@ -74,8 +56,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                var result = await _unitOfWork.CountryRepository.GetCountryAllDataAsync(id);
-                return Ok(result);
+                return Ok(await _countryService.GetCountryByIdAsync(id));
             }
             catch (Exception e) {
                 return NoContent();// new ObjectResult(e.Message) { StatusCode = 666 };
@@ -92,11 +73,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                var countryupdatedResult = await _unitOfWork.CountryRepository.UpdateCountryAsync(country);
-                var result = await _unitOfWork.Save();
-                if (result <= 0) return new ObjectResult("Service Unavailable") { StatusCode = 503 };
-
-                return Ok(countryupdatedResult);
+                return Ok(await _countryService.UpdateCountryAsync(id, country));
             }
             catch (Exception e)
             {
@@ -113,13 +90,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                var deletedResult = await _unitOfWork.CountryRepository.DeleteCountryAsync(id);
-                if (deletedResult == null) return NoContent();
-
-                var result = await _unitOfWork.Save();
-                if (result <= 0) return new ObjectResult("Service Unavailable") { StatusCode = 503 };
-
-                return Ok(true);
+                return Ok(await _countryService.DeleteCountryAsync(id));
             }
             catch (Exception e)
             {
@@ -136,11 +107,7 @@ namespace TreePorts.Controllers
         public async Task<IActionResult> AddPrice([FromBody] CountryPrice countryPrice)
         {
             try {
-                var countryPriceInsertedResult = await _unitOfWork.CountryRepository.InsertCountryPriceAsync(countryPrice);
-                var result =  await _unitOfWork.Save();
-                if (result <= 0) return new ObjectResult("Service Unavailable") { StatusCode = 503 };
-
-                return Ok(countryPriceInsertedResult);
+                  return Ok(await _countryService.AddCountryPriceAsync(countryPrice));
             } catch (Exception e) {
                 return NoContent(); // new ObjectResult(e.Message) { StatusCode = 666 };
             }
@@ -156,11 +123,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                var countryProductPriceInsertedResult = await _unitOfWork.CountryRepository.InsertCountryProductPriceAsync(countryProductPrice);
-                var result = await _unitOfWork.Save();
-                if (result <= 0) return new ObjectResult("Service Unavailable") { StatusCode = 503 };
-
-                return Ok(countryProductPriceInsertedResult);
+                return Ok(await _countryService.AddCountryProductPriceAsync(countryProductPrice));
             }
             catch (Exception e)
             {
@@ -179,11 +142,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                var deletedResult = await _unitOfWork.CountryRepository.DeleteCountryPriceAsync(id);
-                var result = await _unitOfWork.Save();
-                if (result <= 0) return new ObjectResult("Service Unavailable") { StatusCode = 503 };
-                
-                return Ok(true);
+                return Ok(await _countryService.DeleteCountryPriceAsync(id));
             }
             catch (Exception e)
             {
@@ -200,11 +159,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                var deletedResult = await _unitOfWork.CountryRepository.DeleteCountryProductPriceAsync(id);
-                var result = await _unitOfWork.Save();
-                if (result <= 0) return new ObjectResult("Service Unavailable") { StatusCode = 503 };
-
-                return Ok(true);
+                return Ok(await _countryService.DeleteCountryProductPriceAsync(id));
             }
             catch (Exception e)
             {
@@ -223,7 +178,7 @@ namespace TreePorts.Controllers
         {
             try 
             {
-                return Ok( await _unitOfWork.CountryRepository.GetCountriesCitiesAsync());
+                return Ok( await _countryService.GetCountriesCitiesAsync());
             }
             catch (Exception ex)
             {
@@ -240,11 +195,7 @@ namespace TreePorts.Controllers
         public async Task<IActionResult> AddCity([FromBody] City city) {
             try
             {
-                var insertedResult = await _unitOfWork.CountryRepository.InsertCityAsync(city);
-                var result = await _unitOfWork.Save();
-                if (result <= 0) return new ObjectResult("Service Unavailable") { StatusCode = 503 };
-
-                return Ok(insertedResult);
+                return Ok(await _countryService.AddCityAsync(city));
             }
             catch (Exception e)
             {
@@ -261,11 +212,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                var updatedResult = await _unitOfWork.CountryRepository.UpdateCityAsync(city);
-                var result = await _unitOfWork.Save();
-                if (result <= 0) return new ObjectResult("Service Unavailable") { StatusCode = 503 };
-
-                return Ok(updatedResult);
+                return Ok(await _countryService.UpdateCityAsync(id,city));
             }
             catch (Exception e)
             {
@@ -283,13 +230,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                var deletedResult = await _unitOfWork.CountryRepository.DeleteCityAsync(id);
-                if (deletedResult == null) return NoContent();
-
-                var result = await _unitOfWork.Save();
-                if (result <= 0) return new ObjectResult("Service Unavailable") { StatusCode = 503 };
-
-                return Ok(true);
+                return Ok(await _countryService.DeleteCityAsync(id));
             }
             catch (Exception e)
             {

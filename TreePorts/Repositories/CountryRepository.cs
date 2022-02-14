@@ -456,7 +456,7 @@ namespace TreePorts.Repositories
 
         
 
-        public async Task<IEnumerable> GetCountriesCitiesAsync()
+        public async Task<IEnumerable<object>> GetCountriesCitiesAsync()
         {
 
             /*var countriesTask = _context.Countries.ToListAsync();

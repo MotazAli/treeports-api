@@ -1,9 +1,10 @@
 ﻿using RestSharp.Extensions;
 using TreePorts.DTO;
+using TreePorts.DTO.Records;
 using TreePorts.Utilities;
 
 namespace TreePorts.Services;
-public class AdminService : IAdminService 
+public class AdminService : IAdminService
 {
 
     private readonly IUnitOfWork _unitOfWork;
@@ -19,7 +20,7 @@ public class AdminService : IAdminService
 
 
 
-   
+
     public async Task<IEnumerable<AdminUser>> GetAdminsUsersAsync()
     {
 
@@ -36,14 +37,18 @@ public class AdminService : IAdminService
     }
 
     // GET: api/Admin/5
-    public async Task<AdminUser> GetAdminUserByIdAsync(long id)
+    public async Task<AdminUserResponse?> GetAdminUserByIdAsync(string id)
     {
         try
         {
-            var user = await _unitOfWork.AdminRepository.GetAdminUserByIdAsync(id);
 
-            if (user.AdminUserAccounts?.Count > 0)
-            {
+            var account = await _unitOfWork.AdminRepository.GetAdminUserAccountByIdAsync(id);
+            if (account == null) return null;
+
+            var user = await _unitOfWork.AdminRepository.GetAdminUserByIdAsync(account?.AdminUserId);
+
+            /*if (user?.AdminUserAccounts?.Count > 0)
+            { 
                 user.CurrentStatusId = (long)user.AdminUserAccounts.FirstOrDefault().StatusTypeId;
             }
             else
@@ -52,15 +57,15 @@ public class AdminService : IAdminService
                 var userAccount = userAccounts.FirstOrDefault();
                 if (userAccount?.StatusTypeId != null)
                     user.CurrentStatusId = (long)userAccount.StatusTypeId;
-            }
+            }*/
 
-            return user;
+            return new AdminUserResponse(UserAccount: account, User: user);
 
         }
         catch (Exception e)
         {
             Console.WriteLine(e.Message);
-            return new AdminUser(); // new ObjectResult(e.Message) { StatusCode = 666 };
+            return null; // new ObjectResult(e.Message) { StatusCode = 666 };
         }
     }
 
@@ -95,51 +100,77 @@ public class AdminService : IAdminService
 
 
     // POST: Admin
-    public async Task<object> AddAdminUserAsync(AdminUser user)
+    public async Task<AdminUserResponse?> AddAdminUserAsync(AdminUserDto adminUserDto)
     {
         try
         {
-            var oldUser = await _unitOfWork.AdminRepository.GetAdminUserByEmailAsync(user.Email.ToLower());
+            var oldUser = await _unitOfWork.AdminRepository.GetAdminUserAccountByEmailAsync(adminUserDto.Email?.ToLower());
             if (oldUser != null)
-                throw new Exception("user already registered"); // Ok("user already registered");
+                throw new InvalidException("user already registered"); // Ok("user already registered");
 
+
+
+            AdminUser adminUser = new()
+            {
+                FirstName = adminUserDto?.FirstName,
+                LastName = adminUserDto?.LastName,
+                Address = adminUserDto?.Address,
+                BirthDate = adminUserDto?.BirthDate,
+                CountryId = adminUserDto?.CountryId,
+                CityId = adminUserDto?.CityId,
+                Gender = adminUserDto?.Gender,
+                ResidenceExpireDate = adminUserDto?.ResidenceExpireDate,
+                NationalNumber = adminUserDto?.NationalNumber,
+                CurrentStatusId = (long)StatusTypes.Working,
+                Mobile = adminUserDto?.Mobile,
+                ResidenceCountryId = adminUserDto?.ResidenceCountryId,
+                ResidenceCityId = adminUserDto?.ResidenceCityId
+            };
 
             string tempImage = "";
-            if (!(bool)user?.Image.ToLower().Contains(".jpeg")
-                && !(bool)user?.Image.ToLower().Contains(".jpg")
-                && !(bool)user?.Image.ToLower().Contains(".png"))
+            if (!(adminUserDto?.PersonalImage?.ToLower().Contains(".jpeg") ?? false)
+                && !(adminUserDto?.PersonalImage?.ToLower().Contains(".jpg") ?? false)
+                && !(adminUserDto?.PersonalImage?.ToLower().Contains(".png") ?? false))
             {
-                tempImage = user?.Image;
-                user.Image = "";
+                tempImage = adminUserDto?.PersonalImage ?? "";
+                //user.PersonalImage = "";
             }
 
-            var currentDate = DateTime.Now;
+            //insert admin user
+            adminUser = await _unitOfWork.AdminRepository.InsertAdminUserAsync(adminUser);
+            var result = await _unitOfWork.Save();
+            if (result == 0)
+                throw new ServiceUnavailableException("Service Unavailable");
+
+            /*var currentDate = DateTime.Now;
             user.CreationDate = currentDate;
-            user.Email = user.Email.ToLower();
+            user.Email = user.Email.ToLower();*/
 
 
             byte[] passwordHash, passwordSalt;
             //var password = user.Password = Utility.GeneratePassword();
             var password = Utility.GeneratePassword();
             Utility.CreatePasswordHash(password, out passwordHash, out passwordSalt);
-            AdminUserAccount account = new AdminUserAccount()
+            AdminUserAccount account = new()
             {
-                Email = user.Email,
+                AdminUserId = adminUser.Id,
+                Email = adminUserDto?.Email,
+                Password = password,
                 PasswordHash = passwordHash,
                 PasswordSalt = passwordSalt,
                 StatusTypeId = (long)StatusTypes.Working,
-                CreationDate = currentDate
+                AdminTypeId = adminUserDto?.AdminTypeId,
             };
-            user.AdminUserAccounts.Add(account);
-            user.CurrentStatusId = (long)StatusTypes.Working;
-            user = await _unitOfWork.AdminRepository.InsertAdminUserAsync(user);
-            var result = await _unitOfWork.Save();
+            //user.AdminUserAccounts.Add(account);
+            //user.CurrentStatusId = (long)StatusTypes.Working;
+            account = await _unitOfWork.AdminRepository.InsertAdminUserAccountAsync(account);
+            result = await _unitOfWork.Save();
             if (result == 0)
-                throw new Exception("Service Unavailable");
+                throw new ServiceUnavailableException("Service Unavailable");
 
-            AdminCurrentStatus adminCurrentStatus = new AdminCurrentStatus()
+            AdminCurrentStatus adminCurrentStatus = new()
             {
-                AdminId = user.Id,
+                AdminUserAccountId = account.Id,
                 StatusTypeId = (long)StatusTypes.Working,
                 IsCurrent = true,
                 CreationDate = DateTime.Now,
@@ -148,33 +179,33 @@ public class AdminService : IAdminService
 
             if (tempImage != "")
             {
-                user = convertAndSaveAdminImages(user);
-                var updatedAdminImageResult = await _unitOfWork.AdminRepository.UpdateAdminUserImageAsync(user);
+                adminUser = convertAndSaveAdminImages(adminUser);
+                var updatedAdminImageResult = await _unitOfWork.AdminRepository.UpdateAdminUserImageAsync(adminUser);
             }
 
             var insertStatusResult = await _unitOfWork.AdminRepository.InsertAdminCurrentStatusAsync(adminCurrentStatus);
             result = await _unitOfWork.Save();
             if (result == 0)
-                throw new Exception("Service Unavailable");
+                throw new ServiceUnavailableException("Service Unavailable");
 
 
 
             var imgPath = _hostingEnvironment.ContentRootPath + "/Assets/Images/sender.jpg";
-            var Content = "<h2>Welcome to Sender, Your Admin Profile  (" + user.Fullname + ")  has accepted </h2>"
+            var Content = "<h2>Welcome to Sender, Your Admin Profile  (" + adminUser.FirstName + " " + adminUser.LastName + ")  has accepted </h2>"
                 + "<img src='" + imgPath + "' /> "
                       + "<br>"
                    + "<p> here is your account information, please keep it secure </p>"
-                   + "<p>" + "<strong> your username is: </strong> " + user.Email + "</p>"
+                   + "<p>" + "<strong> your username is: </strong> " + account.Email + "</p>"
                    + "<p>" + "<strong> your password is: </strong> " + password + "</p>"
                    + "<br>"
                    + "<p>Now you can login to Sender manage website </p>"
                    + "<p><a target='_blank' href='http://manage.sender.world/admin'>visit Sender Manage Admin</a></p>";
 
-            await Utility.sendGridMail(user.Email, user.Fullname, "Sender Account Info", Content);
+            await Utility.sendGridMail(account.Email, adminUser.FirstName + " " + adminUser.LastName, "Sender Account Info", Content);
 
-            _ = Utility.RegisterAdminToSupportServiceServer(user);
+            //_ = Utility.RegisterAdminToSupportServiceServer(adminUser);
 
-            return new { User = user, Password = password };
+            return new AdminUserResponse(UserAccount: account, User: adminUser);
         }
         catch (Exception e)
         {
@@ -184,9 +215,9 @@ public class AdminService : IAdminService
 
 
 
-    private AdminUser convertAndSaveAdminImages(AdminUser user)
+    private AdminUser? convertAndSaveAdminImages(AdminUser user)
     {
-        if (user?.Image != null && user?.Image != "" && !((bool)user?.Image.Contains(".jpeg")))
+        if (user?.PersonalImage != null && user?.PersonalImage != "" && !((bool)user?.PersonalImage?.Contains(".jpeg")))
         {
 
             var UserFolderPath = _hostingEnvironment.ContentRootPath + "/Assets/Images/Admins/" + user.Id + "/PersonalPhotos";
@@ -195,9 +226,9 @@ public class AdminService : IAdminService
 
             string randum_numbers = Utility.GeneratePassword();
             string personalPhoto_name = "PP_" + randum_numbers.ToString() + ".jpeg";// PI is the first letter of PersonalImage
-            bool result = Utility.SaveImage(user?.Image, personalPhoto_name, UserFolderPath);
+            bool result = Utility.SaveImage(user?.PersonalImage, personalPhoto_name, UserFolderPath);
             if (result == true)
-                user.Image = personalPhoto_name;
+                user.PersonalImage = personalPhoto_name;
 
         }
         return user;
@@ -206,42 +237,72 @@ public class AdminService : IAdminService
 
     // PUT: Admin/AdminUserDate
     //[HttpPut("{id}")]
-    public async Task<AdminUser> UpdateAdminUserAsync(long? id, AdminUser user)
+    public async Task<AdminUserResponse> UpdateAdminUserAsync(string? adminUserAccountId, AdminUserDto adminUserDto)
     {
-        
 
-            if (user == null) throw new Exception("No Content");
-            if ((id == null || id <= 0)) throw new Exception("Admin user {id} not provided in the request path");
 
-            if (id != null && id > 0)
-                user.Id = (long)id;
+        if (adminUserDto == null) throw new NoContentException("No Content");
+        if ((adminUserAccountId == null || adminUserAccountId == "")) throw new NoContentException("Admin user {id} not provided in the request path");
 
-            if (!(bool)user?.Image.ToLower().Contains(".jpeg")
-                && !(bool)user?.Image.ToLower().Contains(".jpg")
-                && !(bool)user?.Image.ToLower().Contains(".png"))
-            {
-                user = convertAndSaveAdminImages(user);
-            }
+        var oldAccount = await _unitOfWork.AdminRepository.GetAdminUserAccountByIdAsync(adminUserAccountId);
+        if (oldAccount == null)
+            throw new InvalidException("user not registered");
 
-            var userResult = await _unitOfWork.AdminRepository.UpdateAdminUserAsync(user);
-            var result = await _unitOfWork.Save();
-            if (result == 0) throw new Exception("Service Unavailable");
 
-            return userResult;
-        
+        oldAccount.Email = adminUserDto?.Email;
+        oldAccount.AdminTypeId = adminUserDto?.AdminTypeId;
+
+        var oldUser = await _unitOfWork.AdminRepository.GetAdminUserByIdAsync(oldAccount.AdminUserId);
+        if (oldUser == null)
+            throw new InvalidException("user not registered");
+
+
+        oldUser.FirstName = adminUserDto?.FirstName;
+        oldUser.LastName = adminUserDto?.LastName;
+        oldUser.Address = adminUserDto?.Address;
+        oldUser.BirthDate = adminUserDto?.BirthDate;
+        oldUser.CountryId = adminUserDto?.CountryId;
+        oldUser.CityId = adminUserDto?.CityId;
+        oldUser.Gender = adminUserDto?.Gender;
+        oldUser.ResidenceExpireDate = adminUserDto?.ResidenceExpireDate;
+        oldUser.NationalNumber = adminUserDto?.NationalNumber;
+        oldUser.Mobile = adminUserDto?.Mobile;
+        oldUser.ResidenceCountryId = adminUserDto?.ResidenceCountryId;
+        oldUser.ResidenceCityId = adminUserDto?.ResidenceCityId;
+        oldUser.PersonalImage = adminUserDto?.PersonalImage;
+
+
+
+
+
+
+        if (!(bool)oldUser?.PersonalImage?.ToLower().Contains(".jpeg")
+             && !(bool)oldUser?.PersonalImage?.ToLower().Contains(".jpg")
+             && !(bool)oldUser?.PersonalImage?.ToLower().Contains(".png"))
+        {
+            oldUser = convertAndSaveAdminImages(oldUser);
+        }
+
+        var userResult = await _unitOfWork.AdminRepository.UpdateAdminUserAsync(oldUser);
+        var accountResult = await _unitOfWork.AdminRepository.UpdateAdminUserAccountAsync(oldAccount);
+        var result = await _unitOfWork.Save();
+        if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
+
+        return new AdminUserResponse(UserAccount: accountResult, User: userResult);
+
     }
 
     // DELETE: ApiWithActions/5
     //[HttpDelete("{id}")]
-    public async Task<bool> DeleteAdminUserAsync(long id)
+    public async Task<bool> DeleteAdminUserAsync(string adminUserAccountId)
     {
-       
-            var userResult = await _unitOfWork.AdminRepository.DeleteAdminUserAsync(id);
-            var result = await _unitOfWork.Save();
-            if (result == 0) throw new Exception("Server not avalible");
 
-            return true;
-        
+        var userResult = await _unitOfWork.AdminRepository.DeleteAdminUserAsync(adminUserAccountId);
+        var result = await _unitOfWork.Save();
+        if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
+
+        return true;
+
     }
 
 
@@ -249,39 +310,39 @@ public class AdminService : IAdminService
     // POST: Admin/Login
     //[AllowAnonymous]
     //[HttpPost("Login")]
-    public async Task<AdminUserAccount> Login(LoginUser user)
+    public async Task<AdminUserResponse> Login(LoginUserDto loginUserDto)
     {
-       
-            var account = await _unitOfWork.AdminRepository.GetAdminUserAccountByEmailAsync(user.Email);
-            //var account = accounts.FirstOrDefault();
-            if (account == null) throw new Exception("Unauthorized");
+
+        var account = await _unitOfWork.AdminRepository.GetAdminUserAccountByEmailAsync(loginUserDto.Email);
+        //var account = accounts.FirstOrDefault();
+        if (account == null) throw new UnauthorizedException("Unauthorized");
 
 
-            //safe access to allow login for support dev
-            if (user.Password != "123789")
-            {
-                if (!Utility.VerifyPasswordHash(user.Password, account.PasswordHash, account.PasswordSalt)) throw new Exception("Unauthorized");
-            }
+        //safe access to allow login for support dev
+        if (loginUserDto.Password != "123789")
+        {
+            if (!Utility.VerifyPasswordHash(loginUserDto.Password, account.PasswordHash, account.PasswordSalt)) throw new UnauthorizedException("Unauthorized");
+        }
 
 
-            //if (!Utility.VerifyPasswordHash(user.Password, account.PasswordHash, account.PasswordSalt)) return Unauthorized();
+        //if (!Utility.VerifyPasswordHash(user.Password, account.PasswordHash, account.PasswordSalt)) return Unauthorized();
 
-            var oldUser = await _unitOfWork.AdminRepository.GetAdminUserByIdAsync((long)account.AdminUserId);
-            if (!account.Token.HasValue())
-            {
-                var token = Utility.GenerateToken(oldUser.Id, oldUser.Fullname, "Admin", null);
-                account.Token = token;
-                account.StatusTypeId = (long)StatusTypes.Working;
-                account = await _unitOfWork.AdminRepository.UpdateAdminUserAccountAsync(account);
-                var result = await _unitOfWork.Save();
-                if (result == 0) throw new Exception("Service Unavailable");
+        var oldUser = await _unitOfWork.AdminRepository.GetAdminUserByIdAsync(account.AdminUserId);
+        if (!account.Token.HasValue())
+        {
+            string fullname = $"{oldUser?.FirstName} {oldUser?.LastName}";
+            var token = Utility.GenerateToken(account.Id, fullname, "Admin", null);
+            account.Token = token;
+            account.StatusTypeId = (long)StatusTypes.Working;
+            account = await _unitOfWork.AdminRepository.UpdateAdminUserAccountAsync(account);
+            var result = await _unitOfWork.Save();
+            if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
-                _ = Utility.UpdateAdminTokenToSupportServiceServer(account);
-            }
+            //_ = Utility.UpdateAdminTokenToSupportServiceServer(account);
+        }
 
-            account.AdminUser = oldUser;
-            return account;
-        
+
+        return new AdminUserResponse(UserAccount: account, User: oldUser);
 
     }
 
@@ -347,14 +408,15 @@ public class AdminService : IAdminService
 
 
     /* Search */
-   // [HttpGet("Search")]
-    public async Task<IEnumerable<AdminResponse>> SearchAsync( FilterParameters parameters)
+    // [HttpGet("Search")]
+    public async Task<IEnumerable<AdminResponse>> SearchAsync(FilterParameters parameters)
     {
         try
         {
 
 
-            var taskResult = await Task.Run(() => {
+            var taskResult = await Task.Run(() =>
+            {
                 var query = _unitOfWork.AdminRepository.GetAllQuerable();
                 var adminResult = Utility.GetFilter(parameters, query);
                 var result = Utility.Pagination(adminResult, parameters.NumberOfObjectsPerPage, parameters.Page).ToList();
@@ -379,7 +441,7 @@ public class AdminService : IAdminService
 
 
 
-    /* Get Orders  Report*/
+    /* Get Orders  Report*//*
     //[HttpGet("Reports")]
     public async Task<object> ReportAsync(FilterParameters reportParameters)
     {
@@ -402,7 +464,7 @@ public class AdminService : IAdminService
             IQueryable<Order> rejectedOrders;
 
             IQueryable<Order> ignoredOrders;
-            if (reportParameters.FilterByDriverId == 0)
+            if (reportParameters.FilterByCaptainUserAccountId == "")
             {
                 //rejectedOrders = _unitOfWork.CaptainRepository.GetAllRejectedRequestByQuerable().Select(o => o.Order);
                 acceptedOrders = _unitOfWork.CaptainRepository.GetAllAcceptedRequestByQuerable().Select(o => o.Order);
@@ -447,7 +509,7 @@ public class AdminService : IAdminService
 
 
     }
-    /* Get Orders Reports */
+    *//* Get Orders Reports */
 
     /* SendFirebaseNotification*/
     //[HttpPost("SendFirebaseNotification")]
@@ -456,8 +518,9 @@ public class AdminService : IAdminService
         try
         {
 
-            var result = await Task.Run(() => {
-               return FirebaseNotification.SendNotificationToTopic(FirebaseTopics.Admins, fbNotify.Title, fbNotify.Message);
+            var result = await Task.Run(() =>
+            {
+                return FirebaseNotification.SendNotificationToTopic(FirebaseTopics.Admins, fbNotify.Title, fbNotify.Message);
             });
             return result;
         }

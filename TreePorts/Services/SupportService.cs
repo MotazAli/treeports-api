@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using RestSharp.Extensions;
 using TreePorts.DTO;
+using TreePorts.DTO.Records;
 using TreePorts.Utilities;
 
 namespace TreePorts.Services;
@@ -18,35 +19,35 @@ public class SupportService : ISupportService
         this.mapper = mapper;
     }
 
-    
-    public async Task<IEnumerable<Support>> GetTicketsAsyncs()
+
+    public async Task<IEnumerable<Ticket>> GetTicketsAsyncs()
     {
         try
         {
-            return await _unitOfWork.SupportRepository.GetSupportsAsync();
+            return await _unitOfWork.SupportRepository.GetTicketsAsync();
         }
         catch (Exception e)
         {
-            return new List<Support>();//  new ObjectResult(e.Message) { StatusCode = 666 };
+            return new List<Ticket>();//  new ObjectResult(e.Message) { StatusCode = 666 };
         }
     }
 
-    public async Task<Support> GetTicketByIdAsync(long id)
+    public async Task<Ticket?> GetTicketByIdAsync(long id)
     {
         try
         {
-            return await _unitOfWork.SupportRepository.GetSupportByIdAsync(id);
+            return await _unitOfWork.SupportRepository.GetTicketByIdAsync(id);
         }
         catch (Exception e)
         {
-            return new Support();//  new ObjectResult(e.Message) { StatusCode = 666 };
+            return new Ticket();//  new ObjectResult(e.Message) { StatusCode = 666 };
         }
 
     }
 
 
-    
-    public async Task<SupportUser> GetSupportAccountUserBySupportUserAccountIdAsync(long supportUserAccountId)
+
+    public async Task<SupportUser> GetSupportAccountUserBySupportUserAccountIdAsync(string supportUserAccountId)
     {
 
 
@@ -76,8 +77,8 @@ public class SupportService : ISupportService
     }
 
 
-    
-    public async Task<object> GetSupportUsersAccountsAsync( FilterParameters parameters)
+
+    public async Task<object> GetSupportUsersAccountsAsync(FilterParameters parameters)
     {
         try
         {
@@ -96,98 +97,107 @@ public class SupportService : ISupportService
 
 
 
-    
-    public async Task<bool> AddTicketAsync(Support support)
+
+    public async Task<bool> AddTicketAsync(Ticket ticket)
     {
-            var savedSupport = await _unitOfWork.SupportRepository.InsertSupportAsync(support);
-            var result = await _unitOfWork.Save();
-            if (result == 0)
-                throw new Exception("Service Unavailable") ;
+        var savedSupport = await _unitOfWork.SupportRepository.InsertTicketAsync(ticket);
+        var result = await _unitOfWork.Save();
+        if (result == 0)
+            throw new ServiceUnavailableException("Service Unavailable");
 
 
 
-            var AllReadySupportUsers = await _unitOfWork.SupportRepository.GetSupportUsersWorkingStateByAsync(u => u.SupportStatusTypeId == (long)SupportStatusTypes.Ready && u.IsCurrent == true);
-            var ReadySupportUser = AllReadySupportUsers.OrderByDescending(s => s.CreationDate).FirstOrDefault();
+        var AllReadySupportUsers = await _unitOfWork.SupportRepository.GetSupportUsersWorkingStateByAsync(u => u.StatusTypeId == (long)SupportStatusTypes.Ready && u.IsCurrent == true);
+        var ReadySupportUser = AllReadySupportUsers.OrderByDescending(s => s.CreationDate).FirstOrDefault();
 
 
-            if (ReadySupportUser == null)
-            {
-                AllReadySupportUsers = await _unitOfWork.SupportRepository.GetSupportUsersWorkingStateByAsync(u => u.SupportStatusTypeId == (long)SupportStatusTypes.Progress && u.IsCurrent == true);
-                ReadySupportUser = AllReadySupportUsers.OrderByDescending(s => s.CreationDate).FirstOrDefault();
-            }
-
-
-
-            SupportAssignment supportAssign = new SupportAssignment()
-            {
-                SupportId = savedSupport.Id,
-                UserId = savedSupport.UserId,
-                SupportUserId = ReadySupportUser.SupportUserId,
-                CurrentStatusId = (long)SupportStatusTypes.New,
-                CreationDate = DateTime.Now,
-                CreatedBy = 1
-            };
-
-            SupportUserWorkingState supportUserWorkingState = new SupportUserWorkingState()
-            {
-                SupportUserId = savedSupport.Id,
-                SupportStatusTypeId = (long)SupportStatusTypes.Progress,
-                IsCurrent = true,
-                CreationDate = DateTime.Now
-            };
-
-            var insertResult = await _unitOfWork.SupportRepository.InsertSupportUserWorkingStateAsync(supportUserWorkingState);
-            //newSupportUserStatus = await _unitOfWork.SupportRepository.InsertSupportUserStatuse(newSupportUserStatus);
-            supportAssign = await _unitOfWork.SupportRepository.InsertSupportAssignmentAsync(supportAssign);
-            var saveResult = await _unitOfWork.Save();
-            if (saveResult == 0)
-                throw new Exception("Service Unavalible");
+        if (ReadySupportUser == null)
+        {
+            AllReadySupportUsers = await _unitOfWork.SupportRepository.GetSupportUsersWorkingStateByAsync(u => u.StatusTypeId == (long)SupportStatusTypes.Progress && u.IsCurrent == true);
+            ReadySupportUser = AllReadySupportUsers.OrderByDescending(s => s.CreationDate).FirstOrDefault();
+        }
 
 
 
-            var supportUsersMessageHub = await _unitOfWork.SupportRepository.GetSupportUsersMessageHubByAsync(u => u.SupportUserId == ReadySupportUser.SupportUserId);
-            var supportUserMessageHub = supportUsersMessageHub.FirstOrDefault();
-            if (supportUserMessageHub != null && supportUserMessageHub.Id > 0)
-            {
-                // var notificationReuslt = await Utility.SendFirebaseNotification(_hostingEnvironment, "newSupportRequest", supportAssign.Id.ToString(), supportUserMessageHub.ConnectionId);
-                // if(notificationReuslt == null) return new ObjectResult("No support available") { StatusCode = 707 };
-                //await Utility.SendFirebaseNotification(_hostingEnvironment, "newSupportRequest", supportAssign.Id.ToString(), supportUserMessageHub.ConnectionId);
-                await _HubContext.Clients.Client(supportUserMessageHub.ConnectionId).SendAsync("newSupportRequest", supportAssign.Id.ToString());
-            }
+        TicketAssignment ticketAssign = new()
+        {
+            TicketId = savedSupport.Id,
+            CaptainUserAccountId = savedSupport.CaptainUserAccountId,
+            SupportUserAccountId = ReadySupportUser?.SupportUserAccountId,
+            TicketStatusTypeId = (long)SupportStatusTypes.New,
+            CreationDate = DateTime.Now
+        };
 
-            return true;
-        
+        SupportUserWorkingState supportUserWorkingState = new()
+        {
+            SupportUserAccountId = ReadySupportUser?.SupportUserAccountId,
+            StatusTypeId = (long)SupportStatusTypes.Progress,
+            IsCurrent = true,
+            CreationDate = DateTime.Now
+        };
+
+        var insertResult = await _unitOfWork.SupportRepository.InsertSupportUserWorkingStateAsync(supportUserWorkingState);
+        //newSupportUserStatus = await _unitOfWork.SupportRepository.InsertSupportUserStatuse(newSupportUserStatus);
+        ticketAssign = await _unitOfWork.SupportRepository.InsertTicketAssignmentAsync(ticketAssign);
+        var saveResult = await _unitOfWork.Save();
+        if (saveResult == 0)
+            throw new ServiceUnavailableException("Service Unavalible");
+
+
+
+        var supportUsersMessageHub = await _unitOfWork.SupportRepository.GetSupportUsersMessageHubByAsync(u => u.SupportUserAccountId == ReadySupportUser.SupportUserAccountId);
+        var supportUserMessageHub = supportUsersMessageHub.FirstOrDefault();
+        if (supportUserMessageHub != null && supportUserMessageHub.Id > 0)
+        {
+            // var notificationReuslt = await Utility.SendFirebaseNotification(_hostingEnvironment, "newSupportRequest", supportAssign.Id.ToString(), supportUserMessageHub.ConnectionId);
+            // if(notificationReuslt == null) return new ObjectResult("No support available") { StatusCode = 707 };
+            //await Utility.SendFirebaseNotification(_hostingEnvironment, "newSupportRequest", supportAssign.Id.ToString(), supportUserMessageHub.ConnectionId);
+            await _HubContext.Clients.Client(supportUserMessageHub.ConnectionId).SendAsync("newSupportRequest", ticketAssign.Id.ToString());
+        }
+
+        return true;
+
     }
 
 
 
 
-    
-    public async Task<SupportAssignment> GetTicketAssignedByCaptainIdAsync(long id)
-    {
-       
-            var allAssigned = await _unitOfWork.SupportRepository.GetSupportsAssignmentsByAsync(
-                                             a => a.UserId == id &&
-                                             (a.CurrentStatusId == (long)SupportStatusTypes.New ||
-                                             a.CurrentStatusId == (long)SupportStatusTypes.Progress));
-            var assigned = allAssigned.FirstOrDefault();
-            if (assigned == null) throw new Exception("No running ticket support for that captain ");
 
-            return assigned;
+    public async Task<TicketAssignment> GetTicketAssignedByCaptainUserAccountIdAsync(string captainUserAccountId)
+    {
+
         
+
+
+        try
+        {
+            var allAssigned = await _unitOfWork.SupportRepository.GetTicketsAssignmentsByAsync(
+                                         a => a.CaptainUserAccountId == captainUserAccountId &&
+                                         (a.TicketStatusTypeId == (long)SupportStatusTypes.New ||
+                                         a.TicketStatusTypeId == (long)SupportStatusTypes.Progress));
+            return  allAssigned.FirstOrDefault();
+            //if (assigned == null) throw new NotFoundException("No running ticket support for that captain ");
+
+            //return assigned;
+        }
+        catch (Exception e)
+        {
+            return new TicketAssignment();// new ObjectResult(e.Message) { StatusCode = 666 };
+        }
+
     }
 
 
 
-    
-    public async Task<IEnumerable<SupportAssignment>> GetTicketsAssignedBySupportUserAccountIdAsync(long supportUserAccountId)
+
+    public async Task<IEnumerable<TicketAssignment>> GetTicketsAssignedBySupportUserAccountIdAsync(string supportUserAccountId)
     {
         try
         {
-            var assigned = await _unitOfWork.SupportRepository.GetSupportsAssignmentsByAsync(
-                                             a => a.SupportUserId == supportUserAccountId &&
-                                             (a.CurrentStatusId == (long)SupportStatusTypes.New ||
-                                             a.CurrentStatusId == (long)SupportStatusTypes.Progress));
+            var assigned = await _unitOfWork.SupportRepository.GetTicketsAssignmentsByAsync(
+                                             a => a.SupportUserAccountId == supportUserAccountId &&
+                                             (a.TicketStatusTypeId == (long)SupportStatusTypes.New ||
+                                             a.TicketStatusTypeId == (long)SupportStatusTypes.Progress));
 
             var result = assigned.OrderByDescending(a => a.CreationDate).ToList();
 
@@ -195,7 +205,7 @@ public class SupportService : ISupportService
         }
         catch (Exception e)
         {
-            return new List<SupportAssignment>();// new ObjectResult(e.Message) { StatusCode = 666 };
+            return new List<TicketAssignment>();// new ObjectResult(e.Message) { StatusCode = 666 };
         }
     }
 
@@ -225,59 +235,61 @@ public class SupportService : ISupportService
 */
 
 
-   
-    public async Task<bool> UpdateTicketAsync(long ticketId, Support support)
+
+    public async Task<bool> UpdateTicketAsync(long ticketId, Ticket ticket)
     {
 
-            support = await _unitOfWork.SupportRepository.UpdateSupportAsync(support);
-            var allSupportAssgins = await _unitOfWork.SupportRepository.GetSupportsAssignmentsByAsync(a => a.SupportId == support.Id);
-            var supportAssgin = allSupportAssgins.FirstOrDefault();
-            supportAssgin.CurrentStatusId = support.StatusTypeId;
-            supportAssgin = await _unitOfWork.SupportRepository.UpdateSupportAssignmentAsync(supportAssgin);
-            var result = await _unitOfWork.Save();
-            if (result == 0) throw new Exception("Service Unavalible") ;
+        ticket = await _unitOfWork.SupportRepository.UpdateTicketAsync(ticket);
+        if(ticket == null) throw new ServiceUnavailableException("Service Unavalible");
 
-            return true;
+        var allTicketAssgins = await _unitOfWork.SupportRepository.GetTicketsAssignmentsByAsync(a => a.TicketId == ticket.Id);
+        var ticketAssgin = allTicketAssgins.FirstOrDefault();
+        ticketAssgin.TicketStatusTypeId = ticket.TicketStatusTypeId;
+        ticketAssgin = await _unitOfWork.SupportRepository.UpdateTicketAssignmentAsync(ticketAssgin);
+        var result = await _unitOfWork.Save();
+        if (result == 0) throw new ServiceUnavailableException("Service Unavalible");
+
+        return true;
     }
 
 
 
-    
-    public async Task<bool> UpdateTicketAssignmentByTicketIdAsync(long ticketId,  SupportAssignment supportAssgin)
+
+    public async Task<bool> UpdateTicketAssignmentByTicketIdAsync(long ticketId, TicketAssignment ticketAssign)
     {
-        
 
-            var oldSupport = await _unitOfWork.SupportRepository.GetSupportByIdAsync((long)supportAssgin.SupportId);
-            //var supportAssgin = allSupportAssgins.FirstOrDefault();
-            oldSupport.StatusTypeId = supportAssgin.CurrentStatusId;
-            var supportAssigns = await _unitOfWork.SupportRepository.GetSupportsAssignmentsByAsync(s => s.SupportUserId == supportAssgin.SupportUserId &&
-            (s.CurrentStatusId == (long)SupportStatusTypes.New ||
-            s.CurrentStatusId == (long)SupportStatusTypes.Progress));
 
-            if (supportAssigns == null || supportAssigns.Count <= 0)
+        var oldSupport = await _unitOfWork.SupportRepository.GetTicketByIdAsync(ticketAssign.TicketId ?? 0);
+        //var supportAssgin = allSupportAssgins.FirstOrDefault();
+        oldSupport.TicketStatusTypeId = ticketAssign.TicketStatusTypeId;
+        var ticketAssigns = await _unitOfWork.SupportRepository.GetTicketsAssignmentsByAsync(s => s.SupportUserAccountId == ticketAssign.SupportUserAccountId &&
+        (s.TicketStatusTypeId == (long)SupportStatusTypes.New ||
+        s.TicketStatusTypeId == (long)SupportStatusTypes.Progress));
+
+        if (ticketAssigns == null || ticketAssigns.Count <= 0)
+        {
+            SupportUserWorkingState supportUserWorkingState = new()
             {
-                SupportUserWorkingState supportUserWorkingState = new SupportUserWorkingState()
-                {
-                    SupportUserId = supportAssgin.SupportUserId,
-                    SupportStatusTypeId = (long)SupportStatusTypes.Ready,
-                    IsCurrent = true,
-                    CreationDate = DateTime.Now
-                };
+                SupportUserAccountId = ticketAssign.SupportUserAccountId,
+                StatusTypeId = (long)SupportStatusTypes.Ready,
+                IsCurrent = true,
+                CreationDate = DateTime.Now
+            };
 
-                var insertRresult = await _unitOfWork.SupportRepository.InsertSupportUserWorkingStateAsync(supportUserWorkingState);
+            var insertRresult = await _unitOfWork.SupportRepository.InsertSupportUserWorkingStateAsync(supportUserWorkingState);
 
-            }
-            supportAssgin = await _unitOfWork.SupportRepository.UpdateSupportAssignmentAsync(supportAssgin);
-            oldSupport = await _unitOfWork.SupportRepository.UpdateSupportAsync(oldSupport);
+        }
+        ticketAssign = await _unitOfWork.SupportRepository.UpdateTicketAssignmentAsync(ticketAssign);
+        oldSupport = await _unitOfWork.SupportRepository.UpdateTicketAsync(oldSupport);
 
-            var result = await _unitOfWork.Save();
-            if (result == 0) throw new Exception("Service Unavalible");
+        var result = await _unitOfWork.Save();
+        if (result == 0) throw new ServiceUnavailableException("Service Unavalible");
 
-            return true;
-        
+        return true;
+
     }
 
-    
+
     public async Task<IEnumerable<SupportUser>> GetSupportUsersAccountsAsync()
     {
         try
@@ -292,7 +304,7 @@ public class SupportService : ISupportService
 
     }
 
-    
+
     public async Task<IEnumerable<SupportType>> GetTicketTypesAsync()
     {
         try
@@ -329,27 +341,27 @@ public class SupportService : ISupportService
 
 
 
-    
-    public async Task<SupportUser> UpdateSupportUserAccountAsync(long supportUserAccountId,  SupportUser user)
-    {
-       
-            var userResult = await _unitOfWork.SupportRepository.UpdateSupportUserAsync(user);
-            var result = await _unitOfWork.Save();
-            if (result == 0) throw new Exception("Service Unavalible");
 
-            return userResult;
+    public async Task<SupportUser?> UpdateSupportUserAccountAsync(long supportUserAccountId, SupportUser user)
+    {
+
+        var userResult = await _unitOfWork.SupportRepository.UpdateSupportUserAsync(user);
+        var result = await _unitOfWork.Save();
+        if (result == 0) throw new ServiceUnavailableException("Service Unavalible");
+
+        return userResult;
     }
 
-    
-    public async Task<bool> DeleteSupportUserAccountAsync(long supportUserAccountId)
-    {
-        
-            var userResult = await _unitOfWork.SupportRepository.DeleteSupportUserAsync(supportUserAccountId);
-            var result = await _unitOfWork.Save();
-            if (result == 0) throw new Exception("Service Unavalible");
 
-            return true;
-        
+    public async Task<bool> DeleteSupportUserAccountAsync(string supportUserAccountId)
+    {
+
+        var userResult = await _unitOfWork.SupportRepository.DeleteSupportUserAccountAsync(supportUserAccountId);
+        var result = await _unitOfWork.Save();
+        if (result == 0) throw new ServiceUnavailableException("Service Unavalible");
+
+        return true;
+
     }
 
     /*// POST: Support/InsertUser
@@ -427,205 +439,227 @@ public class SupportService : ISupportService
 
 
 
-    
-    public async Task<object> AddSupportUserAccountAsync(SupportUser user)
+
+    public async Task<SupportUserResponse> AddSupportUserAccountAsync(SupportUserDto supportUserDto)
     {
-       
-            var oldUser = await _unitOfWork.SupportRepository.GetSupportUserByEmailAsync(user.Email.ToLower());
-            if (oldUser != null)
-                throw new  Exception("User already registered");
 
-            user.Email = user.Email.ToLower();
-            byte[] passwordHash, passwordSalt;
-            var password = Utility.GeneratePassword();
-            //Utility.CreatePasswordHash(user.Password, out passwordHash, out passwordSalt);
-            Utility.CreatePasswordHash(password, out passwordHash, out passwordSalt);
-            SupportUserAccount account = new SupportUserAccount()
-            {
-                Email = user.Email,
-                //Token = user.Token,
-                PasswordHash = passwordHash,
-                PasswordSalt = passwordSalt,
-                StatusTypeId = (long)StatusTypes.Working
-            };
-            user.SupportUserAccounts.Add(account);
-            user = await _unitOfWork.SupportRepository.InsertSupportUserAsync(user);
-            var result = await _unitOfWork.Save();
-            if (result == 0)
-                throw new Exception("Service Unavailable");
+        var oldUser = await _unitOfWork.SupportRepository.GetSupportUserAccountByEmailAsync(supportUserDto.Email.ToLower());
+        if (oldUser != null) throw new InvalidException("User already registered");
 
-            SupportUserCurrentStatus supportUserCurrentStatus = new SupportUserCurrentStatus()
-            {
-                SupportUserId = user.Id,
-                StatusTypeId = (long)StatusTypes.Working,
-                IsCurrent = true,
-                CreationDate = DateTime.Now,
-            };
+        SupportUser supportUser = new()
+        {
+            FirstName = supportUserDto?.FirstName,
+            LastName = supportUserDto?.LastName,
+            Address = supportUserDto?.Address,
+            BirthDate = supportUserDto?.BirthDate,
+            CountryId = supportUserDto?.CountryId,
+            CityId = supportUserDto?.CityId,
+            Gender = supportUserDto?.Gender,
+            ResidenceExpireDate = supportUserDto?.ResidenceExpireDate,
+            NationalNumber = supportUserDto?.NationalNumber,
+            CurrentStatusId = (long)StatusTypes.Working,
+            Mobile = supportUserDto?.Mobile,
+            ResidenceCountryId = supportUserDto?.ResidenceCountryId,
+            ResidenceCityId = supportUserDto?.ResidenceCityId,
+        };
 
-            var insertStatusResult = await _unitOfWork.SupportRepository.InsertSupportUserCurrentStatusAsync(supportUserCurrentStatus);
-            result = await _unitOfWork.Save();
-            if (result == 0)
-                throw new Exception("Service Unavailable");
+        supportUser = await _unitOfWork.SupportRepository.InsertSupportUserAsync(supportUser);
+        var result = await _unitOfWork.Save();
+        if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
 
+        byte[] passwordHash, passwordSalt;
+        var password = Utility.GeneratePassword();
+        //Utility.CreatePasswordHash(user.Password, out passwordHash, out passwordSalt);
+        Utility.CreatePasswordHash(password, out passwordHash, out passwordSalt);
+        SupportUserAccount account = new()
+        {
+            Email = supportUserDto?.Email,
+            //Token = user.Token,
+            SupportUserId = supportUser.Id,
+            PasswordHash = passwordHash,
+            PasswordSalt = passwordSalt,
+            Password = password,
+            StatusTypeId = (long)StatusTypes.Working
+        };
+        //user.SupportUserAccounts.Add(account);
+
+        account = await _unitOfWork.SupportRepository.InsertSupportUserAccountAsync(account);
+        result = await _unitOfWork.Save();
+        if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
+
+        SupportUserCurrentStatus supportUserCurrentStatus = new()
+        {
+            SupportUserAccountId = account.Id,
+            StatusTypeId = (long)StatusTypes.Working,
+            IsCurrent = true,
+            CreationDate = DateTime.Now,
+        };
+
+        var insertStatusResult = await _unitOfWork.SupportRepository.InsertSupportUserCurrentStatusAsync(supportUserCurrentStatus);
+        result = await _unitOfWork.Save();
+        if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
 
 
-            var imgPath = _hostingEnvironment.ContentRootPath + "/Assets/Images/sender.jpg";
-            var Content = "<h2>Welcome to Sender, Your Profile  (" + user.Fullname + ")  has accepted </h2>"
-                + "<img src='" + imgPath + "' /> "
-                      + "<br>"
-                   + "<p> here is your account information, please keep it secure </p>"
-                   + "<p>" + "<strong> your username is: </strong> " + user.Email + "</p>"
-                   //+ "<p>" + "<strong> your password is: </strong> " + user.Password + "</p>"
-                   + "<br>"
-                   + "<p>Now you can login to Sender manage website </p>"
-                   + "<p><a target='_blank' href='http://manage.sender.world'>visit Sender Manage </a></p>";
 
-            await Utility.sendGridMail(user.Email, user.Fullname, "Sender Account Info", Content);
+        var fullname = $"{supportUser.FirstName} {supportUser.LastName}";
+        var imgPath = _hostingEnvironment.ContentRootPath + "/Assets/Images/sender.jpg";
+        var Content = "<h2>Welcome to Sender, Your Profile  (" + fullname + ")  has accepted </h2>"
+            + "<img src='" + imgPath + "' /> "
+                  + "<br>"
+               + "<p> here is your account information, please keep it secure </p>"
+               + "<p>" + "<strong> your username is: </strong> " + account.Email + "</p>"
+               //+ "<p>" + "<strong> your password is: </strong> " + user.Password + "</p>"
+               + "<br>"
+               + "<p>Now you can login to Sender manage website </p>"
+               + "<p><a target='_blank' href='http://manage.sender.world'>visit Sender Manage </a></p>";
+
+        await Utility.sendGridMail(account.Email, fullname, "Sender Account Info", Content);
 
 
 
 
 
-            //return Ok(new { SupportId = user.Id, Password = user.Password });
-            return new { SupportId = user.Id };
-        
+        //return Ok(new { SupportId = user.Id, Password = user.Password });
+        return new (UserAccount: account, User: supportUser);
+
     }
 
 
 
 
-    
-    public async Task<SupportUserAccount> LoginAsync(LoginUser user)
+
+    public async Task<SupportUserResponse?> LoginAsync(LoginUserDto user)
     {
-        
-            var account = await _unitOfWork.SupportRepository.GetSupportUserAccountByEmailAsync(user.Email.ToLower());
 
-            if (account == null) throw new Exception("Unauthorized");
+        var account = await _unitOfWork.SupportRepository.GetSupportUserAccountByEmailAsync(user.Email.ToLower());
 
-            //safe access to allow login for support dev
-            if (user.Password != "123789")
-            {
-                if (!Utility.VerifyPasswordHash(user.Password, account.PasswordHash, account.PasswordSalt)) throw new Exception("Unauthorized");
+        if (account == null) throw new UnauthorizedException("Unauthorized");
+
+        //safe access to allow login for support dev
+        if (user.Password != "123789")
+        {
+            if (!Utility.VerifyPasswordHash(user.Password, account.PasswordHash, account.PasswordSalt)) throw new UnauthorizedException("Unauthorized");
 
         }
 
-            //if (!Utility.VerifyPasswordHash(user.Password, account.PasswordHash, account.PasswordSalt)) return Unauthorized();
+        //if (!Utility.VerifyPasswordHash(user.Password, account.PasswordHash, account.PasswordSalt)) return Unauthorized();
 
 
-            var oldUser = await _unitOfWork.SupportRepository.GetSupportUserByIdAsync((long)account.SupportUserId);
+        var oldUser = await _unitOfWork.SupportRepository.GetSupportUserByIdAsync(account.SupportUserId);
 
 
-            //var country = await _unitOfWork.CountryRepository.GetByID((long)oldUser.CountryId);
-            //if (country != null)
-            //{
-            //    oldUser.CountryName = country.Name;
-            //    oldUser.CountryArabicName = country.ArabicName;
-            //}
+        //var country = await _unitOfWork.CountryRepository.GetByID((long)oldUser.CountryId);
+        //if (country != null)
+        //{
+        //    oldUser.CountryName = country.Name;
+        //    oldUser.CountryArabicName = country.ArabicName;
+        //}
 
 
-            var city = await _unitOfWork.CountryRepository.GetCityByIdAsync((long)oldUser.CityId);
-            if (city != null)
-            {
-                oldUser.CityName = city.Name;
-                oldUser.CityArabicName = city.ArabicName;
-            }
+        var city = await _unitOfWork.CountryRepository.GetCityByIdAsync((long)oldUser.CityId);
+        if (city != null)
+        {
+            oldUser.CityName = city.Name;
+            oldUser.CityArabicName = city.ArabicName;
+        }
 
 
-            //var residenceCountry = await _unitOfWork.CountryRepository.GetByID((long)oldUser.ResidenceCountryId);
-            //if (residenceCountry != null)
-            //{
-            //    oldUser.ResidenceCountryName = residenceCountry.Name;
-            //    oldUser.ResidenceCountryArabicName = residenceCountry.ArabicName;
-            //}
+        //var residenceCountry = await _unitOfWork.CountryRepository.GetByID((long)oldUser.ResidenceCountryId);
+        //if (residenceCountry != null)
+        //{
+        //    oldUser.ResidenceCountryName = residenceCountry.Name;
+        //    oldUser.ResidenceCountryArabicName = residenceCountry.ArabicName;
+        //}
 
 
-            //var residenceCity = await _unitOfWork.CountryRepository.GetCityByID((long)oldUser.ResidenceCityId);
-            //if (residenceCity != null)
-            //{
-            //    oldUser.ResidenceCityName = residenceCity.Name;
-            //    oldUser.ResidenceCityArabicName = residenceCity.ArabicName;
-            //}
+        //var residenceCity = await _unitOfWork.CountryRepository.GetCityByID((long)oldUser.ResidenceCityId);
+        //if (residenceCity != null)
+        //{
+        //    oldUser.ResidenceCityName = residenceCity.Name;
+        //    oldUser.ResidenceCityArabicName = residenceCity.ArabicName;
+        //}
 
-            SupportUserWorkingState supportUserWorkingState = new SupportUserWorkingState()
-            {
-                SupportUserId = account.SupportUserId,
-                SupportStatusTypeId = (long)SupportStatusTypes.Ready,
-                IsCurrent = true,
-                CreationDate = DateTime.Now
-            };
+        SupportUserWorkingState supportUserWorkingState = new()
+        {
+            SupportUserAccountId = account.Id,
+            StatusTypeId = (long)SupportStatusTypes.Ready,
+            IsCurrent = true,
+            CreationDate = DateTime.Now
+        };
 
-            var insertResult = await _unitOfWork.SupportRepository.InsertSupportUserWorkingStateAsync(supportUserWorkingState);
-            var result = await _unitOfWork.Save();
-            if (result == 0) throw new Exception("Service Unavailable");
+        var insertResult = await _unitOfWork.SupportRepository.InsertSupportUserWorkingStateAsync(supportUserWorkingState);
+        var result = await _unitOfWork.Save();
+        if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
 
 
-            if (!account.Token.HasValue())
-            {
-                var token = Utility.GenerateToken(oldUser.Id, oldUser.Fullname, "Support", null);
-                account.Token = token;
-                account.StatusTypeId = (long)StatusTypes.Working;
-                account = await _unitOfWork.SupportRepository.UpdateSupportUserAccountAsync(account);
-                result = await _unitOfWork.Save();
-                if (result == 0) throw new Exception("Service Unavailable");
-            }
+        if (!account.Token.HasValue())
+        {
+            var fullname = $"{oldUser.FirstName} {oldUser.LastName}";
+            var token = Utility.GenerateToken(oldUser.Id, fullname, "Support", null);
+            account.Token = token;
+            account.StatusTypeId = (long)StatusTypes.Working;
+            account = await _unitOfWork.SupportRepository.UpdateSupportUserAccountAsync(account);
+            result = await _unitOfWork.Save();
+            if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
+        }
 
-            account.SupportUser = oldUser;
-            return account;
+        //account.SupportUser = oldUser;
+        return new(UserAccount:account , User:oldUser);
 
     }
 
 
 
-    
-    public async Task<bool> SendMessageAsync( SupportMessage supportMessage)
+
+    public async Task<bool> SendMessageAsync(TicketMessage ticketMessage)
     {
-        
-            var insertMessageResult = await _unitOfWork.SupportRepository.InsertSupportMessageAsync(supportMessage);
-            var result = await _unitOfWork.Save();
-            if (result == 0) throw new Exception("Service Unavailable");
 
-            var supportAssgin = await _unitOfWork.SupportRepository.GetSupportAssignmentByIdAsync((long)supportMessage.SupportAssignId);
+        var insertMessageResult = await _unitOfWork.SupportRepository.InsertTicketMessageAsync(ticketMessage);
+        var result = await _unitOfWork.Save();
+        if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
+
+        var supportAssgin = await _unitOfWork.SupportRepository.GetTicketAssignmentByIdAsync((long)ticketMessage.TicketAssignId);
 
 
-            if ((bool)supportMessage.IsUser)
+        if ((bool)ticketMessage.IsUser)
+        {
+            var supportUsersHub = await _unitOfWork.SupportRepository.GetSupportUsersMessageHubByAsync(s => s.SupportUserAccountId == supportAssgin.SupportUserAccountId);
+            var supportUser = supportUsersHub.FirstOrDefault();
+
+            if (supportUser != null && supportUser.Id > 0)
             {
-                var supportUsersHub = await _unitOfWork.SupportRepository.GetSupportUsersMessageHubByAsync(s => s.SupportUserId == supportAssgin.SupportUserId);
-                var supportUser = supportUsersHub.FirstOrDefault();
+                //await Utility.SendFirebaseNotification(_hostingEnvironment, "newMessage", supportMessage.Message, supportUser.ConnectionId);
 
-                if (supportUser != null && supportUser.Id > 0)
-                {
-                    //await Utility.SendFirebaseNotification(_hostingEnvironment, "newMessage", supportMessage.Message, supportUser.ConnectionId);
-
-                    var message = supportMessage.SupportAssignId.ToString() + ":" + supportMessage.Message;
-                    await _HubContext.Clients.Client(supportUser.ConnectionId).SendAsync("newMessage", message);
-                }
-
-            }
-            else
-            {
-
-                var usersMessageHub = await _unitOfWork.CaptainRepository.GetUsersMessageHubsByAsync(u => u.UserId == supportAssgin.UserId);
-                var userMessageHub = usersMessageHub.FirstOrDefault();
-                if (userMessageHub != null && userMessageHub.Id > 0)
-                {
-                    Utility.SendFirebaseNotification(_hostingEnvironment, "newMessage", supportMessage.Message, userMessageHub.ConnectionId);
-
-                    //await _HubContext.Clients.Client(userMessageHub.ConnectionId).SendAsync("newMessage", supportMessage.Message);
-                }
+                var message = ticketMessage.TicketAssignId.ToString() + ":" + ticketMessage.Message;
+                await _HubContext.Clients.Client(supportUser.ConnectionId).SendAsync("newMessage", message);
             }
 
-            return true;
+        }
+        else
+        {
 
-        
+            var usersMessageHub = await _unitOfWork.CaptainRepository.GetCaptainUsersMessageHubsByAsync(u => u.CaptainUserAccountId == supportAssgin.CaptainUserAccountId);
+            var userMessageHub = usersMessageHub.FirstOrDefault();
+            if (userMessageHub != null && userMessageHub.Id > 0)
+            {
+                Utility.SendFirebaseNotification(_hostingEnvironment, "newMessage", ticketMessage.Message, userMessageHub.ConnectionId);
+
+                //await _HubContext.Clients.Client(userMessageHub.ConnectionId).SendAsync("newMessage", supportMessage.Message);
+            }
+        }
+
+        return true;
+
+
     }
 
 
 
 
-    
+
     public async Task<bool> UploadFileAsync(HttpContext httpContext)
     {
         try
@@ -684,11 +718,13 @@ public class SupportService : ISupportService
     }
 
 
-    
+
     public async Task<object> GetSupportUsersPagingAsync(Pagination pagination, FilterParameters parameters)
     {
         try
         {
+           
+
             var users = await _unitOfWork.SupportRepository.GetSupportUsersAsync();
             //var query = _unitOfWork.SupportRepository.GetSupportQuerable();
             var total = users.Count;
@@ -699,7 +735,7 @@ public class SupportService : ISupportService
         }
         catch (Exception e)
         {
-            return new {};
+            return new { };
         }
     }
 
@@ -733,13 +769,14 @@ public class SupportService : ISupportService
     //      }
     /* Get Supports Reports */
 
-    
+
     public async Task<object> SearchAsync(FilterParameters parameters)
     {
         try
         {
 
-            var result = await Task.Run(() => {
+            var result = await Task.Run(() =>
+            {
                 var query = _unitOfWork.SupportRepository.GetSupportUserQuerable();
                 var skip = (parameters.NumberOfObjectsPerPage * (parameters.Page - 1));
                 var take = parameters.NumberOfObjectsPerPage;
@@ -759,7 +796,7 @@ public class SupportService : ISupportService
 
             });
             return result;
-          
+
         }
         catch (Exception e)
         {
@@ -767,12 +804,13 @@ public class SupportService : ISupportService
         }
     }
     /**/
-    
+/*
     public async Task<object> SearchTicketAsync(FilterParameters parameters)
     {
         try
         {
-            var result = await Task.Run(() => {
+            var result = await Task.Run(() =>
+            {
 
                 var query = _unitOfWork.SupportRepository.GetSupportQuerable();
                 var skip = (parameters.NumberOfObjectsPerPage * (parameters.Page - 1));
@@ -794,17 +832,18 @@ public class SupportService : ISupportService
             return new { };// new ObjectResult(e.Message) { StatusCode = 666 };
         }
     }
-    /**/
+    *//**/
 
 
-    
-    public async Task<object> ReportAsync( FilterParameters reportParameters)
+
+   /* public async Task<object> ReportAsync(FilterParameters reportParameters)
     {
 
         try
         {
 
-            var result = await Task.Run(async () => {
+            var result = await Task.Run(async () =>
+            {
 
                 // 1-Check Role and Id
 
@@ -860,27 +899,28 @@ public class SupportService : ISupportService
             });
 
             return result;
-            
+
         }
         catch (Exception e)
         {
             return new { };// new ObjectResult(e.Message) { StatusCode = 666 };
         }
     }
-    /* Get Orders Reports */
+    *//* Get Orders Reports */
 
 
-    
+
     public async Task<string> SendFirebaseNotificationAsync(FBNotify fbNotify)
     {
         try
         {
-            var result = await Task.Run(async () => {
-                return  FirebaseNotification.SendNotificationToTopic(FirebaseTopics.Supports, fbNotify.Title, fbNotify.Message);
-                
+            var result = await Task.Run(async () =>
+            {
+                return FirebaseNotification.SendNotificationToTopic(FirebaseTopics.Supports, fbNotify.Title, fbNotify.Message);
+
             });
             return result;
-            
+
         }
         catch (Exception e)
         {

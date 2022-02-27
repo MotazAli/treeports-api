@@ -64,16 +64,16 @@ namespace TreePorts.Controllers
 		{
 			try
 			{
-				var userType = "";
-				var userId = long.Parse("0");
-				Utility.getRequestUserIdFromToken(HttpContext, out userId, out userType);
+				//var userType = "";
+				//var userId = long.Parse("0");
+				Utility.getRequestUserIdFromToken(HttpContext, out string userId, out string userType);
 
-				var agentOrder = _unitOfWork.AgentRepository.GetAgentOrder(userId, id);
+				var agentOrder = _unitOfWork.AgentRepository.GetAgentOrderAsync(userId, id);
 				if (userType.ToString() != "Agent" || agentOrder == null) return Unauthorized();
 				
 				var orderStatues = await _unitOfWork.OrderRepository.GetOrderCurrentStatusesByAsync(o => o.OrderId == id &&
 					o.IsCurrent == true &&
-					(o.StatusTypeId == (long)OrderStatusTypes.AssignedToCaptain || o.StatusTypeId == (long)OrderStatusTypes.Progress));
+					(o.OrderStatusTypeId == (long)OrderStatusTypes.AssignedToCaptain || o.OrderStatusTypeId == (long)OrderStatusTypes.Progress));
 
 				var orderCurrentState = orderStatues.FirstOrDefault();
 				if (orderCurrentState == null) NotFound("Driver not available, please try again");
@@ -83,7 +83,7 @@ namespace TreePorts.Controllers
 				var orderAssign = orderAssigns.FirstOrDefault();
 				if (orderAssign == null) NotFound("Driver not available, Please try again");
 
-				var driverLocations = await _unitOfWork.CaptainRepository.GetUsersCurrentLocationsByAsync(u => u.UserId == orderAssign.UserId);
+				var driverLocations = await _unitOfWork.CaptainRepository.GetCaptainUsersCurrentLocationsByAsync(u => u.CaptainUserAccountId == orderAssign.CaptainUserAccountId);
 				var driverCurrentLoation = driverLocations.FirstOrDefault();
 				if (driverCurrentLoation == null) NotFound("Driver not available, Please try again");
 
@@ -111,16 +111,16 @@ namespace TreePorts.Controllers
 		{
 			try
 			{
-				string userType = "";
-				long userId = -1;
-				Utility.getRequestUserIdFromToken(HttpContext, out userId, out userType);
-				if (userType.ToLower() != "agent" || userId <= 0) return Unauthorized();
+				//string userType = "";
+				//long userId = -1;
+				Utility.getRequestUserIdFromToken(HttpContext, out string userId, out string userType);
+				if (userType.ToLower() != "agent" || userId == "") return Unauthorized();
 
 				if (order == null) return NoContent();//
 
 				if (order.Id <= 0 && id > 0) order.Id = id;
 
-				var agentOrder = _unitOfWork.AgentRepository.GetAgentOrder(userId, order.Id);
+				var agentOrder = _unitOfWork.AgentRepository.GetAgentOrderAsync(userId, order.Id);
 				if (agentOrder == null) return Unauthorized();
 				
 
@@ -201,7 +201,7 @@ namespace TreePorts.Controllers
 				AgentCurrentStatus newAgentCurrentStatus = new AgentCurrentStatus()
 				{
 					AgentId = insertResult.Id,
-					StatusId = (long)StatusTypes.New,
+					StatusTypeId = (long)StatusTypes.New,
 					IsCurrent = false,
 					CreationDate = DateTime.Now
 				};
@@ -209,7 +209,7 @@ namespace TreePorts.Controllers
 				AgentCurrentStatus incompleteAgentCurrentStatus = new AgentCurrentStatus()
 				{
 					AgentId = insertResult.Id,
-					StatusId = (long)StatusTypes.Reviewing,
+					StatusTypeId = (long)StatusTypes.Reviewing,
 					IsCurrent = true,
 					CreationDate = DateTime.Now
 				};
@@ -276,20 +276,20 @@ namespace TreePorts.Controllers
 		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 		[ProducesResponseType(StatusCodes.Status404NotFound)]
 		[ProducesResponseType(StatusCodes.Status204NoContent)]
-		public async Task<IActionResult> UpdateAgent(long? id ,[FromBody] Agent agent)
+		public async Task<IActionResult> UpdateAgent(string? id ,[FromBody] Agent agent)
 		{
 			try
 			{
 
 				if (agent == null) return NoContent();
-				if ((id == null || id <= 0)) return new ObjectResult("Agent {id} not provided in the request path") { StatusCode = 204 };
+				if ((id == null || id == null)) return new ObjectResult("Agent {id} not provided in the request path") { StatusCode = 204 };
 
-				if (id != null && id > 0)
-					 agent.Id =(long) id;
+				if (id != null && id != "")
+					 agent.Id =id;
 
-				var userType = "";
-				var userId = long.Parse("0");
-				Utility.getRequestUserIdFromToken(HttpContext, out userId, out userType);
+				//var userType = "";
+				//var userId = long.Parse("0");
+				Utility.getRequestUserIdFromToken(HttpContext, out string userId, out string userType);
 				if (userType.ToString() != "Agent" || id != userId || id != agent.Id) return Unauthorized();
 
 
@@ -327,10 +327,10 @@ namespace TreePorts.Controllers
 			try
 			{
 
-				var userType = "";
-				var userId = long.Parse("0");
-				Utility.getRequestUserIdFromToken(HttpContext, out userId, out userType);
-				if (userId <= 0 || userType.ToLower() != "agent" ) return Unauthorized();
+				//var userType = "";
+				//var userId = long.Parse("0");
+				Utility.getRequestUserIdFromToken(HttpContext, out string userId, out string userType);
+				if (userId == "" || userType.ToLower() != "agent" ) return Unauthorized();
 
 
 				var types = await _unitOfWork.AgentRepository.GetAgentTypesAsync();
@@ -354,9 +354,9 @@ namespace TreePorts.Controllers
 			try
 			{
 
-				var userType = "";
-				var userId = long.Parse("0");
-				Utility.getRequestUserIdFromToken(HttpContext, out userId, out userType);
+				//var userType = "";
+				//var userId = long.Parse("0");
+				Utility.getRequestUserIdFromToken(HttpContext, out string userId, out string userType);
 				if (userType.ToString() != "Agent") return Unauthorized();
 
 
@@ -382,11 +382,11 @@ namespace TreePorts.Controllers
 		{
 			try
 			{
-				long userId = -1;
-				string userType = "";
-				Utility.getRequestUserIdFromToken(HttpContext, out userId, out userType);
+				//long userId = -1;
+				//string userType = "";
+				Utility.getRequestUserIdFromToken(HttpContext, out string userId, out string userType);
 				
-				if(userType.ToLower() != "agent" || userId <= 0) return Unauthorized();
+				if(userType.ToLower() != "agent" || userId == "") return Unauthorized();
 				
 				var result = await _unitOfWork.OrderRepository.GetOrderDetailsByIdAsync(id);
 
@@ -423,10 +423,10 @@ namespace TreePorts.Controllers
 		{
 			try
 			{
-				long userId = -1;
-				string userType = "";
-				Utility.getRequestUserIdFromToken(HttpContext, out userId, out userType);
-				if (userType.ToString() != "Agent" || userId <= 0) return Unauthorized();
+				//long userId = -1;
+				//string userType = "";
+				Utility.getRequestUserIdFromToken(HttpContext, out string userId, out string userType);
+				if (userType.ToString() != "Agent" || userId =="") return Unauthorized();
 				
 				var result = await _unitOfWork.OrderRepository.GetOrdersByAsync(o => o.AgentId == userId);
 				if (result == null ) return NotFound("No Orders Found");
@@ -451,10 +451,10 @@ namespace TreePorts.Controllers
 			try
 			{
 
-				long agentId = -1;
-				string userType = "";
-				Utility.getRequestUserIdFromToken(HttpContext, out agentId, out userType);
-				if (userType.ToString() != "Agent" || agentId <= 0) return Unauthorized();
+				//long agentId = -1;
+				//string userType = "";
+				Utility.getRequestUserIdFromToken(HttpContext, out string agentId, out string userType);
+				if (userType.ToString() != "Agent" || agentId == "") return Unauthorized();
 
 
 				if (order == null || order.PickupLocationLat == null || order.PickupLocationLong == null ||
@@ -462,7 +462,7 @@ namespace TreePorts.Controllers
 					return NoContent();
 
 
-				if (order.AgentId == null || order.AgentId <= 0)
+				if (order.AgentId == null || order.AgentId =="")
 					order.AgentId = agentId;
 
 				var orderInsertResult = await _unitOfWork.OrderRepository.InsertOrderAsync(order);
@@ -470,7 +470,7 @@ namespace TreePorts.Controllers
 				if (result <= 0) return new ObjectResult("Service Unavailable") { StatusCode = 503 };
 
 				_ = _notify.ChangeOrderStatusAndNotify(OrderStatusTypes.New, orderInsertResult.Id,
-					(long)orderInsertResult.AgentId);
+					orderInsertResult.AgentId);
 
 				_ = _orderService.SearchForCaptainAndNotifyOrder(orderInsertResult);
 
@@ -895,7 +895,7 @@ namespace TreePorts.Controllers
 		[HttpGet("TestWebHooks/{id}")]
 		[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
 		[ProducesResponseType(StatusCodes.Status204NoContent)]
-		public async Task<IActionResult> TestWebHooks(long id)
+		public async Task<IActionResult> TestWebHooks(string id)
         {
             try
             {
@@ -925,10 +925,10 @@ namespace TreePorts.Controllers
 		{
 			try
 			{
-				string userType = "";
-				long userId = -1;
-				Utility.getRequestUserIdFromToken(HttpContext, out userId, out userType);
-				if (userType != "Agent" || userId <= 0 || userId != order.AgentId) return Unauthorized();
+				//string userType = "";
+				//long userId = -1;
+				Utility.getRequestUserIdFromToken(HttpContext, out string userId, out string userType);
+				if (userType != "Agent" || userId == "" || userId != order.AgentId) return Unauthorized();
 
 				if (order == null) return NoContent();
 
@@ -954,7 +954,7 @@ namespace TreePorts.Controllers
 				var orderAssigns = await _unitOfWork.OrderRepository.GetOrdersAssignmentsByAsync(r => r.OrderId == id);
 				var orderAssign = orderAssigns.FirstOrDefault();
 
-				var usersMessageHub = await _unitOfWork.CaptainRepository.GetUsersMessageHubsByAsync(u => u.UserId == orderAssign.UserId);
+				var usersMessageHub = await _unitOfWork.CaptainRepository.GetCaptainUsersMessageHubsByAsync(u => u.CaptainUserAccountId == orderAssign.CaptainUserAccountId);
 				var userMessageHub = usersMessageHub.FirstOrDefault();
 				if (userMessageHub != null && userMessageHub.Id > 0)
 				{
@@ -988,10 +988,10 @@ namespace TreePorts.Controllers
 			try
 			{
 
-				string userType = "";
-				long userId = -1;
-				Utility.getRequestUserIdFromToken(HttpContext, out userId, out userType);
-				if (userType != "Agent" || userId <= 0 ) return Unauthorized();
+				//string userType = "";
+				//long userId = -1;
+				Utility.getRequestUserIdFromToken(HttpContext, out string userId, out string userType);
+				if (userType != "Agent" || userId =="" ) return Unauthorized();
 
 				var result = await _unitOfWork.CountryRepository.GetCountriesAsync();
 				return Ok(result);
@@ -1014,10 +1014,10 @@ namespace TreePorts.Controllers
 		{
 			try
 			{
-				string userType = "";
-				long userId = -1;
-				Utility.getRequestUserIdFromToken(HttpContext, out userId, out userType);
-				if (userType != "Agent" || userId <= 0) return Unauthorized();
+				//string userType = "";
+				//long userId = -1;
+				Utility.getRequestUserIdFromToken(HttpContext, out string userId, out string userType);
+				if (userType != "Agent" || userId == "") return Unauthorized();
 
 				var result = await _unitOfWork.CountryRepository.GetCountryByIdAsync(id);
 				return Ok(result);
@@ -1040,10 +1040,10 @@ namespace TreePorts.Controllers
 		{
 			try
 			{
-				string userType = "";
-				long userId = -1;
-				Utility.getRequestUserIdFromToken(HttpContext, out userId, out userType);
-				if (userType != "Agent" || userId <= 0) return Unauthorized();
+				//string userType = "";
+				//long userId = -1;
+				Utility.getRequestUserIdFromToken(HttpContext, out string userId, out string userType);
+				if (userType != "Agent" || userId == "") return Unauthorized();
 
 
 				var result = await _unitOfWork.CountryRepository.GetCitiesAsync();
@@ -1068,10 +1068,10 @@ namespace TreePorts.Controllers
 			try
 			{
 
-				string userType = "";
-				long userId = -1;
-				Utility.getRequestUserIdFromToken(HttpContext, out userId, out userType);
-				if (userType != "Agent" || userId <= 0) return Unauthorized();
+				//string userType = "";
+				//long userId = -1;
+				Utility.getRequestUserIdFromToken(HttpContext, out string userId, out string userType);
+				if (userType != "Agent" || userId == "") return Unauthorized();
 
 				var result = await _unitOfWork.CountryRepository.GetCityByIdAsync(id);
 				return Ok(result);
@@ -1094,10 +1094,10 @@ namespace TreePorts.Controllers
 			try
 			{
 
-				string userType = "";
-				long userId = -1;
-				Utility.getRequestUserIdFromToken(HttpContext, out userId, out userType);
-				if (userType != "Agent" || userId <= 0) return Unauthorized();
+				//string userType = "";
+				//long userId = -1;
+				Utility.getRequestUserIdFromToken(HttpContext, out string userId, out string userType);
+				if (userType != "Agent" || userId == "") return Unauthorized();
 
 				var result = await _unitOfWork.CountryRepository.GetCitiesByAsync(c => c.CountryId == id);
 				return Ok(result);
@@ -1118,10 +1118,10 @@ namespace TreePorts.Controllers
 		{
 			try
 			{
-				string userType = "";
-				long userId = -1;
-				Utility.getRequestUserIdFromToken(HttpContext, out userId, out userType);
-				if (userType != "Agent" || userId <= 0) return Unauthorized();
+				//string userType = "";
+				//long userId = -1;
+				Utility.getRequestUserIdFromToken(HttpContext, out string userId, out string userType);
+				if (userType != "Agent" || userId == "") return Unauthorized();
 
 				var result = await _unitOfWork.OrderRepository.GetProductTypesAsync();
 				return Ok(result);
@@ -1145,10 +1145,10 @@ namespace TreePorts.Controllers
 			try
 			{
 
-				string userType = "";
-				long userId = -1;
-				Utility.getRequestUserIdFromToken(HttpContext, out userId, out userType);
-				if (userType != "Agent" || userId <= 0) return Unauthorized();
+				//string userType = "";
+				//long userId = -1;
+				Utility.getRequestUserIdFromToken(HttpContext, out string userId, out string userType);
+				if (userType != "Agent" || userId == "") return Unauthorized();
 
 				var result = await _unitOfWork.OrderRepository.GetProductTypeByIdAsync(id);
 				return Ok(result);
@@ -1172,10 +1172,10 @@ namespace TreePorts.Controllers
 			try
 			{
 
-				string userType = "";
-				long userId = -1;
-				Utility.getRequestUserIdFromToken(HttpContext, out userId, out userType);
-				if (userType != "Agent" || userId <= 0) return Unauthorized();
+				//string userType = "";
+				//long userId = -1;
+				Utility.getRequestUserIdFromToken(HttpContext, out string userId, out string userType);
+				if (userType != "Agent" || userId == "") return Unauthorized();
 
 				var result = await _unitOfWork.OrderRepository.GetPaymentTypesAsync();
 				return Ok(result);
@@ -1199,10 +1199,10 @@ namespace TreePorts.Controllers
 			try
 			{
 
-				string userType = "";
-				long userId = -1;
-				Utility.getRequestUserIdFromToken(HttpContext, out userId, out userType);
-				if (userType != "Agent" || userId <= 0) return Unauthorized();
+				//string userType = "";
+				//long userId = -1;
+				Utility.getRequestUserIdFromToken(HttpContext, out string userId, out string userType);
+				if (userType != "Agent" || userId == "") return Unauthorized();
 
 				var result = await _unitOfWork.OrderRepository.GetPaymentTypeByIdAsync(id);
 				return Ok(result);
@@ -1215,7 +1215,7 @@ namespace TreePorts.Controllers
 		}
 
 
-
+/*
 		[HttpGet("Report")]
 		[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
 		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -1235,7 +1235,7 @@ namespace TreePorts.Controllers
 
 				// 2- Get Querable data depends on Role and Id 
 
-				/*if (userType == "Driver")
+				*//*if (userType == "Driver")
 				{
 					 query = _unitOfWork.OrderRepository.GetUserAcceptedRequestByQuerable(u => u.UserId == userId).Select(o => o.Order);
 
@@ -1247,7 +1247,7 @@ namespace TreePorts.Controllers
 				else
 				{
 					query = _unitOfWork.OrderRepository.GetAllOrdersQuerable();
-				}*/
+				}*//*
 				// 3- Call generic filter method that take query data and filterparameters
 				query = _unitOfWork.OrderRepository.GetByQuerable(o => o.AgentId == userId);
 				var ordersResult = Utility.GetFilter(reportParameters, query);
@@ -1266,9 +1266,9 @@ namespace TreePorts.Controllers
 
 
 		}
+*/
 
-
-		/* Get Orders Reports */
+		/* Get Orders Reports *//*
 		[HttpGet("Search")]
 		[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
 		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -1310,7 +1310,7 @@ namespace TreePorts.Controllers
 		}
 		
 		
-		
+		*/
 		
 
 
@@ -1319,16 +1319,16 @@ namespace TreePorts.Controllers
 		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 		[ProducesResponseType(StatusCodes.Status204NoContent)]
 		/*Register Hook*/
-		public async Task<IActionResult> GetWebhooksByAgentId(long id)
+		public async Task<IActionResult> GetWebhooksByAgentId(string id)
 		{
 			try
 			{
-				var userType = "";
-				var userId = long.Parse("0");
-				Utility.getRequestUserIdFromToken(HttpContext, out userId, out userType);
+				//var userType = "";
+				//var userId = long.Parse("0");
+				Utility.getRequestUserIdFromToken(HttpContext, out string userId, out string userType);
 				if (userType != "Agent" || userId != id) return Unauthorized();
 
-				if (id <= 0)
+				if (id == "")
 					return NoContent();
 
 				var result = await _unitOfWork.HookRepository.GetWebhooksByAgentIdAsync(id);
@@ -1348,20 +1348,21 @@ namespace TreePorts.Controllers
 		[ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
 		[ProducesResponseType(StatusCodes.Status204NoContent)]
 		/*Register Hook*/
-		public async Task<IActionResult> AddWebhook(WebHook webHook)
+		public async Task<IActionResult> AddWebhook(Webhook webHook)
 		{
 			try
 			{
 				var userType = "";
-				var userId = long.Parse("0");
-				Utility.getRequestUserIdFromToken(HttpContext, out userId, out userType);
+				var userId = "";
+				//Utility.getRequestUserIdFromToken(HttpContext, out userId, out userType);
 				if (userType != "Agent" || userId != webHook?.AgentId) return Unauthorized();
 
 				
-				if (webHook == null || webHook?.AgentId <= 0)
+				if ( webHook?.AgentId == "" )
 					return NoContent();
 
-				var addedResult = await _unitOfWork.HookRepository.InsertWebhookAsync(webHook);
+				
+				var addedResult = await _unitOfWork.HookRepository.InsertOrUpdateAgentWebhookAsync(webHook);
 				var result = await _unitOfWork.Save();
 				if (result == 0) return new ObjectResult("Service Unavailable") { StatusCode = 503};
 
@@ -1376,7 +1377,7 @@ namespace TreePorts.Controllers
 
 
 		[HttpGet("Webhooks/Types")]
-		[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<WebHookType>))]
+		[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<WebhookType>))]
 		//[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 		//[ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
 		[ProducesResponseType(StatusCodes.Status204NoContent)]

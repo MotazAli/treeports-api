@@ -69,9 +69,9 @@ namespace TreePorts.DTO.ReturnDTO
         //public List<OrderItem> OrdersItem { get; set; }
         
         //public List<OrderStatusHistory> OrderStatusHistories { get; set; }
-        public CaptainUser Captain { get; set; }
+        public CaptainUserAccount Captain { get; set; }
         public CaptainUserPayment DeliveryPayment { get; set; }
-        public Qrcode QrCode { get; set; }
+        public OrderQrcode QrCode { get; set; }
         public Agent Agent { get; set; }
         public Country Country { get; set; }
         public City City { get; set; }
@@ -84,7 +84,7 @@ namespace TreePorts.DTO.ReturnDTO
     }
 
 
-    public class OrderFilterResponse
+    /*public class OrderFilterResponse
     {
 	    public long? OrderId { get; set; }
 	    public long? OrderCurrentStatus { get; set; }
@@ -100,7 +100,7 @@ namespace TreePorts.DTO.ReturnDTO
 	    public string DurationToCurrentStatus { get; set; }
 	    public DateTime? OrderStatusHistoryCreationDate { get; set; }
 	    public string DurationToStatusHistory { get; set; }
-    }
+    }*/
     
     
     public class OrderFilter

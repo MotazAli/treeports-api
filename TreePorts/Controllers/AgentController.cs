@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using TreePorts.DTO;
+using TreePorts.DTO.Records;
 
 namespace TreePorts.Controllers
 {
@@ -63,7 +64,7 @@ namespace TreePorts.Controllers
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Agent))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> Get(long id)
+        public async Task<IActionResult> Get(string? id = "")
         {
             try
             {  
@@ -149,7 +150,7 @@ namespace TreePorts.Controllers
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(long))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> Post([FromBody] Agent agent)
+        public async Task<IActionResult> Post([FromBody] AgentDto agent)
         {
             try
             {
@@ -169,7 +170,7 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> AcceptRegisterAgent(long id)
+        public async Task<IActionResult> AcceptRegisterAgent(string? id = "")
          {
 
             try
@@ -191,7 +192,7 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Agent))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> Put(long? id ,[FromBody] Agent agent)
+        public async Task<IActionResult> Put(string? id ,[FromBody] AgentDto agent)
         {
             try
             {
@@ -208,11 +209,11 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> Delete(long id)
+        public async Task<IActionResult> Delete(string? id)
         {
             try
             {
-                return Ok(await _agentService.DeleteAgentAsync(id));
+                return Ok(await _agentService.DeleteAgentAsync(id ?? ""));
             }
             catch (Exception e)
             {
@@ -228,7 +229,7 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Agent))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> Login([FromBody] LoginUser user)
+        public async Task<IActionResult> Login([FromBody] LoginUserDto user)
         {
 
 
@@ -395,7 +396,7 @@ namespace TreePorts.Controllers
         [HttpGet("{id}/Coupons/Check")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Coupon))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> CheckCoupon( long? id ,[FromQuery(Name = "couponCode")]string couponCode, [FromQuery(Name = "countryId")] long? countryId)
+        public async Task<IActionResult> CheckCoupon( string? id ,[FromQuery(Name = "couponCode")]string couponCode, [FromQuery(Name = "countryId")] long? countryId)
         {
             try
             {
@@ -431,11 +432,11 @@ namespace TreePorts.Controllers
         [HttpGet("DeliveryPrices/{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetDeliveryPriceById(long id)
+        public async Task<IActionResult> GetDeliveryPriceById(string? id)
         {
             try
             {
-                return Ok(await _agentService.GetAgentDeliveryPriceByIdAsync(id));
+                return Ok(await _agentService.GetAgentDeliveryPricesByAgentIdAsync(id ?? ""));
             }
             catch (Exception e)
             {
@@ -448,11 +449,11 @@ namespace TreePorts.Controllers
         [HttpGet("{id}/DeliveryPrices")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<AgentDeliveryPrice>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetDeliveryPricesByAgentId(long id)
+        public async Task<IActionResult> GetDeliveryPricesByAgentId(string? id)
         {
             try
             {
-                 return Ok(await _agentService.GetAgentDeliveryPricesByAgentId(id));
+                 return Ok(await _agentService.GetAgentDeliveryPricesByAgentIdAsync(id ?? ""));
             }
             catch (Exception e)
             {

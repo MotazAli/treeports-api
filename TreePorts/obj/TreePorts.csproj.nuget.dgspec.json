@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\motaz\\work\\dot_net\\aion8\\backend\\treeports-api\\TreePorts\\TreePorts.csproj": {}
+    "C:\\Users\\motaz\\work\\dot_net\\aion8\\backend-dot-net\\treeports-api\\TreePorts\\TreePorts.csproj": {}
   },
   "projects": {
-    "C:\\Users\\motaz\\work\\dot_net\\aion8\\backend\\treeports-api\\TreePorts\\TreePorts.csproj": {
+    "C:\\Users\\motaz\\work\\dot_net\\aion8\\backend-dot-net\\treeports-api\\TreePorts\\TreePorts.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\motaz\\work\\dot_net\\aion8\\backend\\treeports-api\\TreePorts\\TreePorts.csproj",
+        "projectUniqueName": "C:\\Users\\motaz\\work\\dot_net\\aion8\\backend-dot-net\\treeports-api\\TreePorts\\TreePorts.csproj",
         "projectName": "TreePorts",
-        "projectPath": "C:\\Users\\motaz\\work\\dot_net\\aion8\\backend\\treeports-api\\TreePorts\\TreePorts.csproj",
+        "projectPath": "C:\\Users\\motaz\\work\\dot_net\\aion8\\backend-dot-net\\treeports-api\\TreePorts\\TreePorts.csproj",
         "packagesPath": "C:\\Users\\motaz\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\motaz\\work\\dot_net\\aion8\\backend\\treeports-api\\TreePorts\\obj\\",
+        "outputPath": "C:\\Users\\motaz\\work\\dot_net\\aion8\\backend-dot-net\\treeports-api\\TreePorts\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

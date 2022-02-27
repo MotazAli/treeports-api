@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using RestSharp.Extensions;
 using TreePorts.DTO;
+using TreePorts.DTO.Records;
 using TreePorts.Utilities;
 
 namespace TreePorts.Services;
@@ -10,7 +11,7 @@ public class AgentService : IAgentService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMailService _mailService;
     private readonly IWebHostEnvironment _hostingEnvironment;
-    private IHubContext<MessageHub> _HubContext;
+    private readonly IHubContext<MessageHub> _HubContext;
     private readonly IMapper mapper;
     public AgentService(IUnitOfWork unitOfWork, IMailService mailService, IWebHostEnvironment hostingEnvironment, IMapper mapper, IHubContext<MessageHub> hubcontext)
     {
@@ -63,14 +64,14 @@ public class AgentService : IAgentService
 
 
     // GET: Agent
-    public async Task<Agent> GetAgentByIdAsync(long id)
+    public async Task<Agent> GetAgentByIdAsync(string id)
     {
         try
         {
             var user = await _unitOfWork.AgentRepository.GetAgentByIdAsync(id);
-            if (user?.StatusTypeId != null) { user.CurrentStatusId = (long)user.StatusTypeId; }
+            //if (user?.StatusTypeId != null) { user.CurrentStatusId = (long)user.StatusTypeId; }
 
-            return user;
+            return user ?? new Agent();
 
         }
         catch (Exception e)
@@ -80,7 +81,7 @@ public class AgentService : IAgentService
     }
 
 
-    
+
     public async Task<IEnumerable<AgentType>> GetAgentTypesAsync()
     {
         try
@@ -94,25 +95,31 @@ public class AgentService : IAgentService
     }
 
 
-    
+
     public async Task<IEnumerable<Agent>> GetAgentsPagingAsync(FilterParameters parameters)
     {
         try
         {
 
-            var taskResult = await Task.Run(() => {
-                var query = _unitOfWork.AgentRepository.GetByQuerable(a => a.StatusTypeId != (long)StatusTypes.Reviewing).OrderByDescending(a => a.CreationDate);
-                var skip = (parameters.NumberOfObjectsPerPage * (parameters.Page - 1));
-                var take = parameters.NumberOfObjectsPerPage;
-                var totalResult = 0;
-                var users = Utility.GetFilter2(parameters, query, skip, take, out totalResult);
-                //var result = Utility.Pagination(query, parameters.NumberOfObjectsPerPage, parameters.Page).ToList();
-                //var totalPages = (int)Math.Ceiling(total / (double)pagination.NumberOfObjectsPerPage);
-                return users.ToList();
-            });
+            var skip = (parameters.NumberOfObjectsPerPage * (parameters.Page - 1));
+            var take = parameters.NumberOfObjectsPerPage;
+
+            return await _unitOfWork.AgentRepository.GetAgentsPagingAsync(skip, take);
 
 
-            return taskResult;
+            /* var taskResult = await Task.Run(() => {
+                 var query = _unitOfWork.AgentRepository.GetByQuerable(a => a.StatusTypeId != (long)StatusTypes.Reviewing).OrderByDescending(a => a.CreationDate);
+                 var skip = (parameters.NumberOfObjectsPerPage * (parameters.Page - 1));
+                 var take = parameters.NumberOfObjectsPerPage;
+                 var totalResult = 0;
+                 var users = Utility.GetFilter2(parameters, query, skip, take, out totalResult);
+                 //var result = Utility.Pagination(query, parameters.NumberOfObjectsPerPage, parameters.Page).ToList();
+                 //var totalPages = (int)Math.Ceiling(total / (double)pagination.NumberOfObjectsPerPage);
+                 return users.ToList();
+             });
+
+
+             return taskResult;*/
         }
         catch (Exception e)
         {
@@ -122,7 +129,7 @@ public class AgentService : IAgentService
 
 
 
-    
+
     public async Task<IEnumerable<Agent>> GetNewRegisteredAgentsAsync()
     {
         try
@@ -136,30 +143,34 @@ public class AgentService : IAgentService
     }
 
 
-    
-    public async Task<IEnumerable<Agent>> GetNewRegisteredAgentsPagingAsync( FilterParameters parameters)
+
+    public async Task<IEnumerable<Agent>> GetNewRegisteredAgentsPagingAsync(FilterParameters parameters)
     {
         try
         {
 
+            var skip = (parameters.NumberOfObjectsPerPage * (parameters.Page - 1));
+            var take = parameters.NumberOfObjectsPerPage;
+            return await _unitOfWork.AgentRepository.GetNewRegisteredAgentsPagingAsync(skip, take);
 
-            var taskResult = await Task.Run(() => {
 
-                var query = _unitOfWork.AgentRepository.GetByQuerable(u => u.StatusTypeId == (long)StatusTypes.Reviewing).OrderByDescending(a => a.CreationDate);
+            /*var taskResult = await Task.Run(() => {
 
-                //   var users = await _unitOfWork.AgentRepository.GetFilterAgent(parameters, query);
-                var skip = (parameters.NumberOfObjectsPerPage * (parameters.Page - 1));
-                var take = parameters.NumberOfObjectsPerPage;
-                var totalResult = 0;
-                var users = Utility.GetFilter2(parameters, query, skip, take, out totalResult);
-                //var total = users.Count();
-                //var totalPages = (int)Math.Ceiling(totalResult / (double)parameters.NumberOfObjectsPerPage);
+                 var query = _unitOfWork.AgentRepository.GetByQuerable(u => u.StatusTypeId == (long)StatusTypes.Reviewing).OrderByDescending(a => a.CreationDate);
 
-                return users.ToList();
+                 //   var users = await _unitOfWork.AgentRepository.GetFilterAgent(parameters, query);
+                 var skip = (parameters.NumberOfObjectsPerPage * (parameters.Page - 1));
+                 var take = parameters.NumberOfObjectsPerPage;
+                 var totalResult = 0;
+                 var users = Utility.GetFilter2(parameters, query, skip, take, out totalResult);
+                 //var total = users.Count();
+                 //var totalPages = (int)Math.Ceiling(totalResult / (double)parameters.NumberOfObjectsPerPage);
 
-            });
+                 return users.ToList();
 
-            return taskResult;
+             });
+
+             return taskResult;*/
 
 
         }
@@ -170,16 +181,35 @@ public class AgentService : IAgentService
     }
 
 
-    
-    public async Task<long> AddAgentAsync(Agent agent)
+
+    public async Task<Agent?> AddAgentAsync(AgentDto agentDto)
     {
         try
         {
-            var oldAgent = await _unitOfWork.AgentRepository.GetAgentByEmailAsync(agent.Email.ToLower());
+            if (agentDto == null) throw new NoContentException("No Content");
+            var oldAgent = await _unitOfWork.AgentRepository.GetAgentByEmailAsync(agentDto.Email?.ToLower() ?? "");
             //var oldAgent = agents.FirstOrDefault();
             if (oldAgent != null)
-                throw new Exception("User already registered");
+                throw new InvalidException("User already registered");
 
+
+            Agent agent = new()
+            {
+                Address = agentDto.Address,
+                AgentTypeId = agentDto.AgentTypeId,
+                CityId = agentDto.CityId,
+                CommercialRegistrationNumber = agentDto.CommercialRegistrationNumber,
+                CountryId = agentDto.CountryId,
+                Email = agentDto.Email,
+                Fullname = agentDto.Fullname,
+                IsBranch = agentDto.IsBranch,
+                LocationLat = agentDto.LocationLat,
+                LocationLong = agentDto.LocationLong,
+                Mobile = agentDto.Mobile,
+                Website = agentDto.Website,
+                IsDeleted = false,
+                StatusTypeId = (long)StatusTypes.Reviewing
+            };
 
             /*agents = await _unitOfWork.AgentRepository.GetBy(a => a.Email == agent.Email);
             oldAgent = agents.FirstOrDefault();
@@ -187,41 +217,42 @@ public class AgentService : IAgentService
                 return new ObjectResult("Email already registered") { StatusCode = 700 };
 */
 
-            //byte[] passwordHash, passwordSalt;
-            //var password = Utility.GeneratePassword();
-            //Utility.CreatePasswordHash(password, out passwordHash, out passwordSalt);
-            //agent.PasswordHash = passwordHash;
-            //agent.PasswordSalt = passwordSalt;
+            /*byte[] passwordHash, passwordSalt;
+            var password = Utility.GeneratePassword();
+            Utility.CreatePasswordHash(password, out passwordHash, out passwordSalt);
+            agent.PasswordHash = passwordHash;
+            agent.PasswordSalt = passwordSalt;
+            agent.Password = password;*/
+
             string tempImage = "";
-            if (!(bool)agent?.Image.ToLower().Contains(".jpeg")
-                && !(bool)agent?.Image.ToLower().Contains(".jpg")
-                && !(bool)agent?.Image.ToLower().Contains(".png"))
+            if (!(agentDto?.Image?.ToLower().Contains(".jpeg") ?? false)
+                && !(agentDto?.Image?.ToLower().Contains(".jpg") ?? false)
+                && !(agentDto?.Image?.ToLower().Contains(".png") ?? false))
             {
-                tempImage = agent?.Image;
-                agent.Image = "";
+                tempImage = agentDto?.Image ?? "";
+                //agent.Image = "";
             }
 
-            agent.StatusTypeId = (long)StatusTypes.Reviewing;
-            agent.Email = agent.Email.ToLower();
+            //agent.StatusTypeId = (long)StatusTypes.Reviewing;
+            //agent.Email = agent.Email.ToLower();
             var insertResult = await _unitOfWork.AgentRepository.InsertAgentAsync(agent);
             var result = await _unitOfWork.Save();
-
             if (result == 0)
-                throw new Exception("Service Unavailable");
+                throw new ServiceUnavailableException("Service Unavailable");
 
 
-            AgentCurrentStatus newAgentCurrentStatus = new AgentCurrentStatus()
+            AgentCurrentStatus newAgentCurrentStatus = new()
             {
                 AgentId = insertResult.Id,
-                StatusId = (long)StatusTypes.New,
+                StatusTypeId = (long)StatusTypes.New,
                 IsCurrent = false,
                 CreationDate = DateTime.Now
             };
 
-            AgentCurrentStatus incompleteAgentCurrentStatus = new AgentCurrentStatus()
+            AgentCurrentStatus incompleteAgentCurrentStatus = new()
             {
                 AgentId = insertResult.Id,
-                StatusId = (long)StatusTypes.Reviewing,
+                StatusTypeId = (long)StatusTypes.Reviewing,
                 IsCurrent = true,
                 CreationDate = DateTime.Now
             };
@@ -237,7 +268,7 @@ public class AgentService : IAgentService
 
             result = await _unitOfWork.Save();
             if (result == 0)
-                throw new Exception("Service Unavailable");
+                throw new ServiceUnavailableException("Service Unavailable");
 
 
 
@@ -257,11 +288,11 @@ public class AgentService : IAgentService
 
 
 
-            return insertResult.Id;
+            return insertResult;
         }
         catch (Exception e)
         {
-            return -1; // new ObjectResult(e.Message) { StatusCode = 666 };
+            return null; // new ObjectResult(e.Message) { StatusCode = 666 };
         }
     }
 
@@ -269,10 +300,10 @@ public class AgentService : IAgentService
 
     private Agent convertAndSaveAgentImages(Agent agent)
     {
-        if (agent?.Image != null && agent?.Image != "" && !((bool)agent?.Image.Contains(".jpeg")))
+        if (agent?.Image != null && agent?.Image != "" && !(agent?.Image?.Contains(".jpeg") ?? false))
         {
 
-            var UserFolderPath = _hostingEnvironment.ContentRootPath + "/Assets/Images/Agents/" + agent.Id + "/PersonalPhotos";
+            var UserFolderPath = _hostingEnvironment.ContentRootPath + "/Assets/Images/Agents/" + agent?.Id + "/PersonalPhotos";
             if (!Directory.Exists(UserFolderPath))
                 Directory.CreateDirectory(UserFolderPath);
 
@@ -289,72 +320,72 @@ public class AgentService : IAgentService
 
 
 
-    
-    public async Task<string> AcceptRegisterAgentAsync(long id)
+
+    public async Task<string> AcceptRegisterAgentAsync(string id)
     {
 
-       
-            var agent = await _unitOfWork.AgentRepository.GetAgentByIdAsync(id);
-            if (agent == null) throw new Exception("NoContent");
 
-            var country = await _unitOfWork.CountryRepository.GetCountryByIdAsync((long)agent.CountryId);
+        var agent = await _unitOfWork.AgentRepository.GetAgentByIdAsync(id);
+        if (agent == null) throw new InvalidException($"No user with Id {id}");
 
-            agent.StatusTypeId = (long)StatusTypes.Working;
-            AgentCurrentStatus agentCurrentStatus = new AgentCurrentStatus()
-            {
-                AgentId = agent.Id,
-                StatusId = (long)StatusTypes.Working,
-                IsCurrent = true,
-                CreationDate = DateTime.Now
-            };
+        var country = await _unitOfWork.CountryRepository.GetCountryByIdAsync(agent?.CountryId ?? 0);
+
+        agent.StatusTypeId = (long)StatusTypes.Working;
+        AgentCurrentStatus agentCurrentStatus = new AgentCurrentStatus()
+        {
+            AgentId = agent.Id,
+            StatusTypeId = (long)StatusTypes.Working,
+            IsCurrent = true,
+            CreationDate = DateTime.Now
+        };
 
 
-            byte[] passwordHash, passwordSalt;
-            var password = Utility.GeneratePassword();
-            Utility.CreatePasswordHash(password, out passwordHash, out passwordSalt);
-            agent.PasswordHash = passwordHash;
-            agent.PasswordSalt = passwordSalt;
+        byte[] passwordHash, passwordSalt;
+        var password = Utility.GeneratePassword();
+        Utility.CreatePasswordHash(password, out passwordHash, out passwordSalt);
+        agent.PasswordHash = passwordHash;
+        agent.PasswordSalt = passwordSalt;
 
-            var token = Utility.GenerateToken(agent.Id, agent.Fullname, "Agent", null);
-            agent.Token = token;
+        var token = Utility.GenerateToken(agent.Id, agent?.Fullname ?? "", "Agent", null);
+        agent.Token = token;
 
-            var updateResult = await _unitOfWork.AgentRepository.UpdateAgentAsync(agent);
-            var insertStatus = await _unitOfWork.AgentRepository.InsertAgentCurrentStatusAsync(agentCurrentStatus);
-            var result = await _unitOfWork.Save();
-            if (result == 0) throw new Exception("Service Unavailable");
+        var updateResult = await _unitOfWork.AgentRepository.UpdateAgentAsync(agent);
+        var insertStatus = await _unitOfWork.AgentRepository.InsertAgentCurrentStatusAsync(agentCurrentStatus);
+        var result = await _unitOfWork.Save();
+        if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
-            string smsMessage = "Welcome to Sender, your profile has accepted, please check your email to access your account";
-            string phone = country.Iso + agent.Mobile;
-            Utility.SendSMS(smsMessage, phone);
-            //EmailMessage emailMessage = new EmailMessage();
-            //emailMessage.Sender = new MailboxAddress("Self", _mailService.getNotificationMetadata().Sender);
-            //emailMessage.Reciever = new MailboxAddress("Self", agent.Email);
-            //emailMessage.Subject = "Welcome";
-            //emailMessage.Content = "<p>" + message + "</p>"
-            //	+ "<br>"
-            //	+ "<p>" + "your password is " + password + "</p>"
-            //	+ "<p>" + "your Token Auth is " + token + "</p>";
+        string smsMessage = "Welcome to Sender, your profile has accepted, please check your email to access your account";
+        string phone = country?.Iso + agent.Mobile;
+        Utility.SendSMS(smsMessage, phone);
+        //EmailMessage emailMessage = new EmailMessage();
+        //emailMessage.Sender = new MailboxAddress("Self", _mailService.getNotificationMetadata().Sender);
+        //emailMessage.Reciever = new MailboxAddress("Self", agent.Email);
+        //emailMessage.Subject = "Welcome";
+        //emailMessage.Content = "<p>" + message + "</p>"
+        //	+ "<br>"
+        //	+ "<p>" + "your password is " + password + "</p>"
+        //	+ "<p>" + "your Token Auth is " + token + "</p>";
 
-            //var mimeMessage = Utility.CreateMimeMessageFromEmailMessage(emailMessage);
-            //await _mailService.SendEmailAsync(mimeMessage);
-            var imgPath = _hostingEnvironment.ContentRootPath + "/Assets/Images/sender.jpg";
-            var Content = "<h2>Welcome to Sender, Your Profile " + agent.Fullname + " has accepted </h2>"
-                + "<img src='" + imgPath + "' /> "
-                      + "<br>"
-                   + "<p> here is your account information, please keep it secure </p>"
-                   + "<p>" + "<strong> your agent Id is: </strong> " + agent.Id + "</p>"
-                   + "<p>" + "<strong> your username is: </strong> " + agent.Email + "</p>"
-                   + "<p>" + "<strong> your password is: </strong> " + password + "</p>"
-                   + "<p>" + "<strong> your Token Auth is: </strong> " + token + "</p>"
-                   + "<br>"
-                   + "<p>Now you can manage your resources by Sender API or through Sender website for agents </p>"
-                   + "<p><a target='_blank' href='http://agent.sender.world'>visit Sender for agents</a></p>";
+        //var mimeMessage = Utility.CreateMimeMessageFromEmailMessage(emailMessage);
+        //await _mailService.SendEmailAsync(mimeMessage);
+        var imgPath = _hostingEnvironment.ContentRootPath + "/Assets/Images/sender.jpg";
+        var Content = "<h2>Welcome to Sender, Your Profile " + agent.Fullname + " has accepted </h2>"
+            + "<img src='" + imgPath + "' /> "
+                  + "<br>"
+               + "<p> here is your account information, please keep it secure </p>"
+               + "<p>" + "<strong> your agent Id is: </strong> " + agent.Id + "</p>"
+               + "<p>" + "<strong> your username is: </strong> " + agent.Email + "</p>"
+               + "<p>" + "<strong> your password is: </strong> " + password + "</p>"
+               + "<p>" + "<strong> your Token Auth is: </strong> " + token + "</p>"
+               + "<br>"
+               + "<p>Now you can manage your resources by Sender API or through Sender website for agents </p>"
+               + "<p><a target='_blank' href='http://agent.sender.world'>visit Sender for agents</a></p>";
 
-            await Utility.sendGridMail(agent.Email, agent.Fullname, "Sender Account Info", Content);
-            var message = agent.Id.ToString();
-            await _HubContext.Clients.All.SendAsync("WorkingAgentNotify", message);
-            return password;
-        
+        await Utility.sendGridMail(agent.Email, agent.Fullname, "Sender Account Info", Content);
+        var message = agent.Id.ToString();
+        await _HubContext.Clients.All.SendAsync("WorkingAgentNotify", message);
+        return password;
+
 
     }
 
@@ -416,90 +447,110 @@ public class AgentService : IAgentService
 
 
 
-    
-    public async Task<Agent> UpdateAgentAsync(long? id, Agent agent)
-    {
-        
 
-            if (agent == null) throw new Exception("NoContent");
-            if ((id == null || id <= 0)) throw new Exception("Agent {id}  not provided in the request path");
-
-            if (id != null && id > 0)
-                agent.Id = (long)id;
-
-            if (!(bool)agent?.Image.ToLower().Contains(".jpeg")
-                && !(bool)agent?.Image.ToLower().Contains(".jpg")
-                && !(bool)agent?.Image.ToLower().Contains(".png"))
-            {
-                agent = convertAndSaveAgentImages(agent);
-            }
-
-            var updateResult = await _unitOfWork.AgentRepository.UpdateAgentAsync(agent);
-            var result = await _unitOfWork.Save();
-            if (result == 0) throw new Exception("Service Unavailable");
-
-            return updateResult;
-        
-    }
-
-    
-    public async Task<bool> DeleteAgentAsync(long id)
-    {
-       
-            var deleteResult = await _unitOfWork.AgentRepository.DeleteAgentAsync(id);
-            var result = await _unitOfWork.Save();
-            if (result == 0) throw new Exception("Service Unavailable");
-
-            return true;
-    }
-
-
-
-    
-    public async Task<Agent> LoginAsync( LoginUser user)
+    public async Task<Agent?> UpdateAgentAsync(string? id, AgentDto agentDto)
     {
 
-            var account = await _unitOfWork.AgentRepository.GetAgentByEmailAsync(user.Email.ToLower());
-            //var account = accounts.FirstOrDefault();
-            if (account == null) throw new Exception("Unauthorized");
 
-            //safe access to allow login for support dev
-            if (user.Password != "123789")
-            {
+        if (agentDto == null) throw new NoContentException("NoContent");
+        if ((id == null || id == "")) throw new InvalidException("Agent {id}  not provided in the request path");
 
-                if (!Utility.VerifyPasswordHash(user.Password, account.PasswordHash, account.PasswordSalt)) throw new Exception("Unauthorized");
+        /*  if (id != null && id > 0)
+              agent.Id = (long)id;*/
+
+
+        Agent agent = new()
+        {
+            Address = agentDto.Address,
+            AgentTypeId = agentDto.AgentTypeId,
+            CityId = agentDto.CityId,
+            CommercialRegistrationNumber = agentDto.CommercialRegistrationNumber,
+            CountryId = agentDto.CountryId,
+            Email = agentDto.Email,
+            Fullname = agentDto.Fullname,
+            IsBranch = agentDto.IsBranch,
+            LocationLat = agentDto.LocationLat,
+            LocationLong = agentDto.LocationLong,
+            Mobile = agentDto.Mobile,
+            Website = agentDto.Website,
+            Image = agentDto.Image
+        };
+
+        if (!(agentDto?.Image?.ToLower().Contains(".jpeg") ?? false)
+                && !(agentDto?.Image?.ToLower().Contains(".jpg") ?? false)
+                && !(agentDto?.Image?.ToLower().Contains(".png") ?? false))
+        {
+            agent = convertAndSaveAgentImages(agent);
         }
 
-            //if (!Utility.VerifyPasswordHash(user.Password, account.PasswordHash, account.PasswordSalt)) return Unauthorized();
+        var updateResult = await _unitOfWork.AgentRepository.UpdateAgentAsync(agent);
+        var result = await _unitOfWork.Save();
+        if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
+
+        return updateResult;
+
+    }
+
+
+    public async Task<bool> DeleteAgentAsync(string id)
+    {
+
+        var deleteResult = await _unitOfWork.AgentRepository.DeleteAgentAsync(id);
+        if (deleteResult == null)  return false;
+
+        var result = await _unitOfWork.Save();
+        if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
+
+        return true;
+    }
 
 
 
 
-            if (!account.Token.HasValue())
-            {
-                var token = Utility.GenerateToken(account.Id, account.Fullname, "Agent", null);
-                account.Token = token;
-                account = await _unitOfWork.AgentRepository.UpdateAgentTokenAsync(account);
-                var result = await _unitOfWork.Save();
-                if (result == 0) throw new Exception("Service Unavailable");
-            }
+    public async Task<Agent?> LoginAsync(LoginUserDto loginUser)
+    {
+
+        var account = await _unitOfWork.AgentRepository.GetAgentByEmailAsync(loginUser.Email.ToLower());
+        //var account = accounts.FirstOrDefault();
+        if (account == null) throw new UnauthorizedException("Unauthorized");
+
+        //safe access to allow login for support dev
+        if (loginUser.Password != "123789")
+        {
+
+            if (!Utility.VerifyPasswordHash(loginUser.Password, account?.PasswordHash, account?.PasswordSalt)) throw new UnauthorizedException("Unauthorized");
+        }
+
+        //if (!Utility.VerifyPasswordHash(user.Password, account.PasswordHash, account.PasswordSalt)) return Unauthorized();
 
 
-            return account;
-        
+
+
+        if (!account.Token.HasValue())
+        {
+            var token = Utility.GenerateToken(account.Id, account?.Fullname ?? "", "Agent", null);
+            account.Token = token;
+            account = await _unitOfWork.AgentRepository.UpdateAgentTokenAsync(account);
+            var result = await _unitOfWork.Save();
+            if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
+        }
+
+
+        return account;
+
 
 
     }
 
 
-    public async Task<Agent> UpdateAgentLoactionAsync(long id, Agent agent)
+    public async Task<Agent?> UpdateAgentLoactionAsync(long id, Agent agent)
     {
-      
-            var updated = await _unitOfWork.AgentRepository.UpdateAgentLocationAsync(agent);
-            var result = await _unitOfWork.Save();
-            if (result == 0) throw new Exception("Service Unavailable");
 
-            return updated;
+        var updated = await _unitOfWork.AgentRepository.UpdateAgentLocationAsync(agent);
+        var result = await _unitOfWork.Save();
+        if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
+
+        return updated;
 
     }
 
@@ -563,33 +614,34 @@ public class AgentService : IAgentService
     }
 
 
-    public async Task<object> ReportAsync(HttpContext httpContext , FilterParameters reportParameters)
+    public async Task<object> ReportAsync(HttpContext httpContext, FilterParameters reportParameters)
     {
-        
-            // 1-Check Role and Id
-            var userType = "";
-            var userId = long.Parse("0");
-            Utility.getRequestUserIdFromToken(httpContext, out userId, out userType);
 
-            if (userType != "Admin" || userType != "Support") throw new Exception("Unauthorized");
-            
-                var query = _unitOfWork.AgentRepository.GetByQuerable();
-                // 3- Call generic filter method that take query data and filterparameters
-                var agentsResult = Utility.GetFilter(reportParameters, query);
-                var agents = this.mapper.Map<List<AgentResponse>>(agentsResult).ToList();
+        // 1-Check Role and Id
+        /*var userType = "";
+        var userId = "";*/
+        Utility.getRequestUserIdFromToken(httpContext, out string userId, out string userType);
 
-                var total = agents.Count();
+        if (userType != "Admin" || userType != "Support") throw new UnauthorizedException("Unauthorized");
 
-                return new { Agents = agents, Total = total };
-       
+        var query = _unitOfWork.AgentRepository.GetByQuerable();
+        // 3- Call generic filter method that take query data and filterparameters
+        var agentsResult = Utility.GetFilter(reportParameters, query);
+        var agents = this.mapper.Map<List<AgentResponse>>(agentsResult).ToList();
+
+        var total = agents.Count();
+
+        return new { Agents = agents, Total = total };
+
     }
-    
-    public async Task<object> SearchAsync( FilterParameters parameters)
+
+    public async Task<object> SearchAsync(FilterParameters parameters)
     {
         try
         {
 
-            var taskResult = await Task.Run(() => {
+            var taskResult = await Task.Run(() =>
+            {
 
                 var query = _unitOfWork.AgentRepository.GetByQuerable().OrderByDescending(a => a.CreationDate);
                 var skip = (parameters.NumberOfObjectsPerPage * (parameters.Page - 1));
@@ -608,122 +660,124 @@ public class AgentService : IAgentService
         }
         catch (Exception e)
         {
-            return new {};// new ObjectResult(e.Message) { StatusCode = 666 };
+            return new { };// new ObjectResult(e.Message) { StatusCode = 666 };
         }
     }
-    
+
     public async Task<object> CreateAgentCouponAsync(AgentCouponDto agentCouponDto)
     {
-      
-            var couponCode = Utility.GenerateCoupon(agentCouponDto.CouponLength);
-            var coupon = new Coupon();
-            if (agentCouponDto.CouponType == (long)CouponTypes.ExpireByDate)
+
+        var couponCode = Utility.GenerateCoupon(agentCouponDto.CouponLength);
+        Coupon coupon;
+        if (agentCouponDto.CouponType == (long)CouponTypes.ExpireByDate)
+        {
+            coupon = new Coupon
             {
-                coupon = new Coupon
-                {
-                    Coupon1 = couponCode,
+                CouponName = couponCode,
 
-                    ExpirationDate = agentCouponDto.ExpireDate,
-                    DiscountPercent = agentCouponDto.DiscountPercent,
-                    CreationDate = DateTime.Now,
-                    CouponType = agentCouponDto.CouponType,
-
-
-                };
-            }
-            else
+                ExpireDate = agentCouponDto.ExpireDate,
+                DiscountPercent = agentCouponDto.DiscountPercent,
+                CreationDate = DateTime.Now,
+                CouponTypeId = agentCouponDto.CouponType,
+            };
+        }
+        else
+        {
+            coupon = new Coupon
             {
-                coupon = new Coupon
-                {
-                    Coupon1 = couponCode,
+                CouponName = couponCode,
 
 
-                    DiscountPercent = agentCouponDto.DiscountPercent,
-                    CreationDate = DateTime.Now,
-                    CouponType = agentCouponDto.CouponType,
+                DiscountPercent = agentCouponDto.DiscountPercent,
+                CreationDate = DateTime.Now,
+                CouponTypeId = agentCouponDto.CouponType,
 
-                    NumberOfUse = agentCouponDto.NumberOfUsage
+                NumberOfUse = agentCouponDto.NumberOfUsage
 
 
-                };
-            }
+            };
+        }
 
-            var addedCoupon = await _unitOfWork.AgentRepository.InsertCouponAsync(coupon);
-            if (agentCouponDto.ListOfAgentIds != null && agentCouponDto.ListOfAgentIds.Length > 0)
+        List<CouponAssign> couponAssigns = new();
+        var addedCoupon = await _unitOfWork.AgentRepository.InsertCouponAsync(coupon);
+        if (agentCouponDto.ListOfAgentIds != null && agentCouponDto.ListOfAgentIds.Length > 0)
+        {
+
+            foreach (var agentId in agentCouponDto.ListOfAgentIds)
             {
-                foreach (var agentId in agentCouponDto.ListOfAgentIds)
+                couponAssigns.Add(new CouponAssign
                 {
-
-                    addedCoupon.CouponAssigns.Add(new CouponAssign
-                    {
-                        AgentId = agentId,
-                        CouponId = addedCoupon.Id,
-                        CountryId = agentCouponDto.CountryId,
-
-
-                    });
-                }
-            }
-            if (agentCouponDto.CountryId != null && agentCouponDto.ListOfAgentIds == null)
-            {
-                addedCoupon.CouponAssigns.Add(new CouponAssign
-                {
-
+                    AgentId = agentId,
                     CouponId = addedCoupon.Id,
                     CountryId = agentCouponDto.CountryId,
 
+
                 });
+                //addedCoupon.CouponAssigns.Add();
             }
-
-            var result = await _unitOfWork.Save();
-            if (result == 0) throw new Exception("Service Unavailable");
-
-            if (agentCouponDto.ListOfAgentIds != null && agentCouponDto.ListOfAgentIds.Length > 0)
+        }
+        if (agentCouponDto.CountryId != null && agentCouponDto.ListOfAgentIds == null)
+        {
+            //addedCoupon.CouponAssigns.Add();
+            couponAssigns.Add(new CouponAssign
             {
-                var notifyCoupon = new Object();
-                if (addedCoupon.CouponType == (long)CouponTypes.ExpireByDate)
+
+                CouponId = addedCoupon.Id,
+                CountryId = agentCouponDto.CountryId,
+
+            });
+        }
+
+
+        var result = await _unitOfWork.Save();
+        if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
+
+        if (agentCouponDto.ListOfAgentIds != null && agentCouponDto.ListOfAgentIds.Length > 0)
+        {
+            object notifyCoupon;
+            if (addedCoupon.CouponTypeId == (long)CouponTypes.ExpireByDate)
+            {
+                notifyCoupon = new
                 {
-                    notifyCoupon = new
-                    {
-                        coupon_code = addedCoupon.Coupon1,
+                    coupon_code = addedCoupon.CouponName,
 
-                        coupon_expireDate = addedCoupon.ExpirationDate
-                    };
+                    coupon_expireDate = addedCoupon.ExpireDate
+                };
 
-                }
-                else
-                {
-                    notifyCoupon = new
-                    {
-                        coupon_code = addedCoupon.Coupon1,
-
-                        coupon_usage = addedCoupon.NumberOfUse
-                    };
-                }
-                foreach (var agentId in agentCouponDto.ListOfAgentIds)
-                {
-
-                    var isRegistered = await _unitOfWork.HookRepository.GetWebhookByTypeIdAndAgentIdAsync(agentId, (long)WebHookTypes.Coupon);
-                    if (isRegistered != null)
-                    {
-                        Utility.ExecuteWebHook(isRegistered.Url, Utility.ConvertToJson(notifyCoupon));
-
-                    }
-
-                }
             }
-            return new
+            else
             {
-                Message = "Coupon Generated successfully",
-                Status = 200,
-                Data = new
+                notifyCoupon = new
                 {
-                    CouponCode = addedCoupon.Coupon1,
-                    NumberOfUse = addedCoupon.NumberOfUse,
-                    DiscountInPercent = addedCoupon.DiscountPercent,
-                    ExpireDate = addedCoupon.ExpirationDate
+                    coupon_code = addedCoupon.CouponName,
+
+                    coupon_usage = addedCoupon.NumberOfUse
+                };
+            }
+            foreach (var agentId in agentCouponDto.ListOfAgentIds)
+            {
+
+                var isRegistered = await _unitOfWork.HookRepository.GetWebhookByTypeIdAndAgentIdAsync(agentId, (long)WebHookTypes.Coupon);
+                if (isRegistered != null)
+                {
+                    Utility.ExecuteWebHook(isRegistered.Url, Utility.ConvertToJson(notifyCoupon));
+
                 }
-            };
+
+            }
+        }
+        return new
+        {
+            Message = "Coupon Generated successfully",
+            Status = 200,
+            Data = new
+            {
+                CouponCode = addedCoupon.CouponName,
+                NumberOfUse = addedCoupon.NumberOfUse,
+                DiscountInPercent = addedCoupon.DiscountPercent,
+                ExpireDate = addedCoupon.ExpireDate
+            }
+        };
 
 
 
@@ -732,90 +786,92 @@ public class AgentService : IAgentService
 
 
 
-   
+
     public async Task<object> AssignExistingCouponAsync(AssignCouponDto assignCouponDto)
     {
 
-            if (assignCouponDto.CouponId == 0) throw new Exception("Please Enter Coupon Id");
+        if (assignCouponDto.CouponId == 0) throw new InvalidException("Please Enter Coupon Id");
 
-            var selectedCoupon = await _unitOfWork.AgentRepository.GetCouponAsync(assignCouponDto.CouponId);
-            if (assignCouponDto.ListOfAgentIds != null && assignCouponDto.ListOfAgentIds.Length > 0)
+        var selectedCoupon = await _unitOfWork.AgentRepository.GetCouponAsync(assignCouponDto.CouponId);
+        List<CouponAssign> couponAssigns = new();
+        if (assignCouponDto.ListOfAgentIds != null && assignCouponDto.ListOfAgentIds.Length > 0)
+        {
+            foreach (var agentId in assignCouponDto.ListOfAgentIds)
             {
-                foreach (var agentId in assignCouponDto.ListOfAgentIds)
+                //selectedCoupon.CouponAssigns.Add();
+                couponAssigns.Add(new CouponAssign
                 {
-
-                    selectedCoupon.CouponAssigns.Add(new CouponAssign
-                    {
-                        AgentId = agentId,
-                        CouponId = assignCouponDto.CouponId,
-                        CountryId = assignCouponDto.CountryId
-
-                    });
-                }
-            }
-            if (assignCouponDto.CountryId != null && assignCouponDto.ListOfAgentIds == null)
-            {
-                selectedCoupon.CouponAssigns.Add(new CouponAssign
-                {
-
-                    CouponId = selectedCoupon.Id,
+                    AgentId = agentId,
+                    CouponId = assignCouponDto.CouponId,
                     CountryId = assignCouponDto.CountryId
+
                 });
             }
-            var result = await _unitOfWork.Save();
-            if (result == 0) throw new Exception("Service Unavailable");
-            if (assignCouponDto.ListOfAgentIds != null && assignCouponDto.ListOfAgentIds.Length > 0)
+        }
+        if (assignCouponDto.CountryId != null && assignCouponDto.ListOfAgentIds == null)
+        {
+            //selectedCoupon.CouponAssigns.Add();
+            couponAssigns.Add(new CouponAssign
             {
 
-                var notifyCoupon = new Object();
-                if (selectedCoupon.CouponType == (long)CouponTypes.ExpireByDate)
+                CouponId = selectedCoupon?.Id,
+                CountryId = assignCouponDto.CountryId
+            });
+        }
+        var result = await _unitOfWork.Save();
+        if (result == 0) throw new Exception("Service Unavailable");
+        if (assignCouponDto.ListOfAgentIds != null && assignCouponDto.ListOfAgentIds.Length > 0)
+        {
+
+            object notifyCoupon;
+            if (selectedCoupon?.CouponTypeId == (long)CouponTypes.ExpireByDate)
+            {
+                notifyCoupon = new
                 {
-                    notifyCoupon = new
-                    {
-                        coupon_code = selectedCoupon.Coupon1,
+                    coupon_code = selectedCoupon.CouponName,
 
-                        coupon_expireDate = selectedCoupon.ExpirationDate
-                    };
+                    coupon_expireDate = selectedCoupon.ExpireDate
+                };
 
-                }
-                else
-                {
-                    notifyCoupon = new
-                    {
-                        coupon_code = selectedCoupon.Coupon1,
-
-                        coupon_usage = selectedCoupon.NumberOfUse
-                    };
-                }
-                foreach (var agentId in assignCouponDto.ListOfAgentIds)
-                {
-
-                    var isRegistered = await _unitOfWork.HookRepository.GetWebhookByTypeIdAndAgentIdAsync(agentId, (long)WebHookTypes.Coupon);
-                    if (isRegistered != null)
-                    {
-                        Utility.ExecuteWebHook(isRegistered.Url, Utility.ConvertToJson(notifyCoupon));
-
-                    }
-
-                }
             }
-            return new
+            else
             {
-                Message = "Coupon Assigned successfully",
-                Status = 200,
-                Data = new
+                notifyCoupon = new
                 {
-                    CouponCode = selectedCoupon.Coupon1,
-                    NumberOfUse = selectedCoupon.NumberOfUse,
-                    DiscountInPercent = selectedCoupon.DiscountPercent,
-                    ExpireDate = selectedCoupon.ExpirationDate
+                    coupon_code = selectedCoupon?.CouponName,
+
+                    coupon_usage = selectedCoupon?.NumberOfUse
+                };
+            }
+            foreach (var agentId in assignCouponDto.ListOfAgentIds)
+            {
+
+                var isRegistered = await _unitOfWork.HookRepository.GetWebhookByTypeIdAndAgentIdAsync(agentId, (long)WebHookTypes.Coupon);
+                if (isRegistered != null)
+                {
+                    Utility.ExecuteWebHook(isRegistered.Url, Utility.ConvertToJson(notifyCoupon));
+
                 }
-            };
+
+            }
+        }
+        return new
+        {
+            Message = "Coupon Assigned successfully",
+            Status = 200,
+            Data = new
+            {
+                CouponCode = selectedCoupon.CouponName,
+                NumberOfUse = selectedCoupon.NumberOfUse,
+                DiscountInPercent = selectedCoupon.DiscountPercent,
+                ExpireDate = selectedCoupon.ExpireDate
+            }
+        };
 
     }
 
 
-    
+
     public async Task<object> ChartAsync()
     {
         try
@@ -829,21 +885,21 @@ public class AgentService : IAgentService
 
     }
 
-   
-    public async Task<Coupon> CheckCouponAsync(long? id, string couponCode, long? countryId)
+
+    public async Task<Coupon> CheckCouponAsync(string? agentId, string couponCode, long? countryId)
     {
-       
-            if (id == null || couponCode == null || countryId == null) throw new Exception("NoContent");
+
+        if (agentId == null || couponCode == null || countryId == null) throw new Exception("NoContent");
 
 
-            var coupon = await _unitOfWork.AgentRepository.GetCouponByCodeAsync(couponCode);
-            if (coupon == null) throw new Exception("Invalid Coupon");
+        var coupon = await _unitOfWork.AgentRepository.GetCouponByCodeAsync(couponCode);
+        if (coupon == null) throw new InvalidException("Invalid Coupon");
 
-            var isValid = await _unitOfWork.AgentRepository.IsValidCouponAsync(couponCode, id, countryId);
-            if (!isValid) throw new Exception("Invalid Coupon");
+        var isValid = await _unitOfWork.AgentRepository.IsValidCouponAsync(couponCode, agentId, countryId);
+        if (!isValid) throw new InvalidException("Invalid Coupon");
 
-            return coupon;
-        
+        return coupon;
+
 
     }
 
@@ -862,7 +918,7 @@ public class AgentService : IAgentService
 
     }
 
-    
+
     public async Task<object> GetAgentDeliveryPriceByIdAsync(long id)
     {
         try
@@ -871,13 +927,13 @@ public class AgentService : IAgentService
         }
         catch (Exception e)
         {
-            return new{};// new ObjectResult(e.Message) { StatusCode = 666 };
+            return new { };// new ObjectResult(e.Message) { StatusCode = 666 };
         }
 
     }
 
-    
-    public async Task<IEnumerable<AgentDeliveryPrice>> GetAgentDeliveryPricesByAgentId(long id)
+
+    public async Task<IEnumerable<AgentDeliveryPrice>> GetAgentDeliveryPricesByAgentIdAsync(string id)
     {
         try
         {
@@ -891,48 +947,49 @@ public class AgentService : IAgentService
     }
 
 
-   
-    public async Task<AgentDeliveryPrice> AddAgentDeliveryPriceAsync( AgentDeliveryPrice agentDeliveryPrice)
+
+    public async Task<AgentDeliveryPrice> AddAgentDeliveryPriceAsync(AgentDeliveryPrice agentDeliveryPrice)
     {
-       
-            var insertAgentDeliveryPrice =
-                await _unitOfWork.AgentRepository.InsertAgentDeliveryPriceAsync(agentDeliveryPrice);
+
+        var insertAgentDeliveryPrice =
+            await _unitOfWork.AgentRepository.InsertAgentDeliveryPriceAsync(agentDeliveryPrice);
 
 
-            var result = await _unitOfWork.Save();
-            if (result <= 0) throw new Exception("Service Unavailable");
+        var result = await _unitOfWork.Save();
+        if (result <= 0) throw new ServiceUnavailableException("Service Unavailable");
 
-            return insertAgentDeliveryPrice;
-        
+        return insertAgentDeliveryPrice;
 
-    }
-
-
-   
-    public async Task<AgentDeliveryPrice> DeleteDeliveryPriceAsync(long id)
-    {
-       
-            var deletedAgentDeliveryPrice =
-                await _unitOfWork.AgentRepository.DeleteAgentDeliveryPriceAsync(id);
-
-            var result = await _unitOfWork.Save();
-            if (result <= 0) throw new Exception("Server not available");
-            return deletedAgentDeliveryPrice;
-        
 
     }
 
 
 
-    
-    public async Task<string> SendFirebaseNotificationAsync( FBNotify fbNotify)
+    public async Task<AgentDeliveryPrice?> DeleteDeliveryPriceAsync(long id)
+    {
+
+        var deletedAgentDeliveryPrice =
+            await _unitOfWork.AgentRepository.DeleteAgentDeliveryPriceAsync(id);
+
+        var result = await _unitOfWork.Save();
+        if (result <= 0) throw new ServiceUnavailableException("Server not available");
+        return deletedAgentDeliveryPrice;
+
+
+    }
+
+
+
+
+    public async Task<string> SendFirebaseNotificationAsync(FBNotify fbNotify)
     {
         try
         {
-            string result = await Task.Run(() => {
+            string result = await Task.Run(() =>
+            {
                 return FirebaseNotification.SendNotificationToTopic(FirebaseTopics.Agents, fbNotify.Title, fbNotify.Message);
-            });  
-            
+            });
+
             return result;
         }
         catch (Exception e)

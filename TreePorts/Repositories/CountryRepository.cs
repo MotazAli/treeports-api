@@ -1,13 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using TreePorts.Interfaces.Repositories;
-using TreePorts.Models;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
+﻿using System.Linq.Expressions;
 
 namespace TreePorts.Repositories
 {
@@ -20,7 +11,7 @@ namespace TreePorts.Repositories
             _context = context;
         }
 
-        public async Task<CountryPrice> DeleteCountryPriceAsync(long id)
+        public async Task<CountryPrice?> DeleteCountryPriceAsync(long id)
         {
             var countryPrice = await _context.CountryPrices.FirstOrDefaultAsync(c => c.Id == id);
             if (countryPrice == null) return null;
@@ -37,7 +28,7 @@ namespace TreePorts.Repositories
             return await _context.CountryOrderPrices.ToListAsync();
         }
 
-        public async Task<CountryOrderPrice> GetCountryOrderPriceByIdAsync(long id)
+        public async Task<CountryOrderPrice?> GetCountryOrderPriceByIdAsync(long id)
         {
             return await _context.CountryOrderPrices.FirstOrDefaultAsync(cop => cop.Id == id);
         }
@@ -54,7 +45,7 @@ namespace TreePorts.Repositories
             return insertResult.Entity;
         }
 
-        public async Task<CountryOrderPrice> DeleteCountryOrderPriceAsync(long id)
+        public async Task<CountryOrderPrice?> DeleteCountryOrderPriceAsync(long id)
         {
             CountryOrderPrice oldCountryOrderPrice =
                 await _context.CountryOrderPrices.FirstOrDefaultAsync(cop => cop.Id == id);
@@ -64,7 +55,7 @@ namespace TreePorts.Repositories
             return oldCountryOrderPrice;
         }
 
-        public async Task<IEnumerable<CountryProductPrice>> DeleteCountryProductPriceByCountryIdAsync(long id)
+        public async Task<IEnumerable<CountryProductPrice>?> DeleteCountryProductPriceByCountryIdAsync(long id)
         {
             var countryProductsPrices = _context.CountryProductPrices.Where(c => c.CountryId == id); //.ToListAsync();
             if (countryProductsPrices == null) return null;
@@ -74,7 +65,7 @@ namespace TreePorts.Repositories
             return countryProductsPrices;
         }
 
-        public async Task<CountryProductPrice> DeleteCountryProductPriceAsync(long id)
+        public async Task<CountryProductPrice?> DeleteCountryProductPriceAsync(long id)
         {
             var countryProductPrice = await _context.CountryProductPrices.FirstOrDefaultAsync(c => c.Id == id);
             if (countryProductPrice == null) return null;
@@ -84,7 +75,7 @@ namespace TreePorts.Repositories
             return countryProductPrice;
         }
 
-        public async Task<IEnumerable<CountryProductPrice>> DeleteCountryProductPriceByProductIdAsync(long id)
+        public async Task<IEnumerable<CountryProductPrice>?> DeleteCountryProductPriceByProductIdAsync(long id)
         {
             var ProductcountriesPrices = _context.CountryProductPrices.Where(c => c.ProductId == id);//.ToListAsync();
             if (ProductcountriesPrices == null) return null;
@@ -112,7 +103,7 @@ namespace TreePorts.Repositories
 
 
 
-        public async Task<object> GetCityPriceByIdAsync(long id)
+        public async Task<object?> GetCityPriceByIdAsync(long id)
         {
             var data = from cityPrice in _context.CityPrices.Where(cp => cp.Id == id).AsNoTracking()
                        join city in _context.Cities.AsNoTracking() on cityPrice.CityId equals city.Id
@@ -147,7 +138,7 @@ namespace TreePorts.Repositories
             return insertResult.Entity;
         }
 
-        public async Task<CityPrice> DeleteCityPriceAsync(long id)
+        public async Task<CityPrice?> DeleteCityPriceAsync(long id)
         {
             var oldCityPrice = await _context.CityPrices.FirstOrDefaultAsync(cp => cp.Id == id);
             if (oldCityPrice == null) return null;
@@ -162,7 +153,7 @@ namespace TreePorts.Repositories
             return await _context.CityOrderPrices.ToListAsync();
         }
 
-        public async Task<CityOrderPrice> GetCityOrderPriceByIdAsync(long id)
+        public async Task<CityOrderPrice?> GetCityOrderPriceByIdAsync(long id)
         {
             return await _context.CityOrderPrices.FirstOrDefaultAsync(cop => cop.Id == id);
         }
@@ -179,7 +170,7 @@ namespace TreePorts.Repositories
             return insertResult.Entity;
         }
 
-        public async Task<CityOrderPrice> DeleteCityOrderPriceAsync(long id)
+        public async Task<CityOrderPrice?> DeleteCityOrderPriceAsync(long id)
         {
             var oldCityOrderPrice = await _context.CityOrderPrices.FirstOrDefaultAsync(cop => cop.Id == id);
             if (oldCityOrderPrice == null) return null;
@@ -188,7 +179,21 @@ namespace TreePorts.Repositories
             return oldCityOrderPrice;
         }
 
-        public async Task<IEnumerable<Country>> GetCountriesAsync() => await _context.Countries.ToListAsync();
+        
+
+
+
+        public async Task<IEnumerable<Country>> GetCountriesAsync()
+        {
+            //return   _context.Countries.AsAsyncEnumerable().ConfigureAwait(false);
+            /*await foreach (Country country in _context.Countries.AsAsyncEnumerable())
+            {
+                yield return country;
+            }*/
+
+            return await _context.Countries.ToListAsync();
+        }
+
         // public async Task<List<Country>> GetAll()
         // {
         //     return await _context.Countries.ToListAsync();
@@ -216,7 +221,7 @@ namespace TreePorts.Repositories
             return await _context.CountryProductPrices.Where(cpp => cpp.IsDeleted == false).ToListAsync();
         }
 
-        public async Task<object> GetCountryAllDataAsync(long id)
+        public async Task<object?> GetCountryAllDataAsync(long id)
         {
 
 
@@ -239,7 +244,7 @@ namespace TreePorts.Repositories
             return await _context.Countries.Where(predicate).ToListAsync();
         }
 
-        public async Task<Country> GetCountryByIdAsync(long id)
+        public async Task<Country?> GetCountryByIdAsync(long id)
         {
             /*return await _context.Countries.Where(c => c.Id == ID).FirstOrDefaultAsync();*/
             return await _context.Countries.FirstOrDefaultAsync(c => c.Id == id);
@@ -256,7 +261,7 @@ namespace TreePorts.Repositories
         //    return await _context.CountryPrices.Where(cp => cp.Id == ID).FirstOrDefaultAsync();
         //}
 
-        public async Task<object> GetCountryPriceByIdAsync(long id)
+        public async Task<object?> GetCountryPriceByIdAsync(long id)
         {
             var data = from countryPrice in _context.CountryPrices.Where(cp => cp.Id == id).AsNoTracking()
                        join country in _context.Countries.AsNoTracking() on countryPrice.CountryId equals country.Id
@@ -269,7 +274,7 @@ namespace TreePorts.Repositories
             return await _context.CountryProductPrices.Where(predicate).ToListAsync();
         }
 
-        public async Task<CountryProductPrice> GetCountryProductPriceByIdAsync(long id)
+        public async Task<CountryProductPrice?> GetCountryProductPriceByIdAsync(long id)
         {
             return await _context.CountryProductPrices.FirstOrDefaultAsync(cpp => cpp.Id == id);
         }
@@ -282,7 +287,7 @@ namespace TreePorts.Repositories
         }
 
 
-        public async Task<Country> UpdateCountryAsync(Country country) {
+        public async Task<Country?> UpdateCountryAsync(Country country) {
             var oldCountry = await _context.Countries.FirstOrDefaultAsync(c => c.Id == country.Id);
             if (oldCountry == null) return null;
 
@@ -376,7 +381,7 @@ namespace TreePorts.Repositories
         }
 
         private async Task<CountryPriceHistory> InsertCountryPriceHistoryAsync(CountryPrice oldCountryPrice) {
-            CountryPriceHistory history = new CountryPriceHistory() 
+            CountryPriceHistory history = new () 
             {
                 CountryPriceId = oldCountryPrice.Id,
                 Kilometers = oldCountryPrice.Kilometers,
@@ -411,7 +416,7 @@ namespace TreePorts.Repositories
 
         private async Task<CountryProductPriceHistory> InsertProductPriceHistoryAsync(CountryProductPrice oldCountryProductPrice)
         {
-            CountryProductPriceHistory history = new CountryProductPriceHistory()
+            CountryProductPriceHistory history = new ()
             {
                 CountryProductPriceId = oldCountryProductPrice.Id,
                 Kilometers = oldCountryProductPrice.Kilometers,
@@ -446,7 +451,7 @@ namespace TreePorts.Repositories
             return await _context.Cities.ToListAsync();
         }
 
-        public async Task<City> GetCityByIdAsync(long id)
+        public async Task<City?> GetCityByIdAsync(long id)
         {
             /*return await _context.Cities.Where(c => c.Id == ID).FirstOrDefaultAsync();*/
             return await _context.Cities.FirstOrDefaultAsync(c => c.Id == id);
@@ -502,7 +507,7 @@ namespace TreePorts.Repositories
         }
 
 
-        public async Task<City> UpdateCityAsync(City city) {
+        public async Task<City?> UpdateCityAsync(City city) {
             var oldCity = await _context.Cities.FirstOrDefaultAsync(c => c.Id == city.Id);
             if (oldCity == null) return null;
 
@@ -524,7 +529,7 @@ namespace TreePorts.Repositories
             return cities;
         }
 
-        public async Task<Country> DeleteCountryAsync(long id)
+        public async Task<Country?> DeleteCountryAsync(long id)
         {
             var oldCountry = await _context.Countries.FirstOrDefaultAsync(c => c.Id == id);
             if (oldCountry == null) return null;
@@ -539,7 +544,7 @@ namespace TreePorts.Repositories
 
         
 
-        public async Task<City> DeleteCityAsync(long id)
+        public async Task<City?> DeleteCityAsync(long id)
         {
             var oldCity = await _context.Cities.FirstOrDefaultAsync(c => c.Id == id);
             if (oldCity == null) return null;

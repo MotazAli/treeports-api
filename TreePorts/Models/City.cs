@@ -7,24 +7,20 @@ namespace TreePorts.Models
     {
         public City()
         {
-            AdminUsers = new HashSet<AdminUser>();
-            Agents = new HashSet<Agent>();
-            SupportUsers = new HashSet<SupportUser>();
-            Users = new HashSet<CaptainUser>();
+            CaptainUsers = new HashSet<CaptainUser>();
         }
 
         public long Id { get; set; }
         public long? CountryId { get; set; }
-        public string Name { get; set; }
-        public string ArabicName { get; set; }
-        public long? CreatedBy { get; set; }
-        public long? ModifiedBy { get; set; }
+        public string? Name { get; set; }
+        public string? ArabicName { get; set; }
+        public string? CreatedBy { get; set; }
+        public long? CreatedByType { get; set; }
+        public string? ModifiedBy { get; set; }
+        public long? ModifiedByType { get; set; }
         public DateTime? CreationDate { get; set; }
         public DateTime? ModificationDate { get; set; }
 
-        public virtual ICollection<AdminUser> AdminUsers { get; set; }
-        public virtual ICollection<Agent> Agents { get; set; }
-        public virtual ICollection<SupportUser> SupportUsers { get; set; }
-        public virtual ICollection<CaptainUser> Users { get; set; }
+        public virtual ICollection<CaptainUser> CaptainUsers { get; set; }
     }
 }

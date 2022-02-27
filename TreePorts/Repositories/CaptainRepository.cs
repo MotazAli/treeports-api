@@ -1,13 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Device.Location;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Threading.Tasks;
+﻿using System.Linq.Expressions;
 using TreePorts.DTO;
-using TreePorts.Interfaces.Repositories;
-using TreePorts.Models;
+using TreePorts.DTO.Records;
 
 namespace TreePorts.Repositories;
 
@@ -21,54 +14,55 @@ namespace TreePorts.Repositories;
             _context = context;
         }
 
-        public  async Task<CaptainUser> DeleteUserAsync(long id)
+        public  async Task<CaptainUser?> DeleteCaptainUserAsync(string id)
         {
-            var oldUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+            var oldUser = await _context.CaptainUsers.FirstOrDefaultAsync(u => u.Id == id);
             if (oldUser == null) return null;
 
-            _context.Users.Remove(oldUser);
+            _context.CaptainUsers.Remove(oldUser);
             return oldUser;
         }
 
-        public async Task<List<CaptainUser>> GetUsersAsync()
+        public async Task<IEnumerable<CaptainUser>> GetCaptainUsersAsync()
         {
-            return await _context.Users.ToListAsync();
+            return await _context.CaptainUsers.ToListAsync();
         }
 
         
 
-        public async Task<List<CaptainUser>> GetUsersByAsync(Expression<Func<CaptainUser, bool>> predicate)
+        public async Task<IEnumerable<CaptainUser>> GetCaptainUsersByAsync(Expression<Func<CaptainUser, bool>> predicate)
         {
-            return await _context.Users.Where(predicate).ToListAsync();
+            return await _context.CaptainUsers.Where(predicate).ToListAsync();
         }
 
-        public async Task<CaptainUser> GetUserByIdAsync(long id)
+        public async Task<CaptainUser?> GetCaptainUserByIdAsync(string id)
         {
-            return await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+            return await _context.CaptainUsers.FirstOrDefaultAsync(u => u.Id == id);
         }
 
-        public async Task<CaptainUser> InsertUserAsync(CaptainUser user)
+        public async Task<CaptainUser> InsertCaptainUserAsync(CaptainUser user)
         {
-            user.CreationDate = DateTime.Now;
+            /*user.CreationDate = DateTime.Now;
             var userAccount = user.UserAccounts.FirstOrDefault();
             if (userAccount != null)
-                userAccount.CreationDate = user.CreationDate;
+                userAccount.CreationDate = user.CreationDate;*/
+
             
-            var result = await _context.Users.AddAsync(user);
+            user.Id = Guid.NewGuid().ToString();
+            var result = await _context.CaptainUsers.AddAsync(user);
             return result.Entity;
         }
 
-        public async Task<CaptainUser> UpdateUserAsync(CaptainUser user)
+        public async Task<CaptainUser?> UpdateCaptainUserAsync(CaptainUser user)
         {
-            var oldUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == user.Id);
+            var oldUser = await _context.CaptainUsers.FirstOrDefaultAsync(u => u.Id == user.Id);
             if (oldUser == null) return null;
 
             oldUser.FirstName = user.FirstName ?? oldUser.FirstName;
-            oldUser.FamilyName = user.FamilyName ?? oldUser.FamilyName;
+            oldUser.LastName = user.LastName ?? oldUser.LastName;
             oldUser.StcPay = user.StcPay ?? oldUser.StcPay;
             oldUser.VehiclePlateNumber = user.VehiclePlateNumber ?? oldUser.VehiclePlateNumber;
             oldUser.NbsherNationalNumberImage = user.NbsherNationalNumberImage ?? oldUser.NbsherNationalNumberImage;
-            oldUser.NationalNumberExpDate = user.NationalNumberExpDate ?? oldUser.NationalNumberExpDate;
             oldUser.BirthDate = user.BirthDate ?? oldUser.BirthDate;
 
             oldUser.NationalNumber = user.NationalNumber ?? oldUser.NationalNumber;
@@ -76,28 +70,13 @@ namespace TreePorts.Repositories;
             oldUser.CityId = user.CityId ?? oldUser.CityId;
           
             oldUser.Gender = user.Gender ?? oldUser.Gender;
-            oldUser.BirthDay = user.BirthDay ?? oldUser.BirthDay;
-            oldUser.BirthMonth = user.BirthMonth ?? oldUser.BirthMonth;
-            oldUser.BirthYear = user.BirthYear ?? oldUser.BirthYear;
             oldUser.Mobile = user.Mobile ?? oldUser.Mobile;
            
-            oldUser.ResidenceExpireDay = user.ResidenceExpireDay ?? oldUser.ResidenceExpireDay;
-            oldUser.ResidenceExpireMonth = user.ResidenceExpireMonth ?? oldUser.ResidenceExpireMonth;
-            oldUser.ResidenceExpireYear = user.ResidenceExpireYear ?? oldUser.ResidenceExpireYear;
-            oldUser.PersonalImageName = user.PersonalImageName ?? oldUser.PersonalImageName;
-            oldUser.PersonalImageAndroidPath = user.PersonalImageAndroidPath ?? oldUser.PersonalImageAndroidPath;
-            oldUser.NationalNumberImageName = user.NationalNumberImageName ?? oldUser.NationalNumberImageName;
-            oldUser.NationalNumberImageAndroidPath = user.NationalNumberImageAndroidPath ?? oldUser.NationalNumberImageAndroidPath;
+            oldUser.NationalNumberExpireDate = user.NationalNumberExpireDate ?? oldUser.NationalNumberExpireDate;
             oldUser.ResidenceCountryId = user.ResidenceCountryId ?? oldUser.ResidenceCountryId;
             oldUser.ResidenceCityId = user.ResidenceCityId ?? oldUser.ResidenceCityId;
             oldUser.ModifiedBy = user.ModifiedBy ?? oldUser.ModifiedBy;
             oldUser.ModificationDate = DateTime.Now;
-
-            if (user.UserVehicles != null && user.UserVehicles.Count > 0)
-            {
-                oldUser.UserVehicles.Clear();
-                oldUser.UserVehicles.Add(user.UserVehicles.FirstOrDefault());
-            }
 
             _context.Entry<CaptainUser>(oldUser).State = EntityState.Modified;
 
@@ -106,45 +85,48 @@ namespace TreePorts.Repositories;
         }
 
 
-        public async Task<CaptainUserAccount> DeleteUserAccountAsync(long id)
+        public async Task<CaptainUserAccount?> DeleteCaptainUserAccountAsync(string id)
         {
-            var account = await _context.UserAccounts.FirstOrDefaultAsync(a => a.Id == id);
+            var account = await _context.CaptainUserAccounts.FirstOrDefaultAsync(a => a.Id == id);
+            if (account == null) return null;
+
             account.ModificationDate = DateTime.Now;
             account.IsDeleted = true;
             _context.Entry<CaptainUserAccount>(account).State = EntityState.Modified;
             return account;
         }
 
-        public async Task<List<CaptainUserAccount>> GetUsersAccountsAsync()
+        public async Task<IEnumerable<CaptainUserAccount>> GetCaptainUsersAccountsAsync()
         {
-            return await _context.UserAccounts.Where(a => a.IsDeleted == false).ToListAsync();
+            return await _context.CaptainUserAccounts.Where(a => a.IsDeleted == false).ToListAsync();
         }
 
-        public async Task<List<CaptainUserAccount>> GetUsersAccountsByAsync(Expression<Func<CaptainUserAccount, bool>> predicate)
+        public async Task<IEnumerable<CaptainUserAccount>> GetCaptainUsersAccountsByAsync(Expression<Func<CaptainUserAccount, bool>> predicate)
         {
-            return await _context.UserAccounts.Where(predicate).Include(u => u.User).ToListAsync();
+            return await _context.CaptainUserAccounts.Where(predicate).ToListAsync();
         }
 
-        public async Task<CaptainUserAccount> GetUserAccountByIdAsync(long id)
+        public async Task<CaptainUserAccount?> GetCaptainUserAccountByIdAsync(string id)
         {
-            return await _context.UserAccounts.FirstOrDefaultAsync(a => a.Id == id);
+            return await _context.CaptainUserAccounts.FirstOrDefaultAsync(a => a.Id == id);
         }
 
 
-        public async Task<CaptainUserAccount> InsertUserAccountAsync(CaptainUserAccount account)
+        public async Task<CaptainUserAccount> InsertCaptainUserAccountAsync(CaptainUserAccount account)
         {
+            account.Id = Guid.NewGuid().ToString();
             account.CreationDate = DateTime.Now;
-            var result = await _context.UserAccounts.AddAsync(account);
+            var result = await _context.CaptainUserAccounts.AddAsync(account);
             return result.Entity;
         }
 
-        public async Task<CaptainUserAccount> UpdateUserAccountAsync(CaptainUserAccount account)
+        public async Task<CaptainUserAccount?> UpdateCaptainUserAccountAsync(CaptainUserAccount account)
         {
-            var oldAccount = await _context.UserAccounts.FirstOrDefaultAsync(a => a.Id == account.Id);
+            var oldAccount = await _context.CaptainUserAccounts.FirstOrDefaultAsync(a => a.Id == account.Id);
             if (oldAccount == null) return null;
 
 
-            oldAccount.UserId = account.UserId;
+            oldAccount.CaptainUserId = account.CaptainUserId;
             oldAccount.StatusTypeId = account.StatusTypeId;
             oldAccount.Mobile = account.Mobile;
             oldAccount.PasswordHash = account.PasswordHash;
@@ -159,46 +141,46 @@ namespace TreePorts.Repositories;
         }
 
 
-        public IQueryable<CaptainUserAccount> GetUserAccountByQuerable(Expression<Func<CaptainUserAccount, bool>> predicate)
+        public IQueryable<CaptainUserAccount> GetCaptainUserAccountByQuerable(Expression<Func<CaptainUserAccount, bool>> predicate)
         {
-            return _context.UserAccounts.Where(predicate).Include(u => u.User);
+            return _context.CaptainUserAccounts.Where(predicate);
         }
 
-        public IQueryable<CaptainUserAccount> GetUserAccountByQuerable()
+        public IQueryable<CaptainUserAccount> GetCaptainUserAccountByQuerable()
         {
-            return _context.UserAccounts.Include(u => u.User);
+            return _context.CaptainUserAccounts;
         }
 
 
-        public async Task<List<CaptainUserNewRequest>> GetUsersNewRequestsAsync()
+        public async Task<IEnumerable<CaptainUserNewRequest>> GetCaptainUsersNewRequestsAsync()
         {
-            return await _context.UserNewRequests.ToListAsync();
+            return await _context.CaptainUserNewRequests.ToListAsync();
         }
 
-        public async Task<CaptainUserNewRequest> GetUserNewRequestByIdAsync(long id)
+        public async Task<CaptainUserNewRequest?> GetCaptainUserNewRequestByIdAsync(long id)
         {
-            return await _context.UserNewRequests.FirstOrDefaultAsync( u => u.Id == id );
+            return await _context.CaptainUserNewRequests.FirstOrDefaultAsync( u => u.Id == id );
         }
 
-        public async Task<List<CaptainUserNewRequest>> GetUsersNewRequestsByAsync(Expression<Func<CaptainUserNewRequest, bool>> predicate)
+        public async Task<IEnumerable<CaptainUserNewRequest>> GetCaptainUsersNewRequestsByAsync(Expression<Func<CaptainUserNewRequest, bool>> predicate)
         {
-            return await _context.UserNewRequests.Where(predicate).ToListAsync();
+            return await _context.CaptainUserNewRequests.Where(predicate).ToListAsync();
         }
 
-        public async Task<CaptainUserNewRequest> InsertUserNewRequestAsync(CaptainUserNewRequest userRequest)
+        public async Task<CaptainUserNewRequest> InsertCaptainUserNewRequestAsync(CaptainUserNewRequest userRequest)
         {
             userRequest.CreationDate = DateTime.Now;
-            var inserResult = await _context.UserNewRequests.AddAsync(userRequest);
+            var inserResult = await _context.CaptainUserNewRequests.AddAsync(userRequest);
             return inserResult.Entity;
         }
 
-        public async Task<CaptainUserNewRequest> UpdateUserNewRequestAsync(CaptainUserNewRequest userRequest)
+        public async Task<CaptainUserNewRequest?> UpdateCaptainUserNewRequestAsync(CaptainUserNewRequest userRequest)
         {
-            var oldUserNewRequest = await _context.UserNewRequests.FirstOrDefaultAsync(u => u.Id == userRequest.Id);
+            var oldUserNewRequest = await _context.CaptainUserNewRequests.FirstOrDefaultAsync(u => u.Id == userRequest.Id);
             if (oldUserNewRequest == null) return null;
 
             oldUserNewRequest.OrderId = userRequest.OrderId;
-            oldUserNewRequest.UserId = userRequest.UserId;
+            oldUserNewRequest.CaptainUserAccountId = userRequest.CaptainUserAccountId;
             oldUserNewRequest.AgentId = userRequest.AgentId;
             oldUserNewRequest.ModifiedBy = userRequest.ModifiedBy;
             oldUserNewRequest.ModificationDate = DateTime.Now;
@@ -208,54 +190,56 @@ namespace TreePorts.Repositories;
 
         }
 
-        public async Task<CaptainUserNewRequest> DeleteUserNewRequestAsync(long id)
+        public async Task<CaptainUserNewRequest?> DeleteCaptainUserNewRequestAsync(long id)
         {
-            var oldUserNewRequest = await _context.UserNewRequests.FirstOrDefaultAsync(u => u.Id == id);
-            _context.UserNewRequests.Remove(oldUserNewRequest);
+            var oldUserNewRequest = await _context.CaptainUserNewRequests.FirstOrDefaultAsync(u => u.Id == id);
+            if (oldUserNewRequest == null) return null;
+
+            _context.CaptainUserNewRequests.Remove(oldUserNewRequest);
             return oldUserNewRequest;
         }
 
 
-        public async Task<List<CaptainUserNewRequest>> DeleteUserNewRequestByUserIdAsync(long id)
+        public async Task<IEnumerable<CaptainUserNewRequest>?> DeleteCaptainUserNewRequestByUserIdAsync(string id)
         {
 
-            var oldUserNewRequests = await _context.UserNewRequests.Where(u => u.UserId == id).ToListAsync();
+            var oldUserNewRequests = await _context.CaptainUserNewRequests.Where(u => u.CaptainUserAccountId == id).ToListAsync();
             if (oldUserNewRequests is null || oldUserNewRequests.Count == 0) return null;
 
-            _context.UserNewRequests.RemoveRange(oldUserNewRequests);
+            _context.CaptainUserNewRequests.RemoveRange(oldUserNewRequests);
             return oldUserNewRequests;
         }
 
 
-        public async Task<List<CaptainUserAcceptedRequest>> GetUsersAcceptedRequestsAsync()
+        public async Task<IEnumerable<CaptainUserAcceptedRequest>> GetCaptainUsersAcceptedRequestsAsync()
         {
-            return await _context.UserAcceptedRequests.ToListAsync();
+            return await _context.CaptainUserAcceptedRequests.ToListAsync();
         }
 
-        public async Task<CaptainUserAcceptedRequest> GetUserAcceptedRequestByIdAsync(long id)
+        public async Task<CaptainUserAcceptedRequest?> GetCaptainUserAcceptedRequestByIdAsync(long id)
         {
-            return await _context.UserAcceptedRequests.FirstOrDefaultAsync(u => u.Id == id);
+            return await _context.CaptainUserAcceptedRequests.FirstOrDefaultAsync(u => u.Id == id);
         }
 
-        public async Task<List<CaptainUserAcceptedRequest>> GetUsersAcceptedRequestsByAsync(Expression<Func<CaptainUserAcceptedRequest, bool>> predicate)
+        public async Task<IEnumerable<CaptainUserAcceptedRequest>> GetCaptainUsersAcceptedRequestsByAsync(Expression<Func<CaptainUserAcceptedRequest, bool>> predicate)
         {
-            return await _context.UserAcceptedRequests.Include(u=>u.User).Where(predicate).ToListAsync();
+            return await _context.CaptainUserAcceptedRequests.Where(predicate).ToListAsync();
         }
 
-        public async Task<CaptainUserAcceptedRequest> InsertUserAcceptedRequestAsync(CaptainUserAcceptedRequest userAcceptedRequest)
+        public async Task<CaptainUserAcceptedRequest> InsertCaptainUserAcceptedRequestAsync(CaptainUserAcceptedRequest userAcceptedRequest)
         {
             userAcceptedRequest.CreationDate = DateTime.Now;
-            var inserResult = await _context.UserAcceptedRequests.AddAsync(userAcceptedRequest);
+            var inserResult = await _context.CaptainUserAcceptedRequests.AddAsync(userAcceptedRequest);
             return inserResult.Entity;
         }
 
-        public async Task<CaptainUserAcceptedRequest> UpdateUserAcceptedRequestAsync(CaptainUserAcceptedRequest userAcceptedRequest)
+        public async Task<CaptainUserAcceptedRequest?> UpdateCaptainUserAcceptedRequestAsync(CaptainUserAcceptedRequest userAcceptedRequest)
         {
-            var oldUserAcceptedRequest = await _context.UserAcceptedRequests.FirstOrDefaultAsync(u => u.Id == userAcceptedRequest.Id);
+            var oldUserAcceptedRequest = await _context.CaptainUserAcceptedRequests.FirstOrDefaultAsync(u => u.Id == userAcceptedRequest.Id);
             if (oldUserAcceptedRequest == null) return null;
 
             oldUserAcceptedRequest.OrderId = userAcceptedRequest.OrderId;
-            oldUserAcceptedRequest.UserId = userAcceptedRequest.UserId;
+            oldUserAcceptedRequest.CaptainUserAccountId = userAcceptedRequest.CaptainUserAccountId;
             oldUserAcceptedRequest.ModifiedBy = userAcceptedRequest.ModifiedBy;
             oldUserAcceptedRequest.ModificationDate = DateTime.Now;
 
@@ -263,52 +247,54 @@ namespace TreePorts.Repositories;
             return oldUserAcceptedRequest;
         }
 
-        public async Task<CaptainUserAcceptedRequest> DeleteUserAcceptedRequestAsync(long id)
+        public async Task<CaptainUserAcceptedRequest?> DeleteCaptainUserAcceptedRequestAsync(long id)
         {
 
-            var oldUserAcceptedRequest = await _context.UserAcceptedRequests.FirstOrDefaultAsync(u => u.Id == id);
-            _context.UserAcceptedRequests.Remove(oldUserAcceptedRequest);
+            var oldUserAcceptedRequest = await _context.CaptainUserAcceptedRequests.FirstOrDefaultAsync(u => u.Id == id);
+            if (oldUserAcceptedRequest == null) return null;
+
+            _context.CaptainUserAcceptedRequests.Remove(oldUserAcceptedRequest);
             return oldUserAcceptedRequest;
         }
 
-		public async Task<List<BoxType>> GetBoxTypesAsync()
+		public async Task<IEnumerable<BoxType>> GetBoxTypesAsync()
         {
             return await _context.BoxTypes.ToListAsync();
         }
 
-        public async Task<BoxType> GetBoxTypeByIdAsync(long id)
+        public async Task<BoxType?> GetBoxTypeByIdAsync(long id)
         {
             return await _context.BoxTypes.FirstOrDefaultAsync(u => u.Id == id);
         }
 
-        public async Task<List<CaptainUserBox>> GetUsersBoxesAsync()
+        public async Task<IEnumerable<CaptainUserBox>> GetCaptainUsersBoxesAsync()
         {
-            return await _context.UserBoxs.ToListAsync();
+            return await _context.CaptainUserBoxs.ToListAsync();
         }
 
-        public async Task<CaptainUserBox> GetUserBoxById(long id)
+        public async Task<CaptainUserBox?> GetCaptainUserBoxById(long id)
         {
-            return await _context.UserBoxs.FirstOrDefaultAsync(u => u.Id == id);
+            return await _context.CaptainUserBoxs.FirstOrDefaultAsync(u => u.Id == id);
         }
 
-        public async Task<List<CaptainUserBox>> GetUsersBoxesByAsync(Expression<Func<CaptainUserBox, bool>> predicate)
+        public async Task<IEnumerable<CaptainUserBox>> GetCaptainUsersBoxesByAsync(Expression<Func<CaptainUserBox, bool>> predicate)
         {
-            return await _context.UserBoxs.Where(predicate).ToListAsync();
+            return await _context.CaptainUserBoxs.Where(predicate).ToListAsync();
         }
 
-        public async Task<CaptainUserBox> InsertUserBoxAsync(CaptainUserBox userBox)
+        public async Task<CaptainUserBox> InsertCaptainUserBoxAsync(CaptainUserBox userBox)
         {
             userBox.CreationDate = DateTime.Now;
-            var inserResult = await _context.UserBoxs.AddAsync(userBox);
+            var inserResult = await _context.CaptainUserBoxs.AddAsync(userBox);
             return inserResult.Entity;
         }
 
-        public async Task<CaptainUserBox> UpdateUserBoxAsync(CaptainUserBox userBox)
+        public async Task<CaptainUserBox?> UpdateCaptainUserBoxAsync(CaptainUserBox userBox)
         {
-            var oldUserBox = await _context.UserBoxs.FirstOrDefaultAsync(u => u.Id == userBox.Id);
+            var oldUserBox = await _context.CaptainUserBoxs.FirstOrDefaultAsync(u => u.Id == userBox.Id);
             if (oldUserBox == null) return null;
 
-            oldUserBox.UserVehicleId = userBox.UserVehicleId;
+            oldUserBox.CaptainUserVehicleId = userBox.CaptainUserVehicleId;
             oldUserBox.BoxTypeId = userBox.BoxTypeId;
             oldUserBox.IsDeleted = userBox.IsDeleted;
             oldUserBox.ModifiedBy = userBox.ModifiedBy;
@@ -318,10 +304,10 @@ namespace TreePorts.Repositories;
             return oldUserBox;
         }
 
-        public async Task<CaptainUserBox> DeleteUserBoxAsync(long id)
+        public async Task<CaptainUserBox?> DeleteCaptainUserBoxAsync(long id)
         {
 
-            var oldUserBox = await _context.UserBoxs.FirstOrDefaultAsync(u => u.Id == id);
+            var oldUserBox = await _context.CaptainUserBoxs.FirstOrDefaultAsync(u => u.Id == id);
             if (oldUserBox == null) return null;
 
             oldUserBox.IsDeleted = true;
@@ -329,34 +315,34 @@ namespace TreePorts.Repositories;
             return oldUserBox;
         }
 
-		public async Task<List<CaptainUserCurrentBalance>> GetUsersCurrentBalancesAsync()
+		public async Task<IEnumerable<CaptainUserCurrentBalance>> GetCaptainUsersCurrentBalancesAsync()
         {
-            return await _context.UserCurrentBalances.ToListAsync();
+            return await _context.CaptainUserCurrentBalances.ToListAsync();
         }
 
-        public async Task<CaptainUserCurrentBalance> GetUserCurrentBalanceByIdAsync(long id)
+        public async Task<CaptainUserCurrentBalance?> GetCaptainUserCurrentBalanceByIdAsync(long id)
         {
-            return await _context.UserCurrentBalances.FirstOrDefaultAsync(u => u.Id == id);
+            return await _context.CaptainUserCurrentBalances.FirstOrDefaultAsync(u => u.Id == id);
         }
 
-        public async Task<List<CaptainUserCurrentBalance>> GetUsersCurrentBalancesByAsync(Expression<Func<CaptainUserCurrentBalance, bool>> predicate)
+        public async Task<IEnumerable<CaptainUserCurrentBalance>> GetCaptainUsersCurrentBalancesByAsync(Expression<Func<CaptainUserCurrentBalance, bool>> predicate)
         {
-            return await _context.UserCurrentBalances.Where(predicate).ToListAsync();
+            return await _context.CaptainUserCurrentBalances.Where(predicate).ToListAsync();
         }
 
-        public async Task<CaptainUserCurrentBalance> InsertUserCurrentBalanceAsync(CaptainUserCurrentBalance userCurrentBalance)
+        public async Task<CaptainUserCurrentBalance> InsertCaptainUserCurrentBalanceAsync(CaptainUserCurrentBalance userCurrentBalance)
         {
             userCurrentBalance.CreationDate = DateTime.Now;
-            var inserResult = await _context.UserCurrentBalances.AddAsync(userCurrentBalance);
+            var inserResult = await _context.CaptainUserCurrentBalances.AddAsync(userCurrentBalance);
             return inserResult.Entity;
         }
 
-        public async Task<CaptainUserCurrentBalance> UpdateUserCurrentBalanceAsync(CaptainUserCurrentBalance userCurrentBalance)
+        public async Task<CaptainUserCurrentBalance?> UpdateCaptainUserCurrentBalanceAsync(CaptainUserCurrentBalance userCurrentBalance)
         {
-            var oldUserCurrentBalance = await _context.UserCurrentBalances.FirstOrDefaultAsync(u => u.Id == userCurrentBalance.Id);
+            var oldUserCurrentBalance = await _context.CaptainUserCurrentBalances.FirstOrDefaultAsync(u => u.Id == userCurrentBalance.Id);
             if (oldUserCurrentBalance == null) return null;
 
-            oldUserCurrentBalance.UserPaymentId = userCurrentBalance.UserPaymentId;
+            oldUserCurrentBalance.CaptainUserPaymentId = userCurrentBalance.CaptainUserPaymentId;
             oldUserCurrentBalance.PaymentStatusTypeId = userCurrentBalance.PaymentStatusTypeId;
             oldUserCurrentBalance.ModifiedBy = userCurrentBalance.ModifiedBy;
             oldUserCurrentBalance.ModificationDate = DateTime.Now;
@@ -365,41 +351,41 @@ namespace TreePorts.Repositories;
             return userCurrentBalance;
         }
 
-        public async Task<CaptainUserCurrentBalance> DeleteUserCurrentBalanceAsync(long id)
+        public async Task<CaptainUserCurrentBalance?> DeleteCaptainUserCurrentBalanceAsync(long id)
         {
-            var oldUserCurrentBalance = await _context.UserCurrentBalances.FirstOrDefaultAsync(u => u.Id == id);
+            var oldUserCurrentBalance = await _context.CaptainUserCurrentBalances.FirstOrDefaultAsync(u => u.Id == id);
             if (oldUserCurrentBalance == null) return null;
 
-            _context.UserCurrentBalances.Remove(oldUserCurrentBalance);
+            _context.CaptainUserCurrentBalances.Remove(oldUserCurrentBalance);
             return oldUserCurrentBalance;
         }
 
-        public async Task<List<CaptainUserCurrentLocation>> GetUsersCurrentLocationsAsync()
+        public async Task<IEnumerable<CaptainUserCurrentLocation>> GetCaptainUsersCurrentLocationsAsync()
         {
-            return await _context.UserCurrentLocations.ToListAsync();
+            return await _context.CaptainUserCurrentLocations.ToListAsync();
         }
 
-        public async Task<CaptainUserCurrentLocation> GetUserCurrentLocationByIdAsync(long id)
+        public async Task<CaptainUserCurrentLocation?> GetCaptainUserCurrentLocationByIdAsync(long id)
         {
-            return await _context.UserCurrentLocations.FirstOrDefaultAsync(u => u.Id == id);
+            return await _context.CaptainUserCurrentLocations.FirstOrDefaultAsync(u => u.Id == id);
         }
 
-        public async Task<List<CaptainUserCurrentLocation>> GetUsersCurrentLocationsByAsync(Expression<Func<CaptainUserCurrentLocation, bool>> predicate)
+        public async Task<IEnumerable<CaptainUserCurrentLocation>> GetCaptainUsersCurrentLocationsByAsync(Expression<Func<CaptainUserCurrentLocation, bool>> predicate)
         {
-            return await _context.UserCurrentLocations.Where(predicate).ToListAsync();
+            return await _context.CaptainUserCurrentLocations.Where(predicate).ToListAsync();
         }
 
-        public async Task<CaptainUserCurrentLocation> InsertUserCurrentLocationAsync(CaptainUserCurrentLocation userCurrentLocation)
+        public async Task<CaptainUserCurrentLocation> InsertCaptainUserCurrentLocationAsync(CaptainUserCurrentLocation userCurrentLocation)
         {
 
-            var oldUserCurrentLocations = await _context.UserCurrentLocations.Where(l => l.UserId == userCurrentLocation.UserId).ToListAsync();
+            var oldUserCurrentLocations = await _context.CaptainUserCurrentLocations.Where(l => l.CaptainUserAccountId == userCurrentLocation.CaptainUserAccountId).ToListAsync();
             if (oldUserCurrentLocations != null && oldUserCurrentLocations.Count > 0)
             {
                 var oldUserCurrentLocation = oldUserCurrentLocations[0];
                 if (oldUserCurrentLocations.Count > 1)
                 {
                     var removedLocation = oldUserCurrentLocations.Where(l => l.ModificationDate == null);
-                    _context.UserCurrentLocations.RemoveRange(removedLocation);
+                    _context.CaptainUserCurrentLocations.RemoveRange(removedLocation);
                     await _context.SaveChangesAsync();
                 }
                 //oldUserCurrentLocation.UserId = userCurrentLocation.UserId;
@@ -413,7 +399,7 @@ namespace TreePorts.Repositories;
             }
 
             userCurrentLocation.CreationDate = DateTime.Now;
-            var inserResult = await _context.UserCurrentLocations.AddAsync(userCurrentLocation);
+            var inserResult = await _context.CaptainUserCurrentLocations.AddAsync(userCurrentLocation);
             return inserResult.Entity;
 
 
@@ -434,12 +420,12 @@ namespace TreePorts.Repositories;
              return inserResult.Entity;*/
         }
 
-        public async Task<CaptainUserCurrentLocation> UpdateUserCurrentLocationAsync(CaptainUserCurrentLocation userCurrentLocation)
+        public async Task<CaptainUserCurrentLocation?> UpdateCaptainUserCurrentLocationAsync(CaptainUserCurrentLocation userCurrentLocation)
         {
-            var oldUserCurrentLocation = await _context.UserCurrentLocations.FirstOrDefaultAsync(u => u.Id == userCurrentLocation.Id);
+            var oldUserCurrentLocation = await _context.CaptainUserCurrentLocations.FirstOrDefaultAsync(u => u.Id == userCurrentLocation.Id);
             if (oldUserCurrentLocation == null) return null;
 
-            oldUserCurrentLocation.UserId = userCurrentLocation.UserId;
+            oldUserCurrentLocation.CaptainUserAccountId = userCurrentLocation.CaptainUserAccountId;
             oldUserCurrentLocation.Lat = userCurrentLocation.Lat;
             oldUserCurrentLocation.Long = userCurrentLocation.Long;
             oldUserCurrentLocation.ModifiedBy = userCurrentLocation.ModifiedBy;
@@ -449,13 +435,13 @@ namespace TreePorts.Repositories;
             return oldUserCurrentLocation;
         }
 
-        public async Task<CaptainUserCurrentLocation> DeleteUserCurrentLocationAsync(long id)
+        public async Task<CaptainUserCurrentLocation?> DeleteCaptainUserCurrentLocationByCaptainUserAccountIdAsync(string id)
         {
 
-            var oldUserCurrentLocation = await _context.UserCurrentLocations.Where(u => u.UserId == id).ToListAsync();
+            var oldUserCurrentLocation = await _context.CaptainUserCurrentLocations.Where(u => u.CaptainUserAccountId == id).ToListAsync();
             if (oldUserCurrentLocation == null || oldUserCurrentLocation.Count() <= 0) return null;
 
-            _context.UserCurrentLocations.RemoveRange(oldUserCurrentLocation);
+            _context.CaptainUserCurrentLocations.RemoveRange(oldUserCurrentLocation);
             return oldUserCurrentLocation[0];
 
             /* var oldUserCurrentLocation = await _context.UserCurrentLocations.FirstOrDefaultAsync(u => u.Id == id);
@@ -465,43 +451,43 @@ namespace TreePorts.Repositories;
              return oldUserCurrentLocation;*/
         }
 
-        public async Task<List<CaptainUserCurrentStatus>> GetUsersCurrentStatusesAsync()
+        public async Task<IEnumerable<CaptainUserCurrentStatus>> GetCaptainUsersCurrentStatusesAsync()
         {
-            return await _context.UserCurrentStatuses.ToListAsync();
+            return await _context.CaptainUserCurrentStatuses.ToListAsync();
         }
 
-        public async Task<CaptainUserCurrentStatus> GetUserCurrentStatusByIdAsync(long id)
+        public async Task<CaptainUserCurrentStatus?> GetCaptainUserCurrentStatusByIdAsync(long id)
         {
-            return await _context.UserCurrentStatuses.FirstOrDefaultAsync(u => u.Id == id);
+            return await _context.CaptainUserCurrentStatuses.FirstOrDefaultAsync(u => u.Id == id);
         }
 
-        public async Task<List<CaptainUserCurrentStatus>> GetUsersCurrentStatusesByAsync(Expression<Func<CaptainUserCurrentStatus, bool>> predicate)
+        public async Task<IEnumerable<CaptainUserCurrentStatus>> GetCaptainUsersCurrentStatusesByAsync(Expression<Func<CaptainUserCurrentStatus, bool>> predicate)
         {
-            return await _context.UserCurrentStatuses.Where(predicate).ToListAsync();
+            return await _context.CaptainUserCurrentStatuses.Where(predicate).ToListAsync();
         }
 
-        public async Task<CaptainUserCurrentStatus> InsertUserCurrentStatusAsync(CaptainUserCurrentStatus userCurrentStatus)
+        public async Task<CaptainUserCurrentStatus> InsertCaptainUserCurrentStatusAsync(CaptainUserCurrentStatus userCurrentStatus)
         {
             var currentDate = DateTime.Now;
 
-            var oldUserCurrentStatus = await _context.UserCurrentStatuses.FirstOrDefaultAsync(u => u.UserId == userCurrentStatus.UserId);
+            var oldUserCurrentStatus = await _context.CaptainUserCurrentStatuses.FirstOrDefaultAsync(u => u.CaptainUserAccountId == userCurrentStatus.CaptainUserAccountId);
             if (oldUserCurrentStatus != null && oldUserCurrentStatus.Id > 0)
             {
                 CaptainUserStatusHistory statusHistory = new CaptainUserStatusHistory()
                 {
-                    UserId = oldUserCurrentStatus.UserId,
+                    CaptainUserAccountId = oldUserCurrentStatus.CaptainUserAccountId,
                     StatusTypeId = oldUserCurrentStatus.StatusTypeId,
                     CreationDate = currentDate,
                     ModificationDate = oldUserCurrentStatus.ModificationDate
                 };
 
 
-                oldUserCurrentStatus.UserId = userCurrentStatus.UserId;
+                oldUserCurrentStatus.CaptainUserAccountId = userCurrentStatus.CaptainUserAccountId;
                 oldUserCurrentStatus.StatusTypeId = userCurrentStatus.StatusTypeId;
                 oldUserCurrentStatus.IsCurrent = true;
                 oldUserCurrentStatus.ModificationDate = currentDate;
 
-                await _context.UserStatusHistories.AddAsync(statusHistory);
+                await _context.CaptainUserStatusHistories.AddAsync(statusHistory);
                 _context.Entry<CaptainUserCurrentStatus>(oldUserCurrentStatus).State = EntityState.Modified;
                 return oldUserCurrentStatus;
 
@@ -510,14 +496,14 @@ namespace TreePorts.Repositories;
             {
                 CaptainUserStatusHistory statusHistory = new CaptainUserStatusHistory()
                 {
-                    UserId = userCurrentStatus.UserId,
+                    CaptainUserAccountId = userCurrentStatus.CaptainUserAccountId,
                     StatusTypeId = (long)StatusTypes.New,
                     CreationDate = currentDate,
                     ModificationDate = userCurrentStatus.ModificationDate
                 };
-                await _context.UserStatusHistories.AddAsync(statusHistory);
+                await _context.CaptainUserStatusHistories.AddAsync(statusHistory);
                 userCurrentStatus.CreationDate = currentDate;
-                var insertResult = await _context.UserCurrentStatuses.AddAsync(userCurrentStatus);
+                var insertResult = await _context.CaptainUserCurrentStatuses.AddAsync(userCurrentStatus);
                 return insertResult.Entity;
             }
 
@@ -525,70 +511,69 @@ namespace TreePorts.Repositories;
             
         }
 
-        public async Task<CaptainUserCurrentStatus> UpdateUserCurrentStatusAsync(CaptainUserCurrentStatus userCurrentStatus)
+        public async Task<CaptainUserCurrentStatus?> UpdateCaptainUserCurrentStatusAsync(CaptainUserCurrentStatus userCurrentStatus)
         {
-            var oldUserCurrentStatus = await _context.UserCurrentStatuses.FirstOrDefaultAsync(u => u.Id == userCurrentStatus.Id);
+            var oldUserCurrentStatus = await _context.CaptainUserCurrentStatuses.FirstOrDefaultAsync(u => u.Id == userCurrentStatus.Id);
             if (oldUserCurrentStatus == null) return null;
 
             var currentDate = DateTime.Now;
             CaptainUserStatusHistory statusHistory = new CaptainUserStatusHistory()
             {
-                UserId = oldUserCurrentStatus.UserId,
+                CaptainUserAccountId = oldUserCurrentStatus.CaptainUserAccountId,
                 StatusTypeId = oldUserCurrentStatus.StatusTypeId,
-                CreationDate = currentDate,
-                CreatedBy = 1
+                CreationDate = currentDate
             };
 
 
 
-            oldUserCurrentStatus.UserId = userCurrentStatus.UserId;
+            oldUserCurrentStatus.CaptainUserAccountId = userCurrentStatus.CaptainUserAccountId;
             oldUserCurrentStatus.StatusTypeId = userCurrentStatus.StatusTypeId;
             oldUserCurrentStatus.IsCurrent = userCurrentStatus.IsCurrent;
             oldUserCurrentStatus.ModifiedBy = userCurrentStatus.ModifiedBy;
             oldUserCurrentStatus.ModificationDate = currentDate;
 
-            var insertResult = await _context.UserStatusHistories.AddAsync(statusHistory);
+            var insertResult = await _context.CaptainUserStatusHistories.AddAsync(statusHistory);
             _context.Entry<CaptainUserCurrentStatus>(oldUserCurrentStatus).State = EntityState.Modified;
             return oldUserCurrentStatus;
         }
 
-        public async Task<CaptainUserCurrentStatus> DeleteUserCurrentStatusAsync(long id)
+        public async Task<CaptainUserCurrentStatus?> DeleteCaptainUserCurrentStatusAsync(long id)
         {
-            var oldUserCurrentStatus = await _context.UserCurrentStatuses.FirstOrDefaultAsync(u => u.Id == id);
+            var oldUserCurrentStatus = await _context.CaptainUserCurrentStatuses.FirstOrDefaultAsync(u => u.Id == id);
             if (oldUserCurrentStatus == null) return null;
 
-            _context.UserCurrentStatuses.Remove(oldUserCurrentStatus);
+            _context.CaptainUserCurrentStatuses.Remove(oldUserCurrentStatus);
             return oldUserCurrentStatus;
         }
 
-        public async Task<List<CaptainUserIgnoredPenalty>> GetUsersIgnoredPenaltiesAsync()
+        public async Task<IEnumerable<CaptainUserIgnoredPenalty>> GetCaptainUsersIgnoredPenaltiesAsync()
         {
-            return await _context.UserIgnoredPenalties.ToListAsync();
+            return await _context.CaptainUserIgnoredPenalties.ToListAsync();
         }
 
-        public async Task<CaptainUserIgnoredPenalty> GetUserIgnoredPenaltyByIdAsync(long id)
+        public async Task<CaptainUserIgnoredPenalty?> GetCaptainUserIgnoredPenaltyByIdAsync(long id)
         {
-            return await _context.UserIgnoredPenalties.FirstOrDefaultAsync(u => u.Id == id);
+            return await _context.CaptainUserIgnoredPenalties.FirstOrDefaultAsync(u => u.Id == id);
         }
 
-        public async Task<List<CaptainUserIgnoredPenalty>> GetUsersIgnoredPenaltiesByAsync(Expression<Func<CaptainUserIgnoredPenalty, bool>> predicate)
+        public async Task<IEnumerable<CaptainUserIgnoredPenalty>> GetCaptainUsersIgnoredPenaltiesByAsync(Expression<Func<CaptainUserIgnoredPenalty, bool>> predicate)
         {
-            return await _context.UserIgnoredPenalties.Where(predicate).ToListAsync();
+            return await _context.CaptainUserIgnoredPenalties.Where(predicate).ToListAsync();
         }
 
-        public async Task<CaptainUserIgnoredPenalty> InsertUserIgnoredPenaltyAsync(CaptainUserIgnoredPenalty userIgnoredPenalty)
+        public async Task<CaptainUserIgnoredPenalty> InsertCaptainUserIgnoredPenaltyAsync(CaptainUserIgnoredPenalty userIgnoredPenalty)
         {
             userIgnoredPenalty.CreationDate = DateTime.Now;
-            var inserResult = await _context.UserIgnoredPenalties.AddAsync(userIgnoredPenalty);
+            var inserResult = await _context.CaptainUserIgnoredPenalties.AddAsync(userIgnoredPenalty);
             return inserResult.Entity;
         }
 
-        public async Task<CaptainUserIgnoredPenalty> UpdateUserIgnoredPenaltyAsync(CaptainUserIgnoredPenalty userIgnoredPenalty)
+        public async Task<CaptainUserIgnoredPenalty?> UpdateCaptainUserIgnoredPenaltyAsync(CaptainUserIgnoredPenalty userIgnoredPenalty)
         {
-            var oldUserIgnoredPenalty = await _context.UserIgnoredPenalties.FirstOrDefaultAsync(u => u.Id == userIgnoredPenalty.Id);
+            var oldUserIgnoredPenalty = await _context.CaptainUserIgnoredPenalties.FirstOrDefaultAsync(u => u.Id == userIgnoredPenalty.Id);
             if (oldUserIgnoredPenalty == null) return null;
 
-            oldUserIgnoredPenalty.UserId = userIgnoredPenalty.UserId;
+            oldUserIgnoredPenalty.CaptainUserAccountId = userIgnoredPenalty.CaptainUserAccountId;
             oldUserIgnoredPenalty.SystemSettingId = userIgnoredPenalty.SystemSettingId;
             oldUserIgnoredPenalty.PenaltyStatusTypeId = userIgnoredPenalty.PenaltyStatusTypeId;
             oldUserIgnoredPenalty.ModifiedBy = userIgnoredPenalty.ModifiedBy;
@@ -598,43 +583,43 @@ namespace TreePorts.Repositories;
             return oldUserIgnoredPenalty;
         }
 
-        public async Task<CaptainUserIgnoredPenalty> DeleteUserIgnoredPenaltyAsync(long id)
+        public async Task<CaptainUserIgnoredPenalty?> DeleteCaptainUserIgnoredPenaltyAsync(long id)
         {
-            var oldUserIgnoredPenalty = await _context.UserIgnoredPenalties.FirstOrDefaultAsync(u => u.Id == id);
+            var oldUserIgnoredPenalty = await _context.CaptainUserIgnoredPenalties.FirstOrDefaultAsync(u => u.Id == id);
             if (oldUserIgnoredPenalty == null) return null;
 
-            _context.UserIgnoredPenalties.Remove(oldUserIgnoredPenalty);
+            _context.CaptainUserIgnoredPenalties.Remove(oldUserIgnoredPenalty);
             return oldUserIgnoredPenalty;
         }
 
-        public async Task<List<CaptainUserIgnoredRequest>> GetUsersIgnoredRequestsAsync()
+        public async Task<IEnumerable<CaptainUserIgnoredRequest>> GetCaptainUsersIgnoredRequestsAsync()
         {
-            return await _context.UserIgnoredRequests.ToListAsync();
+            return await _context.CaptainUserIgnoredRequests.ToListAsync();
         }
 
-        public async Task<CaptainUserIgnoredRequest> GetUserIgnoredRequestByIdAsync(long id)
+        public async Task<CaptainUserIgnoredRequest?> GetCaptainUserIgnoredRequestByIdAsync(long id)
         {
-            return await _context.UserIgnoredRequests.FirstOrDefaultAsync(u => u.Id == id);
+            return await _context.CaptainUserIgnoredRequests.FirstOrDefaultAsync(u => u.Id == id);
         }
 
-        public async Task<List<CaptainUserIgnoredRequest>> GetUsersIgnoredRequestsByAsync(Expression<Func<CaptainUserIgnoredRequest, bool>> predicate)
+        public async Task<IEnumerable<CaptainUserIgnoredRequest>> GetCaptainUsersIgnoredRequestsByAsync(Expression<Func<CaptainUserIgnoredRequest, bool>> predicate)
         {
-            return await _context.UserIgnoredRequests.Where(predicate).ToListAsync();
+            return await _context.CaptainUserIgnoredRequests.Where(predicate).ToListAsync();
         }
 
-        public async Task<CaptainUserIgnoredRequest> InsertUserIgnoredRequestAsync(CaptainUserIgnoredRequest userIgnoredRequest)
+        public async Task<CaptainUserIgnoredRequest> InsertCaptainUserIgnoredRequestAsync(CaptainUserIgnoredRequest userIgnoredRequest)
         {
             userIgnoredRequest.CreationDate = DateTime.Now;
-            var inserResult = await _context.UserIgnoredRequests.AddAsync(userIgnoredRequest);
+            var inserResult = await _context.CaptainUserIgnoredRequests.AddAsync(userIgnoredRequest);
             return inserResult.Entity;
         }
 
-        public async Task<CaptainUserIgnoredRequest> UpdateUserIgnoredRequestAsync(CaptainUserIgnoredRequest userIgnoredRequest)
+        public async Task<CaptainUserIgnoredRequest?> UpdateCaptainUserIgnoredRequestAsync(CaptainUserIgnoredRequest userIgnoredRequest)
         {
-            var oldUserIgnoredRequest = await _context.UserIgnoredRequests.FirstOrDefaultAsync(u => u.Id == userIgnoredRequest.Id);
+            var oldUserIgnoredRequest = await _context.CaptainUserIgnoredRequests.FirstOrDefaultAsync(u => u.Id == userIgnoredRequest.Id);
             if (oldUserIgnoredRequest == null) return null;
 
-            oldUserIgnoredRequest.UserId = userIgnoredRequest.UserId;
+            oldUserIgnoredRequest.CaptainUserAccountId = userIgnoredRequest.CaptainUserAccountId;
             oldUserIgnoredRequest.OrderId = userIgnoredRequest.OrderId;
             oldUserIgnoredRequest.AgentId = userIgnoredRequest.AgentId;
             oldUserIgnoredRequest.ModifiedBy = userIgnoredRequest.ModifiedBy;
@@ -644,48 +629,48 @@ namespace TreePorts.Repositories;
             return userIgnoredRequest;
         }
 
-        public async Task<CaptainUserIgnoredRequest> DeleteUserIgnoredRequestAsync(long id)
+        public async Task<CaptainUserIgnoredRequest?> DeleteCaptainUserIgnoredRequestAsync(long id)
         {
-            var oldUserIgnoredRequest = await _context.UserIgnoredRequests.FirstOrDefaultAsync(u => u.Id == id);
+            var oldUserIgnoredRequest = await _context.CaptainUserIgnoredRequests.FirstOrDefaultAsync(u => u.Id == id);
             if (oldUserIgnoredRequest == null) return null;
 
-            _context.UserIgnoredRequests.Remove(oldUserIgnoredRequest);
+            _context.CaptainUserIgnoredRequests.Remove(oldUserIgnoredRequest);
             return oldUserIgnoredRequest;
         }
 
-		public async Task<List<CaptainUserPayment>> GetUsersPaymentsAsync()
+		public async Task<IEnumerable<CaptainUserPayment>> GetCaptainUsersPaymentsAsync()
         {
-            return await _context.UserPayments.ToListAsync();
+            return await _context.CaptainUserPayments.ToListAsync();
         }
         
-        public async Task<CaptainUserPayment> GetUserPaymentByIdAsync(long id)
+        public async Task<CaptainUserPayment?> GetCaptainUserPaymentByIdAsync(long id)
         {
-            return await _context.UserPayments.FirstOrDefaultAsync(u => u.Id == id);
+            return await _context.CaptainUserPayments.FirstOrDefaultAsync(u => u.Id == id);
         }
 
-        public async Task<List<CaptainUserPayment>> GetUsersPaymentsByAsync(Expression<Func<CaptainUserPayment, bool>> predicate)
+        public async Task<IEnumerable<CaptainUserPayment>> GetCaptainUsersPaymentsByAsync(Expression<Func<CaptainUserPayment, bool>> predicate)
         {
-            return await _context.UserPayments.Where(predicate).ToListAsync();
+            return await _context.CaptainUserPayments.Where(predicate).ToListAsync();
         }
 
-        public async Task<CaptainUserPayment> InsertUserPaymentAsync(CaptainUserPayment userPayment)
+        public async Task<CaptainUserPayment> InsertCaptainUserPaymentAsync(CaptainUserPayment userPayment)
         {
             userPayment.CreationDate = DateTime.Now;
-            var inserResult = await _context.UserPayments.AddAsync(userPayment);
+            var inserResult = await _context.CaptainUserPayments.AddAsync(userPayment);
             return inserResult.Entity;
         }
 
-        public async Task<CaptainUserPayment> UpdateUserPaymentAsync(CaptainUserPayment userPayment)
+        public async Task<CaptainUserPayment?> UpdateCaptainUserPaymentAsync(CaptainUserPayment userPayment)
         {
-            var oldUserPayment = await _context.UserPayments.FirstOrDefaultAsync(u => u.Id == userPayment.Id);
+            var oldUserPayment = await _context.CaptainUserPayments.FirstOrDefaultAsync(u => u.Id == userPayment.Id);
             if (oldUserPayment == null) return null;
 
-            oldUserPayment.UserId = userPayment.UserId;
+            oldUserPayment.CaptainUserAccountId = userPayment.CaptainUserAccountId;
             oldUserPayment.OrderId = userPayment.OrderId;
             oldUserPayment.PaymentTypeId = userPayment.PaymentTypeId;
             oldUserPayment.SystemSettingId = userPayment.SystemSettingId;
             oldUserPayment.Value = userPayment.Value;
-            oldUserPayment.StatusId = userPayment.StatusId;
+            oldUserPayment.PaymentStatusTypeId = userPayment.PaymentStatusTypeId;
             oldUserPayment.ModifiedBy = userPayment.ModifiedBy;
             oldUserPayment.ModificationDate = DateTime.Now;
 
@@ -694,10 +679,10 @@ namespace TreePorts.Repositories;
 
             CaptainUserPaymentHistory userPaymentHistory = new CaptainUserPaymentHistory()
             {
-                UserId = oldUserPayment.UserId,
+                CaptainUserAccountId = oldUserPayment.CaptainUserAccountId,
                 OrderId = oldUserPayment.OrderId,
                 PaymentTypeId = oldUserPayment.PaymentTypeId,
-                StatusId = oldUserPayment.StatusId,
+                PaymentStatusTypeId = oldUserPayment.PaymentStatusTypeId,
                 SystemSettingId = oldUserPayment.SystemSettingId,
                 Value = oldUserPayment.Value,
                 CreationDate = DateTime.Now,
@@ -705,45 +690,45 @@ namespace TreePorts.Repositories;
                 ModifiedBy = oldUserPayment.ModifiedBy,
                 ModificationDate = oldUserPayment.ModificationDate
             };
-            var insertResult = await _context.UserPaymentHistories.AddAsync(userPaymentHistory);
+            var insertResult = await _context.CaptainUserPaymentHistories.AddAsync(userPaymentHistory);
 
             return oldUserPayment;
         }
 
-        public async Task<CaptainUserPayment> DeleteUserPaymentAsync(long id)
+        public async Task<CaptainUserPayment?> DeleteCaptainUserPaymentAsync(long id)
         {
-            var oldUserPayment = await _context.UserPayments.FirstOrDefaultAsync(u => u.Id == id);
+            var oldUserPayment = await _context.CaptainUserPayments.FirstOrDefaultAsync(u => u.Id == id);
             if (oldUserPayment == null) return null;
 
-            _context.UserPayments.Remove(oldUserPayment);
+            _context.CaptainUserPayments.Remove(oldUserPayment);
             return oldUserPayment;
         }
 
-        public async Task<List<CaptainUserRejectedRequest>> GetUsersRejectedRequestsAsync()
+       /* public async Task<IEnumerable<CaptainUserRejectedRequest>> GetCaptainUsersRejectedRequestsAsync()
         {
-            return await _context.UserRejectedRequests.ToListAsync();
+            return await _context.CaptainUserRejectedRequests.ToListAsync();
         }
 
-        public async Task<CaptainUserRejectedRequest> GetUserRejectedRequestByIdAsync(long id)
+        public async Task<CaptainUserRejectedRequest?> GetCaptainUserRejectedRequestByIdAsync(long id)
         {
-            return await _context.UserRejectedRequests.FirstOrDefaultAsync(u => u.Id == id);
+            return await _context.CaptainUserRejectedRequests.FirstOrDefaultAsync(u => u.Id == id);
         }
 
-        public async Task<List<CaptainUserRejectedRequest>> GetUsersRejectedRequestsByAsync(Expression<Func<CaptainUserRejectedRequest, bool>> predicate)
+        public async Task<IEnumerable<CaptainUserRejectedRequest>> GetCaptainUsersRejectedRequestsByAsync(Expression<Func<CaptainUserRejectedRequest, bool>> predicate)
         {
-            return await _context.UserRejectedRequests.Where(predicate).ToListAsync();
+            return await _context.CaptainUserRejectedRequests.Where(predicate).ToListAsync();
         }
 
-        public async Task<CaptainUserRejectedRequest> InsertUserRejectedRequestAsync(CaptainUserRejectedRequest userRejectedRequest)
+        public async Task<CaptainUserRejectedRequest> InsertCaptainUserRejectedRequestAsync(CaptainUserRejectedRequest userRejectedRequest)
         {
             userRejectedRequest.CreationDate = DateTime.Now;
-            var inserResult = await _context.UserRejectedRequests.AddAsync(userRejectedRequest);
+            var inserResult = await _context.CaptainUserRejectedRequests.AddAsync(userRejectedRequest);
             return inserResult.Entity;
         }
 
-        public async Task<CaptainUserRejectedRequest> UpdateUserRejectedRequestAsync(CaptainUserRejectedRequest userRejectedRequest)
+        public async Task<CaptainUserRejectedRequest?> UpdateCaptainUserRejectedRequestAsync(CaptainUserRejectedRequest userRejectedRequest)
         {
-            var oldUserRejectedRequest = await _context.UserRejectedRequests.FirstOrDefaultAsync(u => u.Id == userRejectedRequest.Id);
+            var oldUserRejectedRequest = await _context.CaptainUserRejectedRequests.FirstOrDefaultAsync(u => u.Id == userRejectedRequest.Id);
             if (oldUserRejectedRequest == null) return null;
 
             oldUserRejectedRequest.UserId = userRejectedRequest.UserId;
@@ -756,40 +741,40 @@ namespace TreePorts.Repositories;
             return oldUserRejectedRequest;
         }
 
-        public async Task<CaptainUserRejectedRequest> DeleteUserRejectedRequestAsync(long id)
+        public async Task<CaptainUserRejectedRequest?> DeleteCaptainUserRejectedRequestAsync(long id)
         {
-            var oldUserRejectedRequest = await _context.UserRejectedRequests.FirstOrDefaultAsync(u => u.Id == id);
+            var oldUserRejectedRequest = await _context.CaptainUserRejectedRequests.FirstOrDefaultAsync(u => u.Id == id);
             if (oldUserRejectedRequest == null) return null;
 
-            _context.UserRejectedRequests.Remove(oldUserRejectedRequest);
+            _context.CaptainUserRejectedRequests.Remove(oldUserRejectedRequest);
             return oldUserRejectedRequest;
         }
 
-        public async Task<List<CaptainUserRejectPenalty>> GetUsersRejectPenaltiesAsync()
+        public async Task<IEnumerable<CaptainUserRejectPenalty>> GetCaptainUsersRejectPenaltiesAsync()
         {
-            return await _context.UserRejectPenalties.ToListAsync();
+            return await _context.CaptainUserRejectPenalties.ToListAsync();
         }
 
-        public async Task<CaptainUserRejectPenalty> GetUserRejectPenaltyByIdAsync(long id)
+        public async Task<CaptainUserRejectPenalty?> GetCaptainUserRejectPenaltyByIdAsync(long id)
         {
-            return await _context.UserRejectPenalties.FirstOrDefaultAsync(u => u.Id == id);
+            return await _context.CaptainUserRejectPenalties.FirstOrDefaultAsync(u => u.Id == id);
         }
 
-        public async Task<List<CaptainUserRejectPenalty>> GetUsersRejectPenaltiesByAsync(Expression<Func<CaptainUserRejectPenalty, bool>> predicate)
+        public async Task<IEnumerable<CaptainUserRejectPenalty>> GetCaptainUsersRejectPenaltiesByAsync(Expression<Func<CaptainUserRejectPenalty, bool>> predicate)
         {
-            return await _context.UserRejectPenalties.Where(predicate).ToListAsync();
+            return await _context.CaptainUserRejectPenalties.Where(predicate).ToListAsync();
         }
 
-        public async Task<CaptainUserRejectPenalty> InsertUserRejectPenaltyAsync(CaptainUserRejectPenalty userRejectPenalty)
+        public async Task<CaptainUserRejectPenalty> InsertCaptainUserRejectPenaltyAsync(CaptainUserRejectPenalty userRejectPenalty)
         {
             userRejectPenalty.CreationDate = DateTime.Now;
-            var inserResult = await _context.UserRejectPenalties.AddAsync(userRejectPenalty);
+            var inserResult = await _context.CaptainUserRejectPenalties.AddAsync(userRejectPenalty);
             return inserResult.Entity;
         }
 
-        public async Task<CaptainUserRejectPenalty> UpdateUserRejectPenaltyAsync(CaptainUserRejectPenalty userRejectPenalty)
+        public async Task<CaptainUserRejectPenalty?> UpdateCaptainUserRejectPenaltyAsync(CaptainUserRejectPenalty userRejectPenalty)
         {
-            var oldUserRejectPenalty = await _context.UserRejectPenalties.FirstOrDefaultAsync(u => u.Id == userRejectPenalty.Id);
+            var oldUserRejectPenalty = await _context.CaptainUserRejectPenalties.FirstOrDefaultAsync(u => u.Id == userRejectPenalty.Id);
             if (oldUserRejectPenalty == null) return null;
 
             oldUserRejectPenalty.UserId = userRejectPenalty.UserId;
@@ -802,43 +787,43 @@ namespace TreePorts.Repositories;
             return oldUserRejectPenalty;
         }
 
-        public async Task<CaptainUserRejectPenalty> DeleteUserRejectPenaltyAsync(long id)
+        public async Task<CaptainUserRejectPenalty?> DeleteCaptainUserRejectPenaltyAsync(long id)
         {
-            var oldUserRejectPenalty = await _context.UserRejectPenalties.FirstOrDefaultAsync(u => u.Id == id);
+            var oldUserRejectPenalty = await _context.CaptainUserRejectPenalties.FirstOrDefaultAsync(u => u.Id == id);
             if (oldUserRejectPenalty == null) return null;
 
-            _context.UserRejectPenalties.Remove(oldUserRejectPenalty);
+            _context.CaptainUserRejectPenalties.Remove(oldUserRejectPenalty);
             return oldUserRejectPenalty;
         }
-
-        public async Task<List<CaptainUserShift>> GetUsersShiftsAsync()
+*/
+        public async Task<IEnumerable<CaptainUserShift>> GetCaptainUsersShiftsAsync()
         {
-            return await _context.UserShifts.ToListAsync();
+            return await _context.CaptainUserShifts.ToListAsync();
         }
 
-        public async Task<CaptainUserShift> GetUserShiftByIdAsync(long id)
+        public async Task<CaptainUserShift?> GetCaptainUserShiftByIdAsync(long id)
         {
-            return await _context.UserShifts.FirstOrDefaultAsync(u => u.Id == id);
+            return await _context.CaptainUserShifts.FirstOrDefaultAsync(u => u.Id == id);
         }
 
-        public async Task<List<CaptainUserShift>> GetUsersShiftsByAsync(Expression<Func<CaptainUserShift, bool>> predicate)
+        public async Task<IEnumerable<CaptainUserShift>> GetCaptainUsersShiftsByAsync(Expression<Func<CaptainUserShift, bool>> predicate)
         {
-            return await _context.UserShifts.Where(predicate).ToListAsync();
+            return await _context.CaptainUserShifts.Where(predicate).ToListAsync();
         }
 
-        public async Task<CaptainUserShift> InsertUserShiftAsync(CaptainUserShift userShift)
+        public async Task<CaptainUserShift> InsertCaptainUserShiftAsync(CaptainUserShift userShift)
         {
             userShift.CreationDate = DateTime.Now;
-            var inserResult = await _context.UserShifts.AddAsync(userShift);
+            var inserResult = await _context.CaptainUserShifts.AddAsync(userShift);
             return inserResult.Entity;
         }
 
-        public async Task<CaptainUserShift> UpdateUserShiftAsync(CaptainUserShift userShift)
+        public async Task<CaptainUserShift?> UpdateCaptainUserShiftAsync(CaptainUserShift userShift)
         {
-            var oldUserShift = await _context.UserShifts.FirstOrDefaultAsync(u => u.Id == userShift.Id);
+            var oldUserShift = await _context.CaptainUserShifts.FirstOrDefaultAsync(u => u.Id == userShift.Id);
             if (oldUserShift == null) return null;
 
-            oldUserShift.UserId = userShift.UserId;
+            oldUserShift.CaptainUserAccountId = userShift.CaptainUserAccountId;
             oldUserShift.EndHour = userShift.EndHour;
             oldUserShift.EndMinutes = userShift.EndMinutes;
             oldUserShift.StartHour = userShift.StartHour;
@@ -850,43 +835,43 @@ namespace TreePorts.Repositories;
             return oldUserShift;
         }
 
-        public async Task<CaptainUserShift> DeleteUserShiftAsync(long id)
+        public async Task<CaptainUserShift?> DeleteCaptainUserShiftAsync(long id)
         {
-            var oldUserShift = await _context.UserShifts.FirstOrDefaultAsync(u => u.Id == id);
+            var oldUserShift = await _context.CaptainUserShifts.FirstOrDefaultAsync(u => u.Id == id);
             if (oldUserShift == null) return null;
 
-            _context.UserShifts.Remove(oldUserShift);
+            _context.CaptainUserShifts.Remove(oldUserShift);
             return oldUserShift;
         }
 
-        public async Task<List<CaptainUserStatusHistory>> GetUsersStatusHistoriesAsync()
+        public async Task<IEnumerable<CaptainUserStatusHistory>> GetCaptainUsersStatusHistoriesAsync()
         {
-            return await _context.UserStatusHistories.ToListAsync();
+            return await _context.CaptainUserStatusHistories.ToListAsync();
         }
 
-        public async Task<CaptainUserStatusHistory> GetUserStatusHistoryByIdAsync(long id)
+        public async Task<CaptainUserStatusHistory?> GetCaptainUserStatusHistoryByIdAsync(long id)
         {
-            return await _context.UserStatusHistories.FirstOrDefaultAsync(u => u.Id == id);
+            return await _context.CaptainUserStatusHistories.FirstOrDefaultAsync(u => u.Id == id);
         }
 
-        public async Task<List<CaptainUserStatusHistory>> GetUsersStatusHistoriesByAsync(Expression<Func<CaptainUserStatusHistory, bool>> predicate)
+        public async Task<IEnumerable<CaptainUserStatusHistory>> GetCaptainUsersStatusHistoriesByAsync(Expression<Func<CaptainUserStatusHistory, bool>> predicate)
         {
-            return await _context.UserStatusHistories.Where(predicate).ToListAsync();
+            return await _context.CaptainUserStatusHistories.Where(predicate).ToListAsync();
         }
 
-        public async Task<CaptainUserStatusHistory> InsertUserStatusHistoryAsync(CaptainUserStatusHistory userStatusHistory)
+        public async Task<CaptainUserStatusHistory> InsertCaptainUserStatusHistoryAsync(CaptainUserStatusHistory userStatusHistory)
         {
             userStatusHistory.CreationDate = DateTime.Now;
-            var inserResult = await _context.UserStatusHistories.AddAsync(userStatusHistory);
+            var inserResult = await _context.CaptainUserStatusHistories.AddAsync(userStatusHistory);
             return inserResult.Entity;
         }
 
-        public async Task<CaptainUserStatusHistory> UpdateUserStatusHistoryAsync(CaptainUserStatusHistory userStatusHistory)
+        public async Task<CaptainUserStatusHistory?> UpdateCaptainUserStatusHistoryAsync(CaptainUserStatusHistory userStatusHistory)
         {
-            var oldUserStatusHistory = await _context.UserStatusHistories.FirstOrDefaultAsync(u => u.Id == userStatusHistory.Id);
+            var oldUserStatusHistory = await _context.CaptainUserStatusHistories.FirstOrDefaultAsync(u => u.Id == userStatusHistory.Id);
             if (oldUserStatusHistory == null) return null;
 
-            oldUserStatusHistory.UserId = userStatusHistory.UserId;
+            oldUserStatusHistory.CaptainUserAccountId = userStatusHistory.CaptainUserAccountId;
             oldUserStatusHistory.StatusTypeId = userStatusHistory.StatusTypeId;
             oldUserStatusHistory.ModifiedBy = userStatusHistory.ModifiedBy;
             oldUserStatusHistory.ModificationDate = DateTime.Now;
@@ -895,60 +880,58 @@ namespace TreePorts.Repositories;
             return oldUserStatusHistory;
         }
 
-        public async Task<CaptainUserStatusHistory> DeleteUserStatusHistoryAsync(long id)
+        public async Task<CaptainUserStatusHistory?> DeleteCaptainUserStatusHistoryAsync(long id)
         {
-            var oldUserStatusHistory = await _context.UserStatusHistories.FirstOrDefaultAsync(u => u.Id == id);
+            var oldUserStatusHistory = await _context.CaptainUserStatusHistories.FirstOrDefaultAsync(u => u.Id == id);
             if (oldUserStatusHistory == null) return null;
 
-            _context.UserStatusHistories.Remove(oldUserStatusHistory);
+            _context.CaptainUserStatusHistories.Remove(oldUserStatusHistory);
             return oldUserStatusHistory;
         }
 
-        public async Task<List<Vehicle>> GetVehiclesAsync()
+        public async Task<IEnumerable<Vehicle>> GetVehiclesAsync()
         {
             return await _context.Vehicles.ToListAsync();
         }
 
-        public async Task<Vehicle> GetVehicleByIdAsync(long id)
+        public async Task<Vehicle?> GetVehicleByIdAsync(long id)
         {
             return await _context.Vehicles.FirstOrDefaultAsync(v => v.Id == id);
         }
 
-        public async Task<List<CaptainUserVehicle>> GetUsersVehiclesAsync()
+        public async Task<IEnumerable<CaptainUserVehicle>> GetCaptainUsersVehiclesAsync()
         {
-            return await _context.UserVehicles.ToListAsync();
+            return await _context.CaptainUserVehicles.ToListAsync();
         }
 
-        public async Task<CaptainUserVehicle> GetUserVehicleByIdAsync(long id)
+        public async Task<CaptainUserVehicle?> GetCaptainUserVehicleByIdAsync(long id)
         {
-            return await _context.UserVehicles.FirstOrDefaultAsync(v => v.Id == id);
+            return await _context.CaptainUserVehicles.FirstOrDefaultAsync(v => v.Id == id);
         }
 
-        public async Task<List<CaptainUserVehicle>> GetUsersVehiclesByAsync(Expression<Func<CaptainUserVehicle, bool>> predicate)
+        public async Task<IEnumerable<CaptainUserVehicle>> GetCaptainUsersVehiclesByAsync(Expression<Func<CaptainUserVehicle, bool>> predicate)
         {
-            return await _context.UserVehicles.Where(predicate).ToListAsync();
+            return await _context.CaptainUserVehicles.Where(predicate).ToListAsync();
         }
 
-        public async Task<CaptainUserVehicle> InsertUserVehicleAsync(CaptainUserVehicle userVehicle)
+        public async Task<CaptainUserVehicle> InsertCaptainUserVehicleAsync(CaptainUserVehicle userVehicle)
         {
             userVehicle.CreationDate = DateTime.Now;
-            var inserResult = await _context.UserVehicles.AddAsync(userVehicle);
+            var inserResult = await _context.CaptainUserVehicles.AddAsync(userVehicle);
             return inserResult.Entity;
         }
 
-        public async Task<CaptainUserVehicle> UpdateUserVehicleAsync(CaptainUserVehicle userVehicle)
+        public async Task<CaptainUserVehicle?> UpdateCaptainUserVehicleAsync(CaptainUserVehicle userVehicle)
         {
-            var oldUserVehicle = await _context.UserVehicles.FirstOrDefaultAsync(u => u.Id == userVehicle.Id);
+            var oldUserVehicle = await _context.CaptainUserVehicles.FirstOrDefaultAsync(u => u.Id == userVehicle.Id);
             if (oldUserVehicle == null) return null;
 
-            oldUserVehicle.UserId = userVehicle.UserId;
+            oldUserVehicle.CaptainUserAccountId = userVehicle.CaptainUserAccountId;
             oldUserVehicle.VehicleId = userVehicle.VehicleId;
             oldUserVehicle.PlateNumber = userVehicle.PlateNumber;
             oldUserVehicle.Model = userVehicle.Model;
-            oldUserVehicle.VehicleImageName = userVehicle.VehicleImageName;
-            oldUserVehicle.VehicleImageAndroidPath = userVehicle.VehicleImageAndroidPath;
-            oldUserVehicle.LicenseImageName = userVehicle.LicenseImageName;
-            oldUserVehicle.LicenseImageAndroidPath = userVehicle.LicenseImageAndroidPath;
+            oldUserVehicle.VehicleImage = userVehicle.VehicleImage;
+            oldUserVehicle.LicenseImage = userVehicle.LicenseImage;
             oldUserVehicle.LicenseNumber = userVehicle.LicenseNumber;
             oldUserVehicle.IsActive = userVehicle.IsActive;
             oldUserVehicle.IsDeleted = userVehicle.IsDeleted;
@@ -959,9 +942,9 @@ namespace TreePorts.Repositories;
             return oldUserVehicle;
         }
 
-        public async Task<CaptainUserVehicle> DeleteUserVehicleAsync(long id)
+        public async Task<CaptainUserVehicle?> DeleteCaptainUserVehicleAsync(long id)
         {
-            var oldUserVehicle = await _context.UserVehicles.FirstOrDefaultAsync(u => u.Id == id);
+            var oldUserVehicle = await _context.CaptainUserVehicles.FirstOrDefaultAsync(u => u.Id == id);
             if (oldUserVehicle == null) return null;
 
             oldUserVehicle.IsDeleted = true;
@@ -970,7 +953,7 @@ namespace TreePorts.Repositories;
         }
 
 
-        public async Task<CaptainUser> GetUserNearestLocationAsync(string pickupLatitude, string pickupLongitude)
+        public async Task<CaptainUserAccount?> GetCaptainUserAccountNearestLocationAsync(string pickupLatitude, string pickupLongitude)
         {
 
             //var agentCoordinate = new GeoCoordinate(double.Parse(PickupLatitude), double.Parse(PickupLongitude));
@@ -980,10 +963,10 @@ namespace TreePorts.Repositories;
             //driversIgnoredRequests.AddRange(driversRejectedRequests);
 
 
-            var users = await _context.Users.FromSqlRaw("SelectNearestCaptain '" + pickupLatitude + "','" + pickupLongitude + "'").ToListAsync();
-            if (users == null || users.Count <= 0) return null;
+            var users = await _context.CaptainUserAccounts.FromSqlRaw("SelectNearestCaptain '" + pickupLatitude + "','" + pickupLongitude + "'").ToListAsync();
+            if (users?.Count <= 0) return null;
 
-            var captain = users.FirstOrDefault();
+            var captain = users?.FirstOrDefault();
             return captain;
         }
 
@@ -1094,9 +1077,9 @@ namespace TreePorts.Repositories;
         
         
         
-        public async Task<List<CaptainUser>> GetCaptainsUsersNearToLocationAsync(string pickupLatitude, string pickupLongitude)
+        public async Task<IEnumerable<NearCaptainUser>> GetCaptainsUsersNearToLocationAsync(string pickupLatitude, string pickupLongitude)
         {
-            List<CaptainUser> result = new List<CaptainUser>(); 
+            List<NearCaptainUser> result = new (); 
             var conn = _context.Database.GetDbConnection();
             await conn.OpenAsync();
             var command = conn.CreateCommand();
@@ -1105,20 +1088,20 @@ namespace TreePorts.Repositories;
             using var reader = await command.ExecuteReaderAsync();
             while ( reader.Read())
             {
-                var id = reader.GetInt64(reader.GetOrdinal("ID"));
+                var id = reader.GetString(reader.GetOrdinal("ID"));
                 var firstName = reader.GetString(reader.GetOrdinal("FirstName"));
                 var familyName = reader.GetString(reader.GetOrdinal("FamilyName"));
                 var lat = reader.GetDouble(reader.GetOrdinal("lat"));
                 var lng = reader.GetDouble(reader.GetOrdinal("long"));
 
-                CaptainUser user = new CaptainUser()
-                {
-                    Id = id,
-                    FirstName = firstName,
-                    FamilyName = familyName,
-                    Lat =lat,
-                    Long = lng
-                };
+                NearCaptainUser user = new(
+                
+                    Id : id,
+                    FirstName : firstName,
+                    LastName : familyName,
+                    Lat :lat.ToString(),
+                    Long : lng.ToString()
+                );
 
                 result.Add(user);
 
@@ -1135,125 +1118,124 @@ namespace TreePorts.Repositories;
         }
         
         
-        public async Task<List<CaptainUserMessageHub>> GetUsersMessageHubsAsync()
+        public async Task<IEnumerable<CaptainUserMessageHub>> GetCaptainUsersMessageHubsAsync()
         {
-            return await _context.UserMessageHubs.ToListAsync();
+            return await _context.CaptainUserMessageHubs.ToListAsync();
         }
 
-        public async Task<CaptainUserMessageHub> GetUserMessageHubByIdAsync(long id)
+        public async Task<CaptainUserMessageHub?> GetCaptainUserMessageHubByIdAsync(long id)
         {
-            return await _context.UserMessageHubs.FirstOrDefaultAsync(h => h.Id == id);
+            return await _context.CaptainUserMessageHubs.FirstOrDefaultAsync(h => h.Id == id);
         }
 
-        public async Task<List<CaptainUserMessageHub>> GetUsersMessageHubsByAsync(Expression<Func<CaptainUserMessageHub, bool>> predicate)
+        public async Task<IEnumerable<CaptainUserMessageHub>> GetCaptainUsersMessageHubsByAsync(Expression<Func<CaptainUserMessageHub, bool>> predicate)
         {
-            return await _context.UserMessageHubs.Where(predicate).ToListAsync();
+            return await _context.CaptainUserMessageHubs.Where(predicate).ToListAsync();
         }
 
-        public async Task<CaptainUserMessageHub> InsertUserMessageHubAsync(long id, string connectionId)
+        public async Task<CaptainUserMessageHub> InsertCaptainUserMessageHubByCaptainUserAccountIdAsync(string id, string connectionId)
         {
 
 
-            var oldUserHub = await _context.UserMessageHubs.FirstOrDefaultAsync(h => h.UserId == id);
+            var oldUserHub = await _context.CaptainUserMessageHubs.FirstOrDefaultAsync(h => h.CaptainUserAccountId == id);
             if (oldUserHub != null && oldUserHub.Id > 0)
             {
                 oldUserHub.ConnectionId = connectionId;
-                oldUserHub.ModifiedBy = 1;
                 oldUserHub.ModificationDate = DateTime.Now;
                 _context.Entry<CaptainUserMessageHub>(oldUserHub).State = EntityState.Modified;
                 return oldUserHub;
             }
             else 
             {
-                CaptainUserMessageHub newHub = new CaptainUserMessageHub() { UserId = id, ConnectionId = connectionId, CreationDate = DateTime.Now, CreatedBy = 1 };
-                var insertResult = await _context.UserMessageHubs.AddAsync(newHub);
+                CaptainUserMessageHub newHub = new CaptainUserMessageHub() { CaptainUserAccountId = id, ConnectionId = connectionId, CreationDate = DateTime.Now};
+                var insertResult = await _context.CaptainUserMessageHubs.AddAsync(newHub);
                 return insertResult.Entity;
             }
 
             
         }
 
-        public async Task<CaptainUserMessageHub> UpdateUserMessageHubAsync(long id, string connectionId)
+        public async Task<CaptainUserMessageHub?> UpdateCaptainUserMessageHubByCaptainUserAccountIdAsync(string id, string connectionId)
         {
-            var oldUserHub = await _context.UserMessageHubs.FirstOrDefaultAsync(h => h.UserId == id);
+            var oldUserHub = await _context.CaptainUserMessageHubs.FirstOrDefaultAsync(h => h.CaptainUserAccountId == id);
             if (oldUserHub == null) return null;
 
 
             oldUserHub.ConnectionId = connectionId;
-            oldUserHub.ModifiedBy = 1;
             oldUserHub.ModificationDate = DateTime.Now;
             _context.Entry<CaptainUserMessageHub>(oldUserHub).State = EntityState.Modified;
             return oldUserHub;
         }
 
-        public async Task<CaptainUserNewRequest> DeleteUserNewRequestByOrderIdAsync(long id)
+        public async Task<CaptainUserNewRequest?> DeleteCaptainUserNewRequestByOrderIdAsync(long id)
         {
-            var oldUserNewRequests = await _context.UserNewRequests.FirstOrDefaultAsync(u => u.OrderId == id);
+            var oldUserNewRequests = await _context.CaptainUserNewRequests.FirstOrDefaultAsync(u => u.OrderId == id);
             if (oldUserNewRequests == null) return null;
 
-            _context.UserNewRequests.Remove(oldUserNewRequests);
+            _context.CaptainUserNewRequests.Remove(oldUserNewRequests);
             return oldUserNewRequests;
         }
 
-        public async Task<CaptainUserPayment> DeleteUserPaymentByOrderIdAsync(long id)
+        public async Task<CaptainUserPayment?> DeleteCaptainUserPaymentByOrderIdAsync(long id)
         {
-            var oldUserPayment = await _context.UserPayments.FirstOrDefaultAsync(u => u.OrderId == id);
+            var oldUserPayment = await _context.CaptainUserPayments.FirstOrDefaultAsync(u => u.OrderId == id);
             if (oldUserPayment == null) return null;
 
-            _context.UserPayments.Remove(oldUserPayment);
+            _context.CaptainUserPayments.Remove(oldUserPayment);
             return oldUserPayment;
         }
-        public IQueryable<CaptainUserRejectedRequest> GetUserRejectedRequestByQuerable(Expression<Func<CaptainUserRejectedRequest, bool>> predicate)
-        {
-            var result = _context.UserRejectedRequests.Include(u => u.User).ThenInclude(c => c.UserAccounts); 
-          
-            return result;
-        }
+    /*public IQueryable<CaptainUserRejectedRequest> GetCaptainUserRejectedRequestByQuerable(Expression<Func<CaptainUserRejectedRequest, bool>> predicate)
+    {
+        var result = _context.CaptainUserRejectedRequests.Include(u => u.User).ThenInclude(c => c.UserAccounts); 
 
-        public IQueryable<CaptainUserAcceptedRequest> GetUserAcceptedRequestByQuerable(Expression<Func<CaptainUserAcceptedRequest, bool>> predicate)
+        return result;
+    }*/
+
+    public IQueryable<CaptainUserAcceptedRequest> GetCaptainUserAcceptedRequestByQuerable(Expression<Func<CaptainUserAcceptedRequest, bool>> predicate)
+    {
+        var result = _context.CaptainUserAcceptedRequests
+            //.Include(u => u.User).ThenInclude(c => c.UserAccounts)
+            //.Include(o => o.Order).ThenInclude(o => o.PaymentType).Include(o => o.User)
+            //.Include(o => o.Order).ThenInclude(o => o.Agent).Include(u => u.User).ThenInclude(c => c.City).Include(u => u.User).ThenInclude(c => c.Country)
+            //.Include(o => o.Order).ThenInclude(o => o.UserAcceptedRequests).ThenInclude(u => u.User).ThenInclude(c => c.UserAccounts)
+            //.ThenInclude(u => u.User).ThenInclude(c => c.City)
+            //.Include(o => o.Order).ThenInclude(o => o.UserAcceptedRequests).ThenInclude(u => u.User).ThenInclude(c => c.UserAccounts)
+            //.ThenInclude(u => u.User).ThenInclude(c => c.Country)
+
+            .Where(predicate);
+
+        return result;
+
+    }
+    public IQueryable<CaptainUserIgnoredRequest> GetCaptainUserIgnoredRequestByQuerable(Expression<Func<CaptainUserIgnoredRequest, bool>> predicate)
         {
-            var result = _context.UserAcceptedRequests.Include(u => u.User).ThenInclude(c => c.UserAccounts)
-                .Include(o => o.Order).ThenInclude(o => o.PaymentType).Include(o => o.User)
-                .Include(o => o.Order).ThenInclude(o => o.Agent).Include(u => u.User).ThenInclude(c => c.City).Include(u => u.User).ThenInclude(c => c.Country)
-                .Include(o => o.Order).ThenInclude(o => o.UserAcceptedRequests).ThenInclude(u => u.User).ThenInclude(c => c.UserAccounts)
-                .ThenInclude(u => u.User).ThenInclude(c => c.City)
-                .Include(o => o.Order).ThenInclude(o => o.UserAcceptedRequests).ThenInclude(u => u.User).ThenInclude(c => c.UserAccounts)
-                .ThenInclude(u => u.User).ThenInclude(c => c.Country)
-                
-                .Where(predicate);
+            var result = _context.CaptainUserIgnoredRequests.Where(predicate); 
            
             return result;
 
         }
-        public IQueryable<CaptainUserIgnoredRequest> GetUserIgnoredRequestByQuerable(Expression<Func<CaptainUserIgnoredRequest, bool>> predicate)
-        {
-            var result = _context.UserIgnoredRequests.Include(u => u.User).ThenInclude(c => c.UserAccounts); 
-           
-            return result;
 
-        }
-
-		public IQueryable<CaptainUser> GetByQuerable()
+		/*public IQueryable<CaptainUser> GetByQuerable()
 		{
-            return _context.UserAccounts.Include(u => u.User)
+            return _context.CaptainUserAccounts.Include(u => u.User)
                 .ThenInclude(u => u.City).Include(u => u.User).ThenInclude(u => u.Country)
                 .Include(u => u.User).ThenInclude(u => u.UserAccounts).Select(c => c.User);
 
-        }
+        }*/
        
 
-		public List<CaptainUser> GetByStatusType(long? statusTypeId, List<CaptainUser> query)
+		/*public IEnumerable<CaptainUser> GetCaptainUserByStatusType(long? statusTypeId, IEnumerable<CaptainUser> query)
 		{
             if(statusTypeId != null)
 			{
-                var restult = _context.UserAccounts.Where(u => u.StatusTypeId == statusTypeId)
+                var restult = _context.CaptainUserAccounts.Where(u => u.StatusTypeId == statusTypeId)
                     .Include(u => u.User).ThenInclude(u=> u.UserCurrentStatus).Include(u => u.User).ThenInclude(u => u.Country).Include(u =>u.User).ThenInclude(u => u.City).Select(c => c.User)
                     .ToList();
                 return restult;
 			}
             return query;
-		}
-        public IQueryable<CaptainUser> GetByStatusQuerableS(long? statusTypeId)
+		}*/
+    /*    public IQueryable<CaptainUser> GetByStatusQuerableS(long? statusTypeId)
         {
             return _context.UserAccounts.Where(u => u.StatusTypeId == statusTypeId).Include(u => u.User)
                 .ThenInclude(u => u.City).Include(u => u.User).ThenInclude(u => u.Country)
@@ -1261,26 +1243,26 @@ namespace TreePorts.Repositories;
             
         }
 
+*/
 
-
-		public async Task<List<CaptainUserActivity>> GetUsersActivitiesAsync()
+		public async Task<IEnumerable<CaptainUserActivity>> GetCaptainUsersActivitiesAsync()
 		{
-			return await _context.UserActivities.ToListAsync();
+			return await _context.CaptainUserActivities.ToListAsync();
 		}
 
-		public async Task<CaptainUserActivity> GetUserActivityByIdAsync(long id)
+		public async Task<CaptainUserActivity?> GetCaptainUserActivityByIdAsync(long id)
 		{
-			return await _context.UserActivities.FirstOrDefaultAsync(u => u.Id == id);
+			return await _context.CaptainUserActivities.FirstOrDefaultAsync(u => u.Id == id);
 		}
 
-		public async Task<List<CaptainUserActivity>> GetUsersActivitiesByAsync(Expression<Func<CaptainUserActivity, bool>> predicate)
+		public async Task<IEnumerable<CaptainUserActivity>> GetCaptainUsersActivitiesByAsync(Expression<Func<CaptainUserActivity, bool>> predicate)
 		{
-			return await _context.UserActivities.Where(predicate).ToListAsync();
+			return await _context.CaptainUserActivities.Where(predicate).ToListAsync();
 		}
 
-		public async Task<CaptainUserActivity> InsertUserActivityAsync(CaptainUserActivity userActivity)
+		public async Task<CaptainUserActivity> InsertCaptainUserActivityAsync(CaptainUserActivity userActivity)
 		{
-			var oldUserActivity = await _context.UserActivities.FirstOrDefaultAsync(u => u.UserId == userActivity.UserId && u.IsCurrent == true);
+			var oldUserActivity = await _context.CaptainUserActivities.FirstOrDefaultAsync(u => u.CaptainUserAccountId == userActivity.CaptainUserAccountId && u.IsCurrent == true);
 			if (oldUserActivity != null && oldUserActivity.Id > 0)
 			{
 
@@ -1292,15 +1274,15 @@ namespace TreePorts.Repositories;
 
 			userActivity.IsCurrent = true;
 			userActivity.CreationDate = DateTime.Now;
-			var insert_result = await _context.UserActivities.AddAsync(userActivity);
+			var insert_result = await _context.CaptainUserActivities.AddAsync(userActivity);
 			return insert_result.Entity;
 		}
 
 
 
-        public async Task<CaptainUserActivity> UpdateUserActivityAsync(CaptainUserActivity userActivity)
+        public async Task<CaptainUserActivity?> UpdateCaptainUserActivityAsync(CaptainUserActivity userActivity)
         {
-            var oldUserActivity = await _context.UserActivities.FirstOrDefaultAsync(u => u.Id == userActivity.Id);
+            var oldUserActivity = await _context.CaptainUserActivities.FirstOrDefaultAsync(u => u.Id == userActivity.Id);
             if (oldUserActivity == null) return null;
 
             oldUserActivity.IsCurrent = false;
@@ -1311,30 +1293,30 @@ namespace TreePorts.Repositories;
 
         }
 
-		public async Task<CaptainUserActivity> DeleteUserActivityAsync(long id)
+		public async Task<CaptainUserActivity?> DeleteCaptainUserActivityAsync(long id)
 		{
-            var oldUserActivity = await _context.UserActivities.FirstOrDefaultAsync(u => u.Id == id);
+            var oldUserActivity = await _context.CaptainUserActivities.FirstOrDefaultAsync(u => u.Id == id);
             if (oldUserActivity == null) return null;
 
             
-            _context.UserActivities.Remove(oldUserActivity);
+            _context.CaptainUserActivities.Remove(oldUserActivity);
             return oldUserActivity;
         }
 
 		public object UserReportCount()
 		{
-            var totalUsers = _context.Users.Count();
+            var totalUsers = _context.CaptainUsers.Count();
             
-            var newUsers = _context.UserCurrentStatuses.Where(u => u.StatusTypeId == (long)StatusTypes.New).Count();
-            var readyUsers = _context.UserCurrentStatuses.Where(u => u.StatusTypeId == (long)StatusTypes.Ready).Count();
-            var workingUsers = _context.UserCurrentStatuses.Where(u => u.StatusTypeId == (long)StatusTypes.Working).Count();
-            var progressUsers = _context.UserCurrentStatuses.Where(u => u.StatusTypeId == (long)StatusTypes.Progress).Count();
-            var suspendedUsers = _context.UserCurrentStatuses.Where(u => u.StatusTypeId == (long)StatusTypes.Suspended).Count();
-            var stoppedUsers = _context.UserCurrentStatuses.Where(u => u.StatusTypeId == (long)StatusTypes.Stopped).Count();
-            var reviewingUsers = _context.UserCurrentStatuses.Where(u => u.StatusTypeId == (long)StatusTypes.Reviewing).Count();
-            var penaltyUsers = _context.UserCurrentStatuses.Where(u => u.StatusTypeId == (long)StatusTypes.Penalty).Count();
-            var incompleteUsers = _context.UserCurrentStatuses.Where(u => u.StatusTypeId == (long)StatusTypes.Incomplete).Count();
-            var completeUsers = _context.UserCurrentStatuses.Where(u => u.StatusTypeId == (long)StatusTypes.Complete).Count();
+            var newUsers = _context.CaptainUserCurrentStatuses.Where(u => u.StatusTypeId == (long)StatusTypes.New).Count();
+            var readyUsers = _context.CaptainUserCurrentStatuses.Where(u => u.StatusTypeId == (long)StatusTypes.Ready).Count();
+            var workingUsers = _context.CaptainUserCurrentStatuses.Where(u => u.StatusTypeId == (long)StatusTypes.Working).Count();
+            var progressUsers = _context.CaptainUserCurrentStatuses.Where(u => u.StatusTypeId == (long)StatusTypes.Progress).Count();
+            var suspendedUsers = _context.CaptainUserCurrentStatuses.Where(u => u.StatusTypeId == (long)StatusTypes.Suspended).Count();
+            var stoppedUsers = _context.CaptainUserCurrentStatuses.Where(u => u.StatusTypeId == (long)StatusTypes.Stopped).Count();
+            var reviewingUsers = _context.CaptainUserCurrentStatuses.Where(u => u.StatusTypeId == (long)StatusTypes.Reviewing).Count();
+            var penaltyUsers = _context.CaptainUserCurrentStatuses.Where(u => u.StatusTypeId == (long)StatusTypes.Penalty).Count();
+            var incompleteUsers = _context.CaptainUserCurrentStatuses.Where(u => u.StatusTypeId == (long)StatusTypes.Incomplete).Count();
+            var completeUsers = _context.CaptainUserCurrentStatuses.Where(u => u.StatusTypeId == (long)StatusTypes.Complete).Count();
             return new
             {
                 UsersCount = totalUsers,
@@ -1352,38 +1334,37 @@ namespace TreePorts.Repositories;
             };
         }
 
-		public async Task<Bonus> GetBonusByCountryAsync(long? countryId)
+		public async Task<Bonus?> GetBonusByCountryAsync(long? countryId)
 		{
             var bonus = await _context.Bonuses.FirstOrDefaultAsync(b => b.CountryId == countryId);
             return bonus;
 		}
-        public async Task<CaptainUserBonus> InsertBonusAsync(CaptainUserBonus userBonus)
+        public async Task<CaptainUserBonus> InsertCaptainUserBonusAsync(CaptainUserBonus userBonus)
 		{
-            var result = await _context.UserBonuses.AddAsync(userBonus);
+            var result = await _context.CaptainUserBonuses.AddAsync(userBonus);
             return result.Entity;
 		}
 
-		public IQueryable<CaptainUserRejectedRequest> GetAllRejectedRequestByQuerable()
+		/*public IQueryable<CaptainUserRejectedRequest> GetAllRejectedRequestByQuerable()
 		{
-            var result = _context.UserRejectedRequests.Include(u => u.User).ThenInclude(c => c.UserAccounts);
+            var result = _context.CaptainUserRejectedRequests.Include(u => u.User).ThenInclude(c => c.UserAccounts);
 
             return result;
-        }
-       public async Task<List<Qrcode>> GetQRCodeByAsync(Expression<Func<Qrcode, bool>> predicate)
+        }*/
+       public async Task<IEnumerable<OrderQrcode>> GetOrderQRCodeByAsync(Expression<Func<OrderQrcode, bool>> predicate)
 		{
-            return await _context.Qrcodes.Where(predicate).ToListAsync();
+            return await _context.OrderQrcodes.Where(predicate).ToListAsync();
            
 		}
 
        
-        public async Task<List<CaptainUserAcceptedRequest>> UserAcceptedRequestsAsync(Expression<Func<CaptainUserAcceptedRequest, bool>> predicate)
+        public async Task<IEnumerable<CaptainUserAcceptedRequest>> CaptainUserAcceptedRequestsAsync(Expression<Func<CaptainUserAcceptedRequest, bool>> predicate)
         {
-            return await _context.UserAcceptedRequests.Include(u=>u.User).ThenInclude(u=>u.City)
-                .Include(u => u.User).ThenInclude(u => u.Country).Where(predicate).ToListAsync();
+            return await _context.CaptainUserAcceptedRequests.Where(predicate).ToListAsync();
 
         }
 
-        public IQueryable<CaptainUserAcceptedRequest> GetAllAcceptedRequestByQuerable()
+       /* public IQueryable<CaptainUserAcceptedRequest> GetAllAcceptedRequestByQuerable()
 		{
             var result = _context.UserAcceptedRequests.Include(u => u.User).ThenInclude(c => c.UserAccounts)
                 .Include(o => o.Order).ThenInclude(o => o.PaymentType).Include(o => o.User)
@@ -1396,25 +1377,24 @@ namespace TreePorts.Repositories;
                 ;
 
             return result;
-        }
+        }*/
       
-        public IQueryable<CaptainUserIgnoredRequest> GetAllIgnoredRequestByQuerable()
+        /*public IQueryable<CaptainUserIgnoredRequest> GetAllIgnoredRequestByQuerable()
 		{
             var result = _context.UserIgnoredRequests.Include(u => u.User).ThenInclude(c => c.UserAccounts);//.Include(o => o.Order);
 
             return result;
+        }*/
+
+        public async Task<IEnumerable<CaptainUserAcceptedRequest>> GetCaptainUserAcceptedRequestAsync(Expression<Func<CaptainUserAcceptedRequest, bool>> predicate)
+        {
+            return await _context.CaptainUserAcceptedRequests.Where(predicate).ToListAsync();
         }
 
-        public async Task<List<CaptainUserAcceptedRequest>> GetUserAcceptedRequestAsync(Expression<Func<CaptainUserAcceptedRequest, bool>> predicate)
-        {
-            return await _context.UserAcceptedRequests.Include(u=>u.User).ThenInclude(u=>u.City).
-                Include(u => u.User).ThenInclude(u => u.Country).Where(predicate).ToListAsync();
-        }
 
-
-        public async Task<List<CaptainUserAccount>> GetActiveUsersAccountsPaginationAsync(int skip, int take)
+        public async Task<IEnumerable<CaptainUserAccount>> GetActiveCaptainUsersAccountsPaginationAsync(int skip, int take)
         {
-            return await _context.UserAccounts
+            return await _context.CaptainUserAccounts
                 .Where(u => u.StatusTypeId != (long)StatusTypes.Reviewing)
                 .OrderByDescending(u => u.CreationDate)
                 .Skip(skip)
@@ -1423,9 +1403,9 @@ namespace TreePorts.Repositories;
         }
 
 
-        public async Task<List<CaptainUserAccount>> GetReviewingUsersAccountsPaginationAsync(int skip, int take)
+        public async Task<IEnumerable<CaptainUserAccount>> GetReviewingCaptainUsersAccountsPaginationAsync(int skip, int take)
         {
-            return await _context.UserAccounts
+            return await _context.CaptainUserAccounts
                 .Where(u => u.StatusTypeId == (long)StatusTypes.Reviewing)
                 .OrderByDescending(u => u.CreationDate)
                 .Skip(skip)

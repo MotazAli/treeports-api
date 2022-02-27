@@ -17,7 +17,7 @@ namespace TreePorts.Repositories
             _context = context;
         }
 
-        public async Task<Bookkeeping> DeleteBookkeepingAsync(long id)
+        public async Task<Bookkeeping?> DeleteBookkeepingAsync(long id)
         {
             var oldBookkeeping = await this.GetBookkeepingByIdAsync(id);
             if (oldBookkeeping == null) return null;
@@ -26,7 +26,7 @@ namespace TreePorts.Repositories
             return oldBookkeeping;
         }
 
-        public async Task<DepositType> DeleteDepositTypeAsync(long id)
+        public async Task<DepositType?> DeleteDepositTypeAsync(long id)
         {
             var oldDepositType = await this.GetDepositTypeByIdAsync(id);
             if (oldDepositType == null) return null;
@@ -35,7 +35,7 @@ namespace TreePorts.Repositories
             return oldDepositType;
         }
 
-        public async Task<Transfer> DeleteTransferAsync(long id)
+        public async Task<Transfer?> DeleteTransferAsync(long id)
         {
             var oldTransfer = await this.GetTransferByIdAsync(id);
             if (oldTransfer == null) return null;
@@ -54,7 +54,7 @@ namespace TreePorts.Repositories
             return await _context.Bookkeepings.Where(predicate).ToListAsync();
         }
 
-        public async Task<Bookkeeping> GetBookkeepingByIdAsync(long id)
+        public async Task<Bookkeeping?> GetBookkeepingByIdAsync(long id)
         {
             return await _context.Bookkeepings.FirstOrDefaultAsync(b => b.Id == id);
         }
@@ -64,7 +64,7 @@ namespace TreePorts.Repositories
             return await _context.DepositTypes.Where(predicate).ToListAsync();
         }
 
-        public async Task<DepositType> GetDepositTypeByIdAsync(long id)
+        public async Task<DepositType?> GetDepositTypeByIdAsync(long id)
         {
             return await _context.DepositTypes.FirstOrDefaultAsync(b => b.Id == id);
         }
@@ -79,7 +79,7 @@ namespace TreePorts.Repositories
             return await _context.Transfers.Where(predicate).ToListAsync();
         }
 
-        public async Task<Transfer> GetTransferByIdAsync(long id)
+        public async Task<Transfer?> GetTransferByIdAsync(long id)
         {
             return await _context.Transfers.FirstOrDefaultAsync(b => b.Id == id);
         }
@@ -110,12 +110,12 @@ namespace TreePorts.Repositories
             return inserResult.Entity;
         }
 
-        public async Task<Bookkeeping> UpdateBookkeepingAsync(Bookkeeping bookkeeping)
+        public async Task<Bookkeeping?> UpdateBookkeepingAsync(Bookkeeping bookkeeping)
         {
             var oldBookkeeping = await this.GetBookkeepingByIdAsync(bookkeeping.Id);
             if (oldBookkeeping == null) return null;
 
-            oldBookkeeping.UserId = bookkeeping.UserId;
+            oldBookkeeping.CaptainUserAccountId = bookkeeping.CaptainUserAccountId;
             oldBookkeeping.OrderId = bookkeeping.OrderId;
             oldBookkeeping.DepositTypeId = bookkeeping.DepositTypeId;
             oldBookkeeping.Value = bookkeeping.Value;
@@ -126,7 +126,7 @@ namespace TreePorts.Repositories
 
         }
 
-        public async Task<DepositType> UpdateDepositTypeAsync(DepositType depositType)
+        public async Task<DepositType?> UpdateDepositTypeAsync(DepositType depositType)
         {
             var oldDepositType = await this.GetDepositTypeByIdAsync(depositType.Id);
             if (oldDepositType == null) return null;
@@ -139,7 +139,7 @@ namespace TreePorts.Repositories
             return oldDepositType;
         }
 
-        public async Task<Transfer> UpdateTransferAsync(Transfer transfer)
+        public async Task<Transfer?> UpdateTransferAsync(Transfer transfer)
         {
             var oldTransfer = await this.GetTransferByIdAsync(transfer.Id);
             if (oldTransfer == null) return null;

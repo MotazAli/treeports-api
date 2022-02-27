@@ -47,9 +47,9 @@ namespace TreePorts.Hubs
                         case "support":
                         {
 
-                            SupportUserMessageHub supportUserMessageHub = new SupportUserMessageHub()
+                            SupportUserMessageHub supportUserMessageHub = new ()
                             {
-                                SupportUserId = long.Parse(userId),
+                                SupportUserAccountId = userId,
                                 ConnectionId = userConnectionID
                             };
 
@@ -63,9 +63,9 @@ namespace TreePorts.Hubs
                         case "agent":
                         {
 
-                            AgentMessageHub agentMessageHub = new AgentMessageHub()
+                            AgentMessageHub agentMessageHub = new ()
                             {
-                                AgentId = long.Parse(userId),
+                                AgentId = userId,
                                 ConnectionId = userConnectionID
                             };
 
@@ -79,9 +79,9 @@ namespace TreePorts.Hubs
                         }
                         case "admin":
                         {
-                            AdminUserMessageHub admintUserMessageHub = new AdminUserMessageHub()
+                            AdminUserMessageHub admintUserMessageHub = new()
                             {
-                                AdminUserId = long.Parse(userId),
+                                AdminUserAccountId = userId,
                                 ConnectionId = userConnectionID
                             };
 

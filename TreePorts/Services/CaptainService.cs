@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using RestSharp.Extensions;
 using TreePorts.DTO;
+using TreePorts.DTO.Records;
 using TreePorts.Utilities;
 
 namespace TreePorts.Services;
@@ -21,11 +22,11 @@ public class CaptainService : ICaptainService
 
 
 
-    public async Task<IEnumerable<CaptainUser>> GetUsersAsync()
+    public async Task<IEnumerable<CaptainUser>> GetCaptainUsersAsync()
     {
         try
         {
-            return await _unitOfWork.CaptainRepository.GetUsersAsync();
+            return await _unitOfWork.CaptainRepository.GetCaptainUsersAsync();
         }
         catch (Exception e)
         {
@@ -33,82 +34,91 @@ public class CaptainService : ICaptainService
         }
     }
 
-    
-    public async Task<CaptainUser> GetUserByIdAsync(long id)
+
+    public async Task<CaptainUserVechicleResponse> GetCaptainUserAccountByCaptainUserAccountIdAsync(string captainUserAccountId)
     {
-        try
+
+        var captainUserAccount = await _unitOfWork.CaptainRepository.GetCaptainUserAccountByIdAsync(captainUserAccountId);
+        if (captainUserAccount == null) throw new NotFoundException($"User with account id {captainUserAccountId} not found");
+
+        var captainUser = await _unitOfWork.CaptainRepository.GetCaptainUserByIdAsync(captainUserAccount?.CaptainUserId ?? "");
+        if (captainUser == null) throw new NotFoundException($"User with account id {captainUserAccountId} not found");
+
+        List<CaptainUserAccountVehicle> captainUserAccountVehicles = new();
+        var captainUserVehicles = await _unitOfWork.CaptainRepository.GetCaptainUsersVehiclesByAsync(v => v.CaptainUserAccountId == captainUserAccountId);
+
+        List<CaptainUserVehicleBox> captainUserVehicleBoxs = new();
+        foreach (CaptainUserVehicle captainUserVehicle in captainUserVehicles)
         {
-            var driver = await _unitOfWork.CaptainRepository.GetUserByIdAsync(id);
-            if (driver == null) return new CaptainUser();
-
-            var birthCountry = await _unitOfWork.CountryRepository.GetCountryByIdAsync((long)driver.CountryId);
-            //driver.CountryName = birthCountry.Name;
-            //driver.CountryArabicName = birthCountry.ArabicName;
-
-            var birthCity = await _unitOfWork.CountryRepository.GetCityByIdAsync((long)driver.CityId);
-            //driver.CityName = birthCity.Name;
-            //driver.CityArabicName = birthCity.ArabicName;
-
-
-            //var residenceCountry = await _unitOfWork.CountryRepository.GetByID((long)driver.ResidenceCountryId);
-            //driver.ResidenceCountryName = residenceCountry.Name;
-            //driver.ResidenceCountryArabicName = residenceCountry.ArabicName;
-
-            //var residenceCity = await _unitOfWork.CountryRepository.GetCityByID((long)driver.ResidenceCityId);
-            //driver.ResidenceCityName = residenceCity.Name;
-            //driver.ResidenceCityArabicName = residenceCity.ArabicName;
-
-
-            if (driver.UserVehicles == null)
-                driver.UserVehicles = new List<CaptainUserVehicle>();
-
-            if (driver.UserVehicles.Count <= 0)
-            {
-                var userVehicles = await _unitOfWork.CaptainRepository.GetUsersVehiclesByAsync(u => u.UserId == driver.Id && u.IsActive == true);
-                driver.UserVehicles.ToList().AddRange(userVehicles);
-            }
-
-            if (driver.UserVehicles.Count > 0)
-            {
-                var userVehicle = driver.UserVehicles.FirstOrDefault();
-                var userBoxs = userVehicle.UserBoxes;
-                if (userBoxs == null)
-                    userBoxs = new List<CaptainUserBox>();
-
-                if (userBoxs.Count <= 0)
-                {
-                    var allUserBoxs = await _unitOfWork.CaptainRepository.GetUsersBoxesByAsync(u => u.UserVehicleId == userVehicle.Id);
-                    userVehicle.UserBoxes.ToList().AddRange(allUserBoxs);
-                }
-
-            }
-
-            if (driver.UserAccounts?.Count > 0)
-            {
-                //driver.CurrentStatusId = (long)driver.UserAccounts.FirstOrDefault().StatusTypeId;
-            }
-            else
-            {
-                var userAccounts = await _unitOfWork.CaptainRepository.GetUsersAccountsByAsync(u => u.UserId == driver.Id);
-                var userAccount = userAccounts.FirstOrDefault();
-                //if (userAccount != null)
-                //    driver.CurrentStatusId = (long)userAccount.StatusTypeId;
-            }
-
-
-            return driver;
-
+            var userBoxs = await _unitOfWork.CaptainRepository.GetCaptainUsersBoxesByAsync(b => b.CaptainUserVehicleId == captainUserVehicle.Id);
+            CaptainUserVehicleBox captainUserVehicleBox = new(CaptainUserVehicle: captainUserVehicle, CaptainUserBoxs: userBoxs);
+            captainUserVehicleBoxs.Add(captainUserVehicleBox);
         }
-        catch (Exception e)
-        {
-            return new CaptainUser();// new ObjectResult(e.Message) { StatusCode = 666 };
-        }
+
+        CaptainUserAccountVehicle captainUserAccountVehicle = new(CaptainUserAccount: captainUserAccount, CaptainUserVehicleBoxs: captainUserVehicleBoxs);
+        captainUserAccountVehicles.Add(captainUserAccountVehicle);
+
+
+        return new(CaptainUser: captainUser, CaptainUserAccountsVehicles: captainUserAccountVehicles);
+
 
     }
 
 
-   
-    public async Task<IEnumerable<CaptainUserAccount>> GetUsersPagingAsync( FilterParameters parameters)
+    public async Task<CaptainUserVechicleResponse> GetCaptainUserByCaptainUserIdAsync(string captainUserId)
+    {
+
+        var captainUser = await _unitOfWork.CaptainRepository.GetCaptainUserByIdAsync(captainUserId);
+        if (captainUser == null) throw new NotFoundException($"User with id {captainUserId} not found");
+
+
+        var captainUserAccounts = await _unitOfWork.CaptainRepository.GetCaptainUsersAccountsByAsync(c => c.CaptainUserId == captainUserId);
+        if (captainUserAccounts == null) throw new NotFoundException($"User with id {captainUserId} not found");
+
+        //var birthCountry = await _unitOfWork.CountryRepository.GetCountryByIdAsync(captainUser?.CountryId ?? 0);
+        //driver.CountryName = birthCountry.Name;
+        //driver.CountryArabicName = birthCountry.ArabicName;
+
+        //var birthCity = await _unitOfWork.CountryRepository.GetCityByIdAsync(captainUser?.CityId ?? 0);
+        //driver.CityName = birthCity.Name;
+        //driver.CityArabicName = birthCity.ArabicName;
+
+
+        //var residenceCountry = await _unitOfWork.CountryRepository.GetByID((long)driver.ResidenceCountryId);
+        //driver.ResidenceCountryName = residenceCountry.Name;
+        //driver.ResidenceCountryArabicName = residenceCountry.ArabicName;
+
+        //var residenceCity = await _unitOfWork.CountryRepository.GetCityByID((long)driver.ResidenceCityId);
+        //driver.ResidenceCityName = residenceCity.Name;
+        //driver.ResidenceCityArabicName = residenceCity.ArabicName;
+        List<CaptainUserAccountVehicle> captainUserAccountVehicles = new();
+        foreach (CaptainUserAccount captain in captainUserAccounts)
+        {
+            var captainUserVehicles = await _unitOfWork.CaptainRepository.GetCaptainUsersVehiclesByAsync(v => v.CaptainUserAccountId == captain.Id);
+
+            List<CaptainUserVehicleBox> captainUserVehicleBoxs = new();
+            foreach (CaptainUserVehicle captainUserVehicle in captainUserVehicles)
+            {
+                var userBoxs = await _unitOfWork.CaptainRepository.GetCaptainUsersBoxesByAsync(b => b.CaptainUserVehicleId == captainUserVehicle.Id);
+                CaptainUserVehicleBox captainUserVehicleBox = new(CaptainUserVehicle: captainUserVehicle, CaptainUserBoxs: userBoxs);
+                captainUserVehicleBoxs.Add(captainUserVehicleBox);
+            }
+
+            CaptainUserAccountVehicle captainUserAccountVehicle = new(CaptainUserAccount: captain, CaptainUserVehicleBoxs: captainUserVehicleBoxs);
+            captainUserAccountVehicles.Add(captainUserAccountVehicle);
+        }
+
+
+        return new(CaptainUser: captainUser, CaptainUserAccountsVehicles: captainUserAccountVehicles);
+
+
+
+
+    }
+
+
+
+    public async Task<IEnumerable<CaptainUserAccount>> GetUsersPagingAsync(FilterParameters parameters)
     {
         try
         {
@@ -116,7 +126,7 @@ public class CaptainService : ICaptainService
             var skip = (parameters.NumberOfObjectsPerPage * (parameters.Page - 1));
             var take = parameters.NumberOfObjectsPerPage;
 
-            var result = await _unitOfWork.CaptainRepository.GetActiveUsersAccountsPaginationAsync(skip, take);
+            var result = await _unitOfWork.CaptainRepository.GetActiveCaptainUsersAccountsPaginationAsync(skip, take);
 
             /*var total = query.Count();
             var result = Utility.Pagination(query, parameters.NumberOfObjectsPerPage, parameters.Page).ToList();
@@ -161,7 +171,7 @@ public class CaptainService : ICaptainService
 
 
 
-    public async Task<IEnumerable<CaptainUserAccount>> GetNewCaptainsUsersAsync( FilterParameters parameters)//[FromBody] Pagination pagination, [FromQuery] FilterParameters parameters)
+    public async Task<IEnumerable<CaptainUserAccount>> GetNewCaptainsUsersAsync(FilterParameters parameters)//[FromBody] Pagination pagination, [FromQuery] FilterParameters parameters)
     {
         try
         {
@@ -180,7 +190,7 @@ public class CaptainService : ICaptainService
 
             var skip = (parameters.NumberOfObjectsPerPage * (parameters.Page - 1));
             var take = parameters.NumberOfObjectsPerPage;
-            var result = await _unitOfWork.CaptainRepository.GetReviewingUsersAccountsPaginationAsync(skip, take);
+            var result = await _unitOfWork.CaptainRepository.GetReviewingCaptainUsersAccountsPaginationAsync(skip, take);
 
             return result;
 
@@ -199,8 +209,8 @@ public class CaptainService : ICaptainService
 
 
 
-    
-    public async Task<object> GetDirectionsMapAsync(string origin,  string destination, string mode)
+
+    public async Task<object> GetDirectionsMapAsync(string origin, string destination, string mode)
     {
 
         try
@@ -281,62 +291,89 @@ public class CaptainService : ICaptainService
 
 
 
-    
-    public async Task<long> AddCaptainAsync(HttpContext httpContext, CaptainUser user)
+
+    public async Task<CaptainUserResponse> AddCaptainAsync(HttpContext httpContext, CaptainUserDto captainUserDto)
     {
-       
-            var users = await _unitOfWork.CaptainRepository.GetUsersByAsync(u => u.Mobile == user.Mobile);
-            if (users != null && users.Count > 0) throw new Exception("Mobile already registered before");
 
-            // user.UserAccounts.FirstOrDefault().StatusTypeId = (long)StatusTypes.Reviewing;               
+        var users = await _unitOfWork.CaptainRepository.GetCaptainUsersAccountsByAsync(u => u.Mobile == captainUserDto.Mobile);
+        if (users != null && users.Count() > 0) throw new InvalidException("Mobile already registered before");
 
-            //UserCurrentStatus userStatus_New = new UserCurrentStatus() { StatusTypeId = (long)StatusTypes.New, CreationDate = DateTime.Now, IsCurrent = false };
-            //UserCurrentStatus userStatus_Review = new UserCurrentStatus() { StatusTypeId = (long)StatusTypes.Reviewing, CreationDate = DateTime.Now, IsCurrent = true };
-            //user.UserCurrentStatus.Add(userStatus_New);
-            //user.UserCurrentStatus.Add(userStatus_Review);
-            var currentDate = DateTime.Now;
-            user.CreationDate = currentDate;
-            user = convertAndSaveUserImages(user);
-            var insertedUser = await _unitOfWork.CaptainRepository.InsertUserAsync(user);
-            var result = await _unitOfWork.Save();
-            if (result == 0)
-                throw new Exception("Service Unavailable");
+        // user.UserAccounts.FirstOrDefault().StatusTypeId = (long)StatusTypes.Reviewing;               
 
-            //var status = new StatusType { Id = (long)StatusTypes.Reviewing };
+        //UserCurrentStatus userStatus_New = new UserCurrentStatus() { StatusTypeId = (long)StatusTypes.New, CreationDate = DateTime.Now, IsCurrent = false };
+        //UserCurrentStatus userStatus_Review = new UserCurrentStatus() { StatusTypeId = (long)StatusTypes.Reviewing, CreationDate = DateTime.Now, IsCurrent = true };
+        //user.UserCurrentStatus.Add(userStatus_New);
+        //user.UserCurrentStatus.Add(userStatus_Review);
 
-            var account = new CaptainUserAccount
-            {
-                UserId = insertedUser.Id,
-                Mobile = insertedUser.Mobile,
-                PersonalImage = user.PersonalImage,
-                Fullname = user.FirstName + " " + user.FamilyName,
-                StatusTypeId = (long)StatusTypes.Reviewing,
-                CreationDate = currentDate
-            };
-            var userAccount = await _unitOfWork.CaptainRepository.InsertUserAccountAsync(account);
-            long modifierID = -1;
-            string modifierType = "";
-            Utility.getRequestUserIdFromToken(httpContext, out modifierID, out modifierType);
-            CaptainUserCurrentStatus userStatus_Review = new CaptainUserCurrentStatus()
-            {
-                UserId = insertedUser.Id,
-                StatusTypeId = (long)StatusTypes.Reviewing,
-                IsCurrent = true,
-                CreatedBy = modifierID,
-                CreationDate = currentDate,
-                ModificationDate = currentDate
-            };
+        CaptainUser captainUser = new() {
+            BirthDate =  captainUserDto?.BirthDate,
+            CityId = captainUserDto?.CityId,
+            CountryId = captainUserDto?.CountryId,
+            DrivingLicenseImage = captainUserDto?.DrivingLicenseImage,
+            FirstName = captainUserDto?.FirstName,
+            LastName = captainUserDto?.LastName,
+            Gender = captainUserDto?.Gender,
+            Mobile = captainUserDto?.Mobile,
+            NationalNumber = captainUserDto?.NationalNumber,
+            NationalNumberExpireDate = captainUserDto?.NationalNumberExpireDate,
+            NationalNumberFrontImage = captainUserDto?.NationalNumberFrontImage,
+            NbsherNationalNumberImage = captainUserDto?.NbsherNationalNumberImage,
+            PersonalImage = captainUserDto?.PersonalImage,
+            ResidenceCityId = captainUserDto?.ResidenceCityId,
+            RecidenceImage = captainUserDto?.RecidenceImage,
+            ResidenceCountryId = captainUserDto?.ResidenceCountryId,
+            StcPay = captainUserDto?.StcPay,
+            VehiclePlateNumber = captainUserDto?.VehiclePlateNumber,
+            VehicleRegistrationImage = captainUserDto?.VehicleRegistrationImage
+        };
 
-            var insertedResult = await _unitOfWork.CaptainRepository.InsertUserCurrentStatusAsync(userStatus_Review);
-            var result2 = await _unitOfWork.Save();
 
-            if (result2 == 0)
-                throw new Exception("Service Unavailable") ;
-            var message = insertedUser.Id.ToString();
-            _ = _HubContext.Clients.All.SendAsync("ReviewingDriverNotify", message);
+        captainUser = convertAndSaveUserImages(captainUser);
+        var insertedUser = await _unitOfWork.CaptainRepository.InsertCaptainUserAsync(captainUser);
+        var result = await _unitOfWork.Save();
+        if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
-            return insertedUser.Id;
-  
+
+
+
+
+        //var status = new StatusType { Id = (long)StatusTypes.Reviewing };
+
+        CaptainUserAccount account = new()
+        {
+            CaptainUserId = insertedUser.Id,
+            Mobile = insertedUser.Mobile,
+            StatusTypeId = (long)StatusTypes.Reviewing,
+            CreationDate = DateTime.Now
+        };
+        var userAccount = await _unitOfWork.CaptainRepository.InsertCaptainUserAccountAsync(account);
+        result = await _unitOfWork.Save();
+        if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
+
+
+        string modifierID = "";
+        string modifierType = "";
+        Utility.getRequestUserIdFromToken(httpContext, out modifierID, out modifierType);
+        CaptainUserCurrentStatus userStatus_Review = new CaptainUserCurrentStatus()
+        {
+            CaptainUserAccountId = userAccount.Id,
+            StatusTypeId = (long)StatusTypes.Reviewing,
+            IsCurrent = true,
+            CreatedBy = modifierID,
+            CreationDate = DateTime.Now,
+            ModificationDate = DateTime.Now
+        };
+
+        var insertedResult = await _unitOfWork.CaptainRepository.InsertCaptainUserCurrentStatusAsync(userStatus_Review);
+        result = await _unitOfWork.Save(); 
+        if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
+
+
+        var message = insertedUser.Id.ToString();
+        _ = _HubContext.Clients.All.SendAsync("ReviewingDriverNotify", message);
+
+        return new( CaptainUser:captainUser , CaptainUserAccount:userAccount );
+
 
     }
 
@@ -344,7 +381,7 @@ public class CaptainService : ICaptainService
 
     private CaptainUser convertAndSaveUserImages(CaptainUser user)
     {
-        if (user?.PersonalImage != null && user?.PersonalImage != "" && !((bool)user?.PersonalImage.Contains(".jpeg")))
+        if (user?.PersonalImage != null && user?.PersonalImage != "" && !(user?.PersonalImage?.Contains(".jpeg") ?? false))
         {
 
             var UserFolderPath = _hostingEnvironment.ContentRootPath + "/Assets/Images/Drivers/PersonalImages";
@@ -359,7 +396,7 @@ public class CaptainService : ICaptainService
 
         }
 
-        if (user?.NbsherNationalNumberImage != null && user?.NbsherNationalNumberImage != "" && !((bool)user?.NbsherNationalNumberImage.Contains(".jpeg")))
+        if (user?.NbsherNationalNumberImage != null && user?.NbsherNationalNumberImage != "" && !(user?.NbsherNationalNumberImage?.Contains(".jpeg") ?? false))
         {
 
             var UserFolderPath = _hostingEnvironment.ContentRootPath + "/Assets/Images/Drivers/NbsherNationalNumberImages";
@@ -373,7 +410,7 @@ public class CaptainService : ICaptainService
                 user.NbsherNationalNumberImage = NbsherNationalNumberImage_name;
 
         }
-        if (user?.NationalNumberFrontImage != null && user?.NationalNumberFrontImage != "" && !((bool)user?.NationalNumberFrontImage.Contains(".jpeg")))
+        if (user?.NationalNumberFrontImage != null && user?.NationalNumberFrontImage != "" && !(user?.NationalNumberFrontImage?.Contains(".jpeg") ?? false))
         {
 
             var UserFolderPath = _hostingEnvironment.ContentRootPath + "/Assets/Images/Drivers/NationalNumberFrontImages";
@@ -387,7 +424,7 @@ public class CaptainService : ICaptainService
                 user.NationalNumberFrontImage = NationalNumberFrontImage_name;
 
         }
-        if (user?.VehicleRegistrationImage != null && user?.VehicleRegistrationImage != "" && !((bool)user?.VehicleRegistrationImage.Contains(".jpeg")))
+        if (user?.VehicleRegistrationImage != null && user?.VehicleRegistrationImage != "" && !(user?.VehicleRegistrationImage?.Contains(".jpeg") ?? false))
         {
 
             var UserFolderPath = _hostingEnvironment.ContentRootPath + "/Assets/Images/Drivers/VehicleRegistrationImages";
@@ -401,7 +438,7 @@ public class CaptainService : ICaptainService
                 user.VehicleRegistrationImage = VehicleRegistrationImage_name;
 
         }
-        if (user?.DrivingLicenseImage != null && user?.DrivingLicenseImage != "" && !((bool)user?.DrivingLicenseImage.Contains(".jpeg")))
+        if (user?.DrivingLicenseImage != null && user?.DrivingLicenseImage != "" && !(user?.DrivingLicenseImage.Contains(".jpeg") ?? false))
         {
 
             var UserFolderPath = _hostingEnvironment.ContentRootPath + "/Assets/Images/Drivers/DrivingLicenseImages";
@@ -421,52 +458,43 @@ public class CaptainService : ICaptainService
     }
 
 
-    
-    public async Task<object> LoginAsync(LoginDriver driver)
+
+    public async Task<CaptainUserResponse> LoginAsync(LoginCaptainUserDto loginCaptain)
     {
-       
-
-            var accounts = await _unitOfWork.CaptainRepository.GetUsersAccountsByAsync(d => d.Mobile == driver.Mobile);
-            var account = accounts.FirstOrDefault();
-            if (account == null)
-                throw new Exception("Unauthorized");
 
 
-
-            if (driver.Password != "123789")
-            {
-                if (!Utility.VerifyPasswordHash(driver.Password, account.PasswordHash, account.PasswordSalt))
-                    throw new Exception("Unauthorized");
-            }
+        var accounts = await _unitOfWork.CaptainRepository.GetCaptainUsersAccountsByAsync(d => d.Mobile == loginCaptain.Mobile);
+        var account = accounts.FirstOrDefault();
+        if (account == null) throw new UnauthorizedException("Unauthorized");
 
 
 
-
-            if (!account.Token.HasValue())
-            {
-                //var user = await _unitOfWork.CaptainRepository.GetUserByID((long)account.UserId);
-                var token = Utility.GenerateToken((long)account.UserId, account.Fullname, "Driver", null);
-                account.Token = token;
-                //account.StatusTypeId = (long)StatusTypes.Incomplete;
-                account = await _unitOfWork.CaptainRepository.UpdateUserAccountAsync(account);
-                var result = await _unitOfWork.Save();
-                if (result == 0) throw new Exception("Service Unavailable");
-
-                //account.User = user;
-
-            }
+        if (loginCaptain.Password != "123789")
+        {
+            if (!Utility.VerifyPasswordHash(loginCaptain.Password, account.PasswordHash, account.PasswordSalt))
+                throw new UnauthorizedException("Unauthorized");
+        }
 
 
-            return new
-            {
-                accountId = account.Id,
-                userId = account.UserId,
-                fullname = account.Fullname,
-                mobile = account.Mobile,
-                token = account.Token,
-                accountStatusType = account.StatusTypeId,
-                PersonalImage = account.PersonalImage
-            };
+
+        var user = await _unitOfWork.CaptainRepository.GetCaptainUserByIdAsync(account.CaptainUserId);
+
+        if (!account.Token.HasValue())
+        {
+            //var user = await _unitOfWork.CaptainRepository.GetUserByID((long)account.UserId);
+            var token = Utility.GenerateToken(account.Id, $"{user.FirstName} {user.LastName}" , "Captain", null);
+            account.Token = token;
+            //account.StatusTypeId = (long)StatusTypes.Incomplete;
+            account = await _unitOfWork.CaptainRepository.UpdateCaptainUserAccountAsync(account);
+            var result = await _unitOfWork.Save();
+            if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
+
+            //account.User = user;
+
+        }
+
+
+        return new(CaptainUser: user, CaptainUserAccount: account);
 
 
     }
@@ -475,42 +503,36 @@ public class CaptainService : ICaptainService
     //we don't use that any more , we use the method in the system controller
     public async Task<bool> ChangePasswordAsync(DriverPhone driver)
     {
-       
-
-            var accounts = await _unitOfWork.CaptainRepository.GetUsersAccountsByAsync(d => d.Mobile == driver.Mobile);
-            var account = accounts.FirstOrDefault();
-            if (account == null)
-                throw new Exception("Unauthorized");
-
-            var user = await _unitOfWork.CaptainRepository.GetUserByIdAsync(account.Id);
-            var country = await _unitOfWork.CountryRepository.GetCountryByIdAsync((long)user.CountryId);
-
-            byte[] passwordHash, passwordSalt;
-            var password = Utility.GeneratePassword();
-            Utility.CreatePasswordHash(password, out passwordHash, out passwordSalt);
-
-            account.PasswordHash = passwordHash;
-            account.PasswordSalt = passwordSalt;
-            account.Password = password;
 
 
-            var message = "Welcome to Sender, your password reset, the password is " + password;
-            var phone = country.Code + account.Mobile;
-            var responseResult = Utility.SendSMS(message, phone);
-            //if (!responseResult)
-            //    return new ObjectResult("Server not available") { StatusCode = 707 };
+        var accounts = await _unitOfWork.CaptainRepository.GetCaptainUsersAccountsByAsync(d => d.Mobile == driver.Mobile);
+        var account = accounts.FirstOrDefault();
+        if (account == null) throw new UnauthorizedException("Unauthorized");
 
-            var updatedUser = await _unitOfWork.CaptainRepository.UpdateUserAccountAsync(account);
-            var result = await _unitOfWork.Save();
+        var user = await _unitOfWork.CaptainRepository.GetCaptainUserByIdAsync(account.CaptainUserId);
+        var country = await _unitOfWork.CountryRepository.GetCountryByIdAsync((long)user.CountryId);
 
-            if (result == 0)
-                throw new Exception("Service Unavailable");
+        byte[] passwordHash, passwordSalt;
+        var password = Utility.GeneratePassword();
+        Utility.CreatePasswordHash(password, out passwordHash, out passwordSalt);
+
+        account.PasswordHash = passwordHash;
+        account.PasswordSalt = passwordSalt;
+        account.Password = password;
 
 
-            return true;
+        var message = "Welcome to Sender, your password reset, the password is " + password;
+        var phone = country.Code + account.Mobile;
+        var responseResult = Utility.SendSMS(message, phone);
+        //if (!responseResult)
+        //    return new ObjectResult("Server not available") { StatusCode = 707 };
 
-        
+        var updatedUser = await _unitOfWork.CaptainRepository.UpdateCaptainUserAccountAsync(account);
+        var result = await _unitOfWork.Save();
 
+        if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
+
+        return true;
 
     }
 
@@ -652,80 +674,82 @@ public class CaptainService : ICaptainService
 */
 
 
-    
-    public async Task<object> AcceptRegisterCaptainByIdAsync(long id, HttpContext httpContext)
+
+    public async Task<object> AcceptRegisterCaptainByIdAsync(string captainUserAccountId, HttpContext httpContext)
     {
 
 
-            var userAccount = await _unitOfWork.CaptainRepository.GetUserAccountByIdAsync(id);
-            //var userAccount = usersAccounts.FirstOrDefault();
-            if (userAccount != null && userAccount.StatusTypeId == (long)StatusTypes.Reviewing)
-                userAccount.StatusTypeId = (long)StatusTypes.Working;
+        var userAccount = await _unitOfWork.CaptainRepository.GetCaptainUserAccountByIdAsync(captainUserAccountId);
+        if (userAccount == null) throw new NotFoundException($"User with id {captainUserAccountId} not found");
 
-            byte[] passwordHash, passwordSalt;
-            var password = Utility.GeneratePassword();
-            Utility.CreatePasswordHash(password, out passwordHash, out passwordSalt);
+        //var userAccount = usersAccounts.FirstOrDefault();
+        if (userAccount?.StatusTypeId == (long)StatusTypes.Reviewing)
+            userAccount.StatusTypeId = (long)StatusTypes.Working;
 
-            userAccount.PasswordHash = passwordHash;
-            userAccount.PasswordSalt = passwordSalt;
-            userAccount.Password = password;
+        byte[] passwordHash, passwordSalt;
+        var password = Utility.GeneratePassword();
+        Utility.CreatePasswordHash(password, out passwordHash, out passwordSalt);
 
-            var user = await _unitOfWork.CaptainRepository.GetUserByIdAsync(id);
+        userAccount.PasswordHash = passwordHash;
+        userAccount.PasswordSalt = passwordSalt;
+        userAccount.Password = password;
 
-
-
-            long modifierID = -1;
-            string modifierType = "";
-            Utility.getRequestUserIdFromToken(httpContext, out modifierID, out modifierType);
-            CaptainUserCurrentStatus userCurrentStatus = new CaptainUserCurrentStatus()
-            {
-                UserId = userAccount.UserId,
-                StatusTypeId = (long)StatusTypes.Working,
-                IsCurrent = true,
-                CreatedBy = modifierID,
-                CreationDate = DateTime.Now,
-                ModifiedBy = modifierID,
-                ModificationDate = DateTime.Now
-            };
+        var user = await _unitOfWork.CaptainRepository.GetCaptainUserByIdAsync(userAccount.CaptainUserId);
 
 
 
+        //string modifierID = -1;
+        //string modifierType = "";
+        Utility.getRequestUserIdFromToken(httpContext, out string modifierID, out string modifierType);
+        CaptainUserCurrentStatus userCurrentStatus = new CaptainUserCurrentStatus()
+        {
+            CaptainUserAccountId = userAccount.Id,
+            StatusTypeId = (long)StatusTypes.Working,
+            IsCurrent = true,
+            CreatedBy = modifierID,
+            CreationDate = DateTime.Now,
+            ModifiedBy = modifierID,
+            ModificationDate = DateTime.Now
+        };
 
 
 
-            //var userStatuses = await _unitOfWork.CaptainRepository.GetUserCurrentStatusBy(u => u.UserId == userAccount.UserId && u.IsCurrent == true);
-            //var userCurrentStatus = userStatuses.FirstOrDefault();
-            //if (userCurrentStatus != null && userCurrentStatus.StatusTypeId == (long)StatusTypes.New)
-            //{
-            //    userCurrentStatus.StatusTypeId = (long)StatusTypes.Working;
-            //    userCurrentStatus = await _unitOfWork.CaptainRepository.UpdateUserCurrentStatus(userCurrentStatus);
-            //}
-            //else if (userCurrentStatus == null)
-            //{
-            //    userCurrentStatus = new UserCurrentStatus() { StatusTypeId = (long)StatusTypes.Working };
-            //    userCurrentStatus = await _unitOfWork.CaptainRepository.InsertUserCurrentStatus(userCurrentStatus);
-            //}
 
 
-            //var updateResult = await _unitOfWork.CaptainRepository.UpdateUser(user);
+
+        //var userStatuses = await _unitOfWork.CaptainRepository.GetUserCurrentStatusBy(u => u.UserId == userAccount.UserId && u.IsCurrent == true);
+        //var userCurrentStatus = userStatuses.FirstOrDefault();
+        //if (userCurrentStatus != null && userCurrentStatus.StatusTypeId == (long)StatusTypes.New)
+        //{
+        //    userCurrentStatus.StatusTypeId = (long)StatusTypes.Working;
+        //    userCurrentStatus = await _unitOfWork.CaptainRepository.UpdateUserCurrentStatus(userCurrentStatus);
+        //}
+        //else if (userCurrentStatus == null)
+        //{
+        //    userCurrentStatus = new UserCurrentStatus() { StatusTypeId = (long)StatusTypes.Working };
+        //    userCurrentStatus = await _unitOfWork.CaptainRepository.InsertUserCurrentStatus(userCurrentStatus);
+        //}
 
 
-            var userCurrentStatusInsertedResult = await _unitOfWork.CaptainRepository.InsertUserCurrentStatusAsync(userCurrentStatus);
-            userAccount = await _unitOfWork.CaptainRepository.UpdateUserAccountAsync(userAccount);
-            var result = await _unitOfWork.Save();
-            if (result == 0) throw new Exception("Service Unavailable");
+        //var updateResult = await _unitOfWork.CaptainRepository.UpdateUser(user);
 
 
-            /*var country = await _unitOfWork.CountryRepository.GetCountryByIdAsync((long)user.CountryId);
-            var message = "Welcome to Sender,your registration has been approved,your password is " + password;
-            var phone = country.Code + userAccount.Mobile;
-            var responseResult = Utility.SendSMS(message, phone);*/
+        var userCurrentStatusInsertedResult = await _unitOfWork.CaptainRepository.InsertCaptainUserCurrentStatusAsync(userCurrentStatus);
+        userAccount = await _unitOfWork.CaptainRepository.UpdateCaptainUserAccountAsync(userAccount);
+        var result = await _unitOfWork.Save();
+        if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
 
-            var message2 = userAccount.UserId.ToString();
-            _ = _HubContext.Clients.All.SendAsync("WorkingDriverNotify", message2);
-            return new { Result = true, Password = password };
-        
+        /*var country = await _unitOfWork.CountryRepository.GetCountryByIdAsync((long)user.CountryId);
+        var message = "Welcome to Sender,your registration has been approved,your password is " + password;
+        var phone = country.Code + userAccount.Mobile;
+        var responseResult = Utility.SendSMS(message, phone);*/
+
+
+        var message2 = userAccount?.Id;
+        _ = _HubContext.Clients.All.SendAsync("WorkingDriverNotify", message2);
+        return new { Result = true, Password = password };
+
 
     }
 
@@ -736,54 +760,81 @@ public class CaptainService : ICaptainService
 
 
 
-    
-    public async Task<object> UpdateCaptainAsync(long id, CaptainUser user)
+
+    public async Task<object> UpdateCaptainUserAsync(string? captainUserAccountId, CaptainUserDto captainUserDto)
     {
-            if (id <= 0 || user == null) throw new Exception("NoContent");
 
-            if (user.Id <= 0)
-                user.Id = id;
+        if (captainUserAccountId == null || captainUserAccountId == "") throw new InvalidException($"No User Id provided"); 
+        if (captainUserDto == null) throw new NoContentException("NoContent");
+
+        var captainUserAccount = await _unitOfWork.CaptainRepository.GetCaptainUserAccountByIdAsync(captainUserAccountId);
+        if (captainUserAccount == null) throw new NotFoundException($"User account with id {captainUserAccountId} not found");
+
+
+        CaptainUser captainUser = new()
+        {
+            Id = captainUserAccount?.CaptainUserId ?? "",
+            BirthDate = captainUserDto?.BirthDate,
+            CityId = captainUserDto?.CityId,
+            CountryId = captainUserDto?.CountryId,
+            DrivingLicenseImage = captainUserDto?.DrivingLicenseImage,
+            FirstName = captainUserDto?.FirstName,
+            LastName = captainUserDto?.LastName,
+            Gender = captainUserDto?.Gender,
+            Mobile = captainUserDto?.Mobile,
+            NationalNumber = captainUserDto?.NationalNumber,
+            NationalNumberExpireDate = captainUserDto?.NationalNumberExpireDate,
+            NationalNumberFrontImage = captainUserDto?.NationalNumberFrontImage,
+            NbsherNationalNumberImage = captainUserDto?.NbsherNationalNumberImage,
+            PersonalImage = captainUserDto?.PersonalImage,
+            ResidenceCityId = captainUserDto?.ResidenceCityId,
+            RecidenceImage = captainUserDto?.RecidenceImage,
+            ResidenceCountryId = captainUserDto?.ResidenceCountryId,
+            StcPay = captainUserDto?.StcPay,
+            VehiclePlateNumber = captainUserDto?.VehiclePlateNumber,
+            VehicleRegistrationImage = captainUserDto?.VehicleRegistrationImage
+        };
 
 
 
-            user = convertAndSaveUserImages(user);
-            var updateResult = await _unitOfWork.CaptainRepository.UpdateUserAsync(user);
-            var result = await _unitOfWork.Save();
-            if (result == 0) throw new Exception("Service Unavailable");
+        captainUser = convertAndSaveUserImages(captainUser);
+        var updateResult = await _unitOfWork.CaptainRepository.UpdateCaptainUserAsync(captainUser);
+        var result = await _unitOfWork.Save();
+        if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
-            return new { Result = true, Message = "Updated successfuly" };
-        
+        return new { Result = true, Message = "Updated successfuly" };
+
     }
 
 
 
     public async Task<bool> UpdateCaptainCurrentLocationAsync(CaptainUserCurrentLocation userCurrentLocation)
     {
-        
-            var insertedResult = await _unitOfWork.CaptainRepository.InsertUserCurrentLocationAsync(userCurrentLocation);
 
-            var result = await _unitOfWork.Save();
-            if (result == 0) throw new Exception("Service Unavailable");
+        var insertedResult = await _unitOfWork.CaptainRepository.InsertCaptainUserCurrentLocationAsync(userCurrentLocation);
 
-            return true;
+        var result = await _unitOfWork.Save();
+        if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
+
+        return true;
 
     }
 
 
 
 
-    
-    public async Task<bool> DeleteCaptainUserAccountAsync(long id)
+
+    public async Task<bool> DeleteCaptainUserAccountAsync(string captainUserAccountId)
     {
 
-       
-            var userAccount = await _unitOfWork.CaptainRepository.DeleteUserAccountAsync(id);
 
-            var result = await _unitOfWork.Save();
-            if (result == 0) throw new Exception("Service Unavailable");
+        var userAccount = await _unitOfWork.CaptainRepository.DeleteCaptainUserAccountAsync(captainUserAccountId);
 
-            return true;
-        
+        var result = await _unitOfWork.Save();
+        if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
+
+        return true;
+
 
     }
 
@@ -825,12 +876,15 @@ public class CaptainService : ICaptainService
 
 */
 
-    
-    public async Task<object> GetOrdersPaymentsByCaptainUserAccountIdAsync(long id)
+
+    public async Task<object> GetOrdersPaymentsByCaptainUserAccountIdAsync(string captainUserAccountId)
     {
         try
         {
-            var payments = await _unitOfWork.CaptainRepository.GetUsersPaymentsByAsync(p => p.UserId == id && p.StatusId == (long)PaymentStatusTypes.Complete);
+            var payments = await _unitOfWork.CaptainRepository
+                .GetCaptainUsersPaymentsByAsync(p => 
+                p.CaptainUserAccountId == captainUserAccountId && 
+                p.PaymentStatusTypeId == (long)PaymentStatusTypes.Complete);
 
             var orderIds = payments.Select(p => p.OrderId).ToList();
 
@@ -848,45 +902,45 @@ public class CaptainService : ICaptainService
     }
 
 
-    
-    public async Task<object> GetBookkeepingPagingByCaptainUserAccountIdAsync(long id,FilterParameters parameters)// , [FromBody] Pagination pagination)
+
+    public async Task<object> GetBookkeepingPagingByCaptainUserAccountIdAsync(string? captainUserAccountId, FilterParameters parameters)// , [FromBody] Pagination pagination)
     {
-        
 
-            if (id <= 0 || parameters == null) throw new Exception("NoContent");
+        if (captainUserAccountId == null || captainUserAccountId == "") throw new InvalidException("No account Id provided");
+        if (parameters == null) throw new NoContentException("NoContent");
 
-            /*int skip = 0 , take = 0;
-            if (objects != null &&  objects >= 0  &&  page != null && page > 0 ) {
-                skip = (int)objects * (int)page;
-                take = (int)page;
-            }*/
+        /*int skip = 0 , take = 0;
+        if (objects != null &&  objects >= 0  &&  page != null && page > 0 ) {
+            skip = (int)objects * (int)page;
+            take = (int)page;
+        }*/
 
-            if (parameters.NumberOfObjectsPerPage <= 0)
-                parameters.NumberOfObjectsPerPage = 10;
+        if (parameters.NumberOfObjectsPerPage <= 0)
+            parameters.NumberOfObjectsPerPage = 10;
 
-            if (parameters.Page <= 0)
-                parameters.Page = 1;
+        if (parameters.Page <= 0)
+            parameters.Page = 1;
 
-            var skip = (parameters.NumberOfObjectsPerPage * (parameters.Page - 1));
-            var take = parameters.NumberOfObjectsPerPage;
-            var payments = await _unitOfWork.PaymentRepository.GetBookkeepingPaginationByAsync(p => p.UserId == id, skip, take);
+        var skip = (parameters.NumberOfObjectsPerPage * (parameters.Page - 1));
+        var take = parameters.NumberOfObjectsPerPage;
+        var payments = await _unitOfWork.PaymentRepository.GetBookkeepingPaginationByAsync(p => p.CaptainUserAccountId == captainUserAccountId, skip, take);
 
-            return payments;
+        return payments;
 
-        
+
 
     }
 
 
-    
-    public async Task<IEnumerable<Bookkeeping>> GetBookkeepingByCaptainUserAccountIdAsync(long id)
+
+    public async Task<IEnumerable<Bookkeeping>> GetBookkeepingByCaptainUserAccountIdAsync(string captainUserAccountId)
     {
         try
         {
 
             /*var skip = (pagination.NumberOfObjectsPerPage * (pagination.Page));
             var take = pagination.NumberOfObjectsPerPage;*/
-            var payments = await _unitOfWork.PaymentRepository.GetBookkeepingByAsync(p => p.UserId == id);
+            var payments = await _unitOfWork.PaymentRepository.GetBookkeepingByAsync(p => p.CaptainUserAccountId == captainUserAccountId);
 
             return payments;
 
@@ -899,12 +953,12 @@ public class CaptainService : ICaptainService
     }
 
 
-    
-    public async Task<decimal> GetUntransferredBookkeepingByCaptainUserAccountIdAsync(long id)
+
+    public async Task<decimal> GetUntransferredBookkeepingByCaptainUserAccountIdAsync(string captainUserAccountId)
     {
         try
         {
-            var payments = await _unitOfWork.PaymentRepository.UntransferredBookkeepingByAsync(p => p.UserId == id && p.Value > 0);
+            var payments = await _unitOfWork.PaymentRepository.UntransferredBookkeepingByAsync(p => p.CaptainUserAccountId == captainUserAccountId && p.Value > 0);
             if (payments == null || payments?.Count <= 0) return 0;
 
             var total = payments?.Sum(p => p.Value);
@@ -920,7 +974,7 @@ public class CaptainService : ICaptainService
 
 
 
-    public async Task<IEnumerable<Order>> GetAllOrdersAssignmentsByCaptainUserAccountIdAsync(long id, FilterParameters parameters)//[FromBody] Pagination pagination)
+    public async Task<IEnumerable<Order>> GetAllOrdersAssignmentsByCaptainUserAccountIdAsync(string captainUserAccountId, FilterParameters parameters)//[FromBody] Pagination pagination)
     {
         try
         {
@@ -934,10 +988,13 @@ public class CaptainService : ICaptainService
             var take = parameters.NumberOfObjectsPerPage;
             //var result = orders.Skip(skip).Take(take).ToList();
 
-            var orderAssignments = await _unitOfWork.OrderRepository.GetOrdersAssignmentsByAsync(p => p.UserId == id);
+            var orderAssignments = await _unitOfWork.OrderRepository.GetOrdersAssignmentsByAsync(p => p.CaptainUserAccountId == captainUserAccountId);
             var orderIds = orderAssignments.Select(a => a.OrderId).ToList();
-            var OrdersStatus = await _unitOfWork.OrderRepository.GetOrderCurrentStatusesByAsync(s => orderIds.Contains(s.OrderId) &&
-            (s.StatusTypeId == (long)OrderStatusTypes.Dropped || s.StatusTypeId == (long)OrderStatusTypes.Delivered));
+            var OrdersStatus = await _unitOfWork.OrderRepository
+                .GetOrderCurrentStatusesByAsync(s => 
+                orderIds.Contains(s.OrderId) &&
+            ( s.OrderStatusTypeId == (long)OrderStatusTypes.Dropped || 
+            s.OrderStatusTypeId == (long)OrderStatusTypes.Delivered ));
 
             var realOrdersIDs = OrdersStatus.Skip(skip).Take(take).Select(o => o.OrderId);
 
@@ -953,14 +1010,14 @@ public class CaptainService : ICaptainService
 
     }
 
-    
-    public async Task<CaptainUserShift> AddCaptainUserShiftAsync( CaptainUserShift userShift)
+
+    public async Task<CaptainUserShift> AddCaptainUserShiftAsync(CaptainUserShift userShift)
     {
         try
         {
-            var insertResult = await _unitOfWork.CaptainRepository.InsertUserShiftAsync(userShift);
+            var insertResult = await _unitOfWork.CaptainRepository.InsertCaptainUserShiftAsync(userShift);
             var result = await _unitOfWork.Save();
-            if (result == 0) throw new Exception("Service Unavailable");
+            if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
             return insertResult;
 
@@ -972,33 +1029,33 @@ public class CaptainService : ICaptainService
     }
 
 
-    public async Task<CaptainUserShift> DeleteCaptainUserShiftAsync( long userId,long shiftId)
+    public async Task<CaptainUserShift> DeleteCaptainUserShiftAsync(string captainUserAccountId, long shiftId)
     {
 
-       
-            var userShifts = await _unitOfWork.CaptainRepository.GetUsersShiftsByAsync(s => s.UserId == userId && s.ShiftId == shiftId); //&& s.CreationDate >= DateTime.Now);
-            var oldUserShift = userShifts.FirstOrDefault();
-            if (oldUserShift == null) throw new Exception("NotFound");
 
-            var deleteResult = await _unitOfWork.CaptainRepository.DeleteUserShiftAsync(oldUserShift.Id);
-            var result = await _unitOfWork.Save();
-            if (result == 0) throw new Exception("Service Unavailable");
+        var userShifts = await _unitOfWork.CaptainRepository.GetCaptainUsersShiftsByAsync(s => s.CaptainUserAccountId == captainUserAccountId && s.ShiftId == shiftId); //&& s.CreationDate >= DateTime.Now);
+        var oldUserShift = userShifts.FirstOrDefault();
+        if (oldUserShift == null) throw new NotFoundException("the target shift not found");
 
-            return deleteResult;
+        var deleteResult = await _unitOfWork.CaptainRepository.DeleteCaptainUserShiftAsync(oldUserShift.Id);
+        var result = await _unitOfWork.Save();
+        if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
+
+        return deleteResult;
 
     }
 
 
-    
-    public async Task<CaptainUserShift> GetCaptainUsershiftAsync(long userId, long shiftId)//[FromBody] UserShift userShift)
+
+    public async Task<CaptainUserShift?> GetCaptainUsershiftAsync(string captainUserAccountId, long shiftId)//[FromBody] UserShift userShift)
     {
 
         try
         {
-            var userShifts = await _unitOfWork.CaptainRepository.GetUsersShiftsByAsync(s => s.UserId == userId && s.ShiftId == shiftId); //&& s.CreationDate >= DateTime.Now);
+            var userShifts = await _unitOfWork.CaptainRepository.GetCaptainUsersShiftsByAsync(s => s.CaptainUserAccountId == captainUserAccountId && s.ShiftId == shiftId); //&& s.CreationDate >= DateTime.Now);
             var result = userShifts.FirstOrDefault();
 
-            return result ?? new CaptainUserShift();
+            return result;
         }
         catch (Exception e)
         {
@@ -1008,14 +1065,14 @@ public class CaptainService : ICaptainService
     }
 
 
-    
-    public async Task<object> GetShiftsAndUserShiftsByDateAsync(long id,Shift shift)
+
+    public async Task<object> GetShiftsAndUserShiftsByDateAsync(string captainUserAccountId, Shift shift)
     {
         try
         {
             var resultShiftsOftheDay = await _unitOfWork.SystemRepository.GetShiftsByShiftDateAsync(shift);
             var shiftsOftheDay_IDs = resultShiftsOftheDay.Select(s => s.Id).ToList();
-            var userShifts = await _unitOfWork.CaptainRepository.GetUsersShiftsByAsync(s => s.UserId == id && shiftsOftheDay_IDs.Contains((long)s.ShiftId));
+            var userShifts = await _unitOfWork.CaptainRepository.GetCaptainUsersShiftsByAsync(s => s.CaptainUserAccountId == captainUserAccountId && shiftsOftheDay_IDs.Contains(s.ShiftId ?? 0));
 
             return new { shifts = resultShiftsOftheDay, userShifts = userShifts };
         }
@@ -1031,98 +1088,98 @@ public class CaptainService : ICaptainService
     //Inactive is if captain is don't want to take orders and stopped using the app 
     public async Task<CaptainUserActivity> CaptainUserActivitiesAsync(CaptainUserActivity userActivity)
     {
-       
-
-            if (userActivity.StatusTypeId == (long)StatusTypes.Inactive)
-            {
-                var updateDriverLocationResult =
-                await _unitOfWork.CaptainRepository.DeleteUserCurrentLocationAsync((long)userActivity.UserId);
 
 
-            }
+        if (userActivity.StatusTypeId == (long)StatusTypes.Inactive)
+        {
+            var updateDriverLocationResult =
+            await _unitOfWork.CaptainRepository.DeleteCaptainUserCurrentLocationByCaptainUserAccountIdAsync(userActivity.CaptainUserAccountId ?? "");
 
-            var updateResult = await _unitOfWork.CaptainRepository.InsertUserActivityAsync(userActivity);
-            var result = await _unitOfWork.Save();
-            if (result == 0) throw new Exception("Service Unavailable");
+
+        }
+
+        var updateResult = await _unitOfWork.CaptainRepository.InsertCaptainUserActivityAsync(userActivity);
+        var result = await _unitOfWork.Save();
+        if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
 
-            return updateResult;
-        
+        return updateResult;
+
     }
 
 
-    
-    public async Task<object> ReportsAsync(FilterParameters reportParameters, HttpContext httpContext)
+
+   /* public async Task<object> ReportsAsync(FilterParameters reportParameters, HttpContext httpContext)
     {
-       
-            // 1-Check Role and Id
+
+        // 1-Check Role and Id
 
 
-            var userType = "";
-            var userId = long.Parse("0");
-            Utility.getRequestUserIdFromToken(httpContext, out userId, out userType);
+        //var userType = "";
+        //var userId = long.Parse("0");
+        Utility.getRequestUserIdFromToken(httpContext, out string userId, out string userType);
 
-            //   var accessToken = await HttpContext.GetTokenAsync("access_token");
-            // 2- Get Querable data depends on Role and Id 
-            IQueryable<Order> acceptedOrders;
-            if (userType != "Admin" || userType != "Support") throw new Exception("Unauthorized");
-            if (userType != "Driver" && userId == 0) throw new Exception("Unauthorized");
-
-
-            IQueryable<Order> rejectedOrders;
-
-            IQueryable<Order> ignoredOrders;
-            if (reportParameters.FilterByDriverId == 0)
-            {
-                //rejectedOrders = _unitOfWork.CaptainRepository.GetAllRejectedRequestByQuerable().Select(o => o.Order);
-                acceptedOrders = _unitOfWork.CaptainRepository.GetAllAcceptedRequestByQuerable().Select(o => o.Order);
-                //ignoredOrders = _unitOfWork.CaptainRepository.GetAllIgnoredRequestByQuerable().Select(o => o.Order);
-
-            }
-            else if (userId != 0) 
-            {
-                acceptedOrders = _unitOfWork.CaptainRepository.GetUserAcceptedRequestByQuerable(u => u.UserId == userId).Select(o => o.Order);
-            }
-            else
-            {
-
-                //rejectedOrders = _unitOfWork.CaptainRepository.GetUserRejectedRequestByQuerable(u => u.UserId == reportParameters.FilterByDriverId).Select(o => o.Order);
-                acceptedOrders = _unitOfWork.CaptainRepository.GetUserAcceptedRequestByQuerable(u => u.UserId == reportParameters.FilterByDriverId).Select(o => o.Order);
-                //ignoredOrders = _unitOfWork.CaptainRepository.GetUserIgnoredRequestByQuerable(u => u.UserId == reportParameters.FilterByDriverId).Select(o => o.Order);
-
-            }
+        //   var accessToken = await HttpContext.GetTokenAsync("access_token");
+        // 2- Get Querable data depends on Role and Id 
+        IQueryable<Order> acceptedOrders;
+        //if (userType != "Admin" || userType != "Support") throw new Exception("Unauthorized");
+        if (userType != "Captain" && userId == "") throw new Exception("Unauthorized");
 
 
-            var filteredAcceptedOrdersResult = Utility.GetFilter(reportParameters, acceptedOrders);
-            var filteredAcceptedOrders = this.mapper.Map<List<OrderResponse>>(filteredAcceptedOrdersResult.ToList());
-            //var finalIgnoredOrderResult = Utility.GetFilter(reportParameters, ignoredOrders);
-            //var finalIgnoredOrders = this.mapper.Map<List<OrderResponse>>(finalIgnoredOrderResult.ToList());
-            //var finalRejectedOrderResult = Utility.GetFilter(reportParameters, rejectedOrders);
-            //var finalRejectedOrders = this.mapper.Map<List<OrderResponse>>(finalRejectedOrderResult.ToList());
+        IQueryable<Order> rejectedOrders;
+
+        IQueryable<Order> ignoredOrders;
+        if (reportParameters.FilterByDriverId == 0)
+        {
+            //rejectedOrders = _unitOfWork.CaptainRepository.GetAllRejectedRequestByQuerable().Select(o => o.Order);
+            acceptedOrders = _unitOfWork.CaptainRepository.GetAllAcceptedRequestByQuerable().Select(o => o.Order);
+            //ignoredOrders = _unitOfWork.CaptainRepository.GetAllIgnoredRequestByQuerable().Select(o => o.Order);
+
+        }
+        else if (userId != "")
+        {
+            acceptedOrders = _unitOfWork.CaptainRepository.GetCaptainUserAcceptedRequestByQuerable(u => u.CaptainUserAccountId == userId).Select(o => o.Order);
+        }
+        else
+        {
+
+            //rejectedOrders = _unitOfWork.CaptainRepository.GetUserRejectedRequestByQuerable(u => u.UserId == reportParameters.FilterByDriverId).Select(o => o.Order);
+            acceptedOrders = _unitOfWork.CaptainRepository.GetCaptainUserAcceptedRequestByQuerable(u => u.CaptainUserAccountId == reportParameters.FilterByCaptainUserAccountId);//.Select(o => o.Order);
+            //ignoredOrders = _unitOfWork.CaptainRepository.GetUserIgnoredRequestByQuerable(u => u.UserId == reportParameters.FilterByDriverId).Select(o => o.Order);
+
+        }
 
 
-            return new
-            {
-
-                //RejectedRequestsCount = finalRejectedOrders.Count(),
-                //RejectedRequests = finalRejectedOrders,
-                AcceptedRequests = filteredAcceptedOrders,
-                AcceptedRequestsCount = filteredAcceptedOrders.Count(),
-                //IgnoredRequests = finalIgnoredOrders,
-                //IgnoredRequestsCount = finalIgnoredOrders.Count()
-            };
+        var filteredAcceptedOrdersResult = Utility.GetFilter(reportParameters, acceptedOrders);
+        var filteredAcceptedOrders = this.mapper.Map<List<OrderResponse>>(filteredAcceptedOrdersResult.ToList());
+        //var finalIgnoredOrderResult = Utility.GetFilter(reportParameters, ignoredOrders);
+        //var finalIgnoredOrders = this.mapper.Map<List<OrderResponse>>(finalIgnoredOrderResult.ToList());
+        //var finalRejectedOrderResult = Utility.GetFilter(reportParameters, rejectedOrders);
+        //var finalRejectedOrders = this.mapper.Map<List<OrderResponse>>(finalRejectedOrderResult.ToList());
 
 
+        return new
+        {
 
-    }
+            //RejectedRequestsCount = finalRejectedOrders.Count(),
+            //RejectedRequests = finalRejectedOrders,
+            AcceptedRequests = filteredAcceptedOrders,
+            AcceptedRequestsCount = filteredAcceptedOrders.Count(),
+            //IgnoredRequests = finalIgnoredOrders,
+            //IgnoredRequestsCount = finalIgnoredOrders.Count()
+        };
+
+
+
+    }*/
     /* Get Orders Reports */
 
 
 
 
 
-    
-    public async Task<object> SearchAsync(FilterParameters parameters)
+
+   /* public async Task<object> SearchAsync(FilterParameters parameters)
     {
         try
         {
@@ -1164,10 +1221,10 @@ public class CaptainService : ICaptainService
         {
             return new { };// new ObjectResult(e.Message) { StatusCode = 666 };
         }
-    }
+    }*/
     /**/
 
-    
+
     public async Task<object> ChartsAsync()
     {
         try
@@ -1177,109 +1234,115 @@ public class CaptainService : ICaptainService
         }
         catch (Exception e)
         {
-            return new {};// new ObjectResult(e.Message) { StatusCode = 666 };
+            return new { };// new ObjectResult(e.Message) { StatusCode = 666 };
         }
 
     }
 
-    
+
     public async Task<object> CheckBonusPerMonthAsync(BonusCheckDto bonusCheckDto)
     {
-        
-            /// Check Bonus
-            var userOrdersAssignedPerMonth = await _unitOfWork.OrderRepository.GetOrdersAssignmentsByAsync(a =>
-                a.UserId == bonusCheckDto.userId &&
-                a.CreationDate.Value.Month == bonusCheckDto.date.Month &&
-                a.CreationDate.Value.Month == bonusCheckDto.date.Month);
 
-            var orderIds = userOrdersAssignedPerMonth.Select(a => a.OrderId).ToList();
-            var ordersStatus = await _unitOfWork.OrderRepository.GetOrderCurrentStatusesByAsync(s =>
-                orderIds.Contains(s.OrderId) &&
-                (s.StatusTypeId == (long)OrderStatusTypes.Dropped));
-            var ordersCount = ordersStatus.Count();
-            // var order = await _unitOfWork.OrderRepository.GetOrderByID((long)orderIds[0]);
-            var userCountryId = userOrdersAssignedPerMonth.FirstOrDefault()?.User.ResidenceCountryId;
-            var bonusPerCountry = await _unitOfWork.CaptainRepository.GetBonusByCountryAsync(userCountryId);
+        /// Check Bonus
+        var userOrdersAssignedPerMonth = await _unitOfWork.OrderRepository.GetOrdersAssignmentsByAsync(a =>
+            a.CaptainUserAccountId == bonusCheckDto.captainUserAccountId &&
+            a.CreationDate.Value.Month == bonusCheckDto.date.Month &&
+            a.CreationDate.Value.Month == bonusCheckDto.date.Month);
+
+        var orderIds = userOrdersAssignedPerMonth.Select(a => a.OrderId).ToList();
+        var ordersStatus = await _unitOfWork.OrderRepository.GetOrderCurrentStatusesByAsync(s =>
+            orderIds.Contains(s.OrderId) &&
+            (s.OrderStatusTypeId == (long)OrderStatusTypes.Dropped));
+        var ordersCount = ordersStatus.Count();
+        // var order = await _unitOfWork.OrderRepository.GetOrderByID((long)orderIds[0]);
+
+        var anyOrderAssign = userOrdersAssignedPerMonth.FirstOrDefault();
+        var userAccount = await _unitOfWork.CaptainRepository.GetCaptainUserAccountByIdAsync(anyOrderAssign.CaptainUserAccountId);
+        var user = await _unitOfWork.CaptainRepository.GetCaptainUserByIdAsync(userAccount.CaptainUserId);
+        var bonusPerCountry = await _unitOfWork.CaptainRepository.GetBonusByCountryAsync(user.ResidenceCountryId);
 
 
-            var userBonus = new CaptainUserBonus();
-            if (ordersCount >= bonusPerCountry.OrdersPerMonth)
+        var userBonus = new CaptainUserBonus();
+        if (ordersCount >= bonusPerCountry.OrdersPerMonth)
+        {
+            userBonus = new CaptainUserBonus()
             {
-                userBonus = new CaptainUserBonus()
-                {
-                    UserId = bonusCheckDto.userId,
-                    BonusTypeId = (long)BonusTypes.BonusPerMonth,
-                    CreationDate = DateTime.Now,
-                    Amount = bonusPerCountry.BonusPerMonth
-                };
-                var insertedBonus = await _unitOfWork.CaptainRepository.InsertBonusAsync(userBonus);
-                var result = await _unitOfWork.Save();
-                if (result == 0) throw new Exception("Service Unavailable");
+                CaptainUserAccountId = bonusCheckDto.captainUserAccountId,
+                BonusTypeId = (long)BonusTypes.BonusPerMonth,
+                CreationDate = DateTime.Now,
+                Amount = bonusPerCountry.BonusPerMonth
+            };
+            var insertedBonus = await _unitOfWork.CaptainRepository.InsertCaptainUserBonusAsync(userBonus);
+            var result = await _unitOfWork.Save();
+            if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
-                return new
-                {
-                    Bonus = userBonus,
-                    Message = "User Delivered about " + ordersCount + " Orders in Month" + bonusCheckDto.date.Month
-                };
-            }
-            else
+            return new
             {
-                return new
-                {
-                    Message = "User has no bonus as he delivered about " + ordersCount + " Orders in Month " +
-                              bonusCheckDto.date.Month
-                };
-            }
-        
+                Bonus = userBonus,
+                Message = "User Delivered about " + ordersCount + " Orders in Month" + bonusCheckDto.date.Month
+            };
+        }
+        else
+        {
+            return new
+            {
+                Message = "User has no bonus as he delivered about " + ordersCount + " Orders in Month " +
+                          bonusCheckDto.date.Month
+            };
+        }
+
     }
 
-   
+
     public async Task<object> CheckBonusPerYearAsync(BonusCheckDto bonusCheckDto)
     {
-       
-            /// Check Bonus
-            var userOrdersAssignedPerYear = await _unitOfWork.OrderRepository.GetOrdersAssignmentsByAsync(a => a.UserId == bonusCheckDto.userId &&
-                                     a.CreationDate.Value.Year == bonusCheckDto.date.Year);
 
-            var orderIds = userOrdersAssignedPerYear.Select(a => a.OrderId).ToList();
-            var ordersStatus = await _unitOfWork.OrderRepository.GetOrderCurrentStatusesByAsync(s => orderIds.Contains(s.OrderId) &&
-           (s.StatusTypeId == (long)OrderStatusTypes.Dropped));
-            var ordersCount = ordersStatus.Count();
-            //var order = await _unitOfWork.OrderRepository.GetOrderByID((long)orderIds[0]);
-            var userCountryId = userOrdersAssignedPerYear.FirstOrDefault()?.User.ResidenceCountryId;
-            var bonusPerCountry = await _unitOfWork.CaptainRepository.GetBonusByCountryAsync(userCountryId);
+        /// Check Bonus
+        var userOrdersAssignedPerYear = await _unitOfWork.OrderRepository.GetOrdersAssignmentsByAsync(a => a.CaptainUserAccountId == bonusCheckDto.captainUserAccountId &&
+                                 a.CreationDate.Value.Year == bonusCheckDto.date.Year);
 
-            var userBonus = new CaptainUserBonus();
-            if (ordersCount >= bonusPerCountry.OrdersPerYear)
+        var orderIds = userOrdersAssignedPerYear.Select(a => a.OrderId).ToList();
+        var ordersStatus = await _unitOfWork.OrderRepository.GetOrderCurrentStatusesByAsync(s => orderIds.Contains(s.OrderId) &&
+       (s.OrderStatusTypeId == (long)OrderStatusTypes.Dropped));
+        var ordersCount = ordersStatus.Count();
+        //var order = await _unitOfWork.OrderRepository.GetOrderByID((long)orderIds[0]);
+
+        var anyOrderAssign = userOrdersAssignedPerYear.FirstOrDefault();
+        var userAccount = await _unitOfWork.CaptainRepository.GetCaptainUserAccountByIdAsync(anyOrderAssign.CaptainUserAccountId);
+        var user = await _unitOfWork.CaptainRepository.GetCaptainUserByIdAsync(userAccount.CaptainUserId);
+        var bonusPerCountry = await _unitOfWork.CaptainRepository.GetBonusByCountryAsync(user.ResidenceCountryId);
+
+        var userBonus = new CaptainUserBonus();
+        if (ordersCount >= bonusPerCountry.OrdersPerYear)
+        {
+            userBonus = new CaptainUserBonus()
             {
-                userBonus = new CaptainUserBonus()
-                {
-                    UserId = bonusCheckDto.userId,
-                    BonusTypeId = (long)BonusTypes.BonusPerYear,
-                    CreationDate = DateTime.Now,
-                    Amount = bonusPerCountry.BonusPerYear
-                };
-                var insertedBonus = await _unitOfWork.CaptainRepository.InsertBonusAsync(userBonus);
-                var result = await _unitOfWork.Save();
-                if (result == 0) throw new Exception("Service Unavailable");
+                CaptainUserAccountId = bonusCheckDto.captainUserAccountId,
+                BonusTypeId = (long)BonusTypes.BonusPerYear,
+                CreationDate = DateTime.Now,
+                Amount = bonusPerCountry.BonusPerYear
+            };
+            var insertedBonus = await _unitOfWork.CaptainRepository.InsertCaptainUserBonusAsync(userBonus);
+            var result = await _unitOfWork.Save();
+            if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
-                return new { Bonus = userBonus, Message = "User Delivered about " + ordersCount + " Orders in Year " + bonusCheckDto.date.Year };
-            }
-            else
-            {
-                return new { Message = "User has no bonus as he delivered about " + ordersCount + " Orders in Year " + bonusCheckDto.date.Year };
-            }
+            return new { Bonus = userBonus, Message = "User Delivered about " + ordersCount + " Orders in Year " + bonusCheckDto.date.Year };
+        }
+        else
+        {
+            return new { Message = "User has no bonus as he delivered about " + ordersCount + " Orders in Year " + bonusCheckDto.date.Year };
+        }
 
-        
+
     }
 
 
-   
-    public async Task<string> SendFirebaseNotificationAsync( FBNotify fbNotify)
+
+    public async Task<string> SendFirebaseNotificationAsync(FBNotify fbNotify)
     {
         try
         {
-            var result = await Task.Run(()=> {
+            var result = await Task.Run(() => {
                 return FirebaseNotification.SendNotificationToTopic(FirebaseTopics.Captains, fbNotify.Title, fbNotify.Message);
             });
             return result;
@@ -1293,17 +1356,17 @@ public class CaptainService : ICaptainService
 
 
 
-    
-    public async Task<IEnumerable<CaptainUser>> GetCaptainsUsersNearToLocation(Location location)
+
+    public async Task<IEnumerable<NearCaptainUser>> GetCaptainsUsersNearToLocationAsync(Location location)
     {
         try
         {
             return await _unitOfWork.CaptainRepository.GetCaptainsUsersNearToLocationAsync(location.Lat, location.Lng);
-            
+
         }
         catch (Exception e)
         {
-            return new List<CaptainUser>();// new ObjectResult(e.Message) { StatusCode = 666 };
+            return new List<NearCaptainUser>();// new ObjectResult(e.Message) { StatusCode = 666 };
         }
     }
     /**/

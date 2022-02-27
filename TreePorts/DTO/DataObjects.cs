@@ -220,14 +220,7 @@ namespace TreePorts.DTO
     }
 
 
-    public class LoginDriver
-    {
-        [Required]
-        public string Mobile { get; set; }
-        [Required]
-        [StringLength(6, ErrorMessage = "You must enter password 6 digites")]
-        public string Password { get; set; }
-    }
+   
 
 
     public class DriverPhone
@@ -265,20 +258,9 @@ namespace TreePorts.DTO
     }
 
 
-    public class UserHubToken
-    {
-        public string UserType { get; set; }
-        public long UserId { get; set; }
-        public string Token { get; set; }
-    }
+    
 
-    public class StatusAction
-    {
-        public string UserType { get; set; }
-        public long UserId { get; set; }
-        public long StatusTypeId { get; set; }
-        public long ModifiedBy { get; set; }
-    }
+    
 
 
     //public class LoginSupport
@@ -292,23 +274,7 @@ namespace TreePorts.DTO
 
 
 
-    [Serializable]
-    public class NotFoundException : Exception
-    {
-        public NotFoundException()
-        {
-        }
-
-        public NotFoundException(string message)
-            : base(message)
-        {
-        }
-
-        public NotFoundException(string message, Exception inner)
-            : base(message, inner)
-        {
-        }
-    }
+    
 
 
     public class Pagination {
@@ -353,11 +319,7 @@ namespace TreePorts.DTO
     }
 
 
-    public class OrderRequest
-    {
-        public long UserId { get; set; }
-        public long OrderId { get; set; }
-    }
+    
     
     
     public class Location
@@ -387,16 +349,7 @@ namespace TreePorts.DTO
     }
 
 
-    public class FBNotify
-    {
-        public long UserId { get; set; }
-        public string Token { get; set; }
-        public string Topic { get; set; }
-        public List<string> Tokens { get; set; }
-        public List<long> UserIds { get; set; }
-        public string Title { get; set; }
-        public string Message { get; set; }
-    }
+    
 
 
 
@@ -425,7 +378,7 @@ namespace TreePorts.DTO
      
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
-		public long FilterByDriverId { get; set; }
+		public string? FilterByCaptainUserAccountId { get; set; }
         public long? CurrentStatusId { get; set; }
         public string CountryName { get; set; }
         public string CityName { get; set; }
@@ -510,7 +463,7 @@ namespace TreePorts.DTO
 	{
         // [Required]
         public long CouponId { get; set; }
-        public long[] ListOfAgentIds { get; set; }
+        public string[]? ListOfAgentIds { get; set; }
        
         public DateTime ExpireDate { get; set; }
         [Required]
@@ -527,14 +480,14 @@ namespace TreePorts.DTO
     public class AssignCouponDto
 	{
         public long CouponId { get; set; }
-        public long[] ListOfAgentIds { get; set; }
+        public string[]? ListOfAgentIds { get; set; }
         public long? CountryId { get; set; }
     }
-    public class BonusCheckDto
+   /* public class BonusCheckDto
 	{
 		public long userId { get; set; }
 		public DateTime date { get; set; }
-	}
+	}*/
     public class WebhookEvent
     {
         

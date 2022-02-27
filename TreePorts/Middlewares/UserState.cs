@@ -135,7 +135,7 @@ namespace TreePorts.Utilities
             if (userType.ToString() == "Driver")
             {
 
-                var users = await unitOfWork.CaptainRepository.GetUsersAccountsByAsync(u => u.Token == token);
+                var users = await unitOfWork.CaptainRepository.GetCaptainUsersAccountsByAsync(u => u.Token == token);
                 var user = users.FirstOrDefault();
                 if (user != null && isValidStatus(user.StatusTypeId)) return true;
             }

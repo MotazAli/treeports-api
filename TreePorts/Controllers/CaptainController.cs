@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using RestSharp.Extensions;
 using TreePorts.DTO;
+using TreePorts.DTO.Records;
 using TreePorts.Utilities;
 
 namespace TreePorts.Controllers
@@ -43,7 +44,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                return Ok(await _captainService.GetUsersAsync());
+                return Ok(await _captainService.GetCaptainUsersAsync());
             }
             catch (Exception e)
             {
@@ -55,11 +56,11 @@ namespace TreePorts.Controllers
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CaptainUser))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetUserByIdAsync(long id)
+        public async Task<IActionResult> GetUserByIdAsync(string? id)
         {
             try {
                 
-                return Ok(await _captainService.GetUserByIdAsync(id));
+                return Ok(await _captainService.GetCaptainUserAccountByCaptainUserAccountIdAsync(id ?? ""));
 
             } catch (Exception e) {
                 return NoContent();// new ObjectResult(e.Message) { StatusCode = 666 };
@@ -128,7 +129,7 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(long))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> AddCaptain([FromBody] CaptainUser user)
+        public async Task<IActionResult> AddCaptain([FromBody] CaptainUserDto user)
         {
             try
             {
@@ -151,11 +152,11 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> Login([FromBody] LoginDriver driver)
+        public async Task<IActionResult> Login([FromBody] LoginCaptainUserDto captain)
         {
             try
             {
-                return Ok(await _captainService.LoginAsync(driver)) ;
+                return Ok(await _captainService.LoginAsync(captain)) ;
             }
             catch (Exception e)
             {
@@ -219,13 +220,13 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> AcceptRegisterCaptainById(long id)
+        public async Task<IActionResult> AcceptRegisterCaptainById(string? id)
         {
 
             try
             {
 
-                return Ok(await _captainService.AcceptRegisterCaptainByIdAsync(id,HttpContext));
+                return Ok(await _captainService.AcceptRegisterCaptainByIdAsync(id ?? "",HttpContext));
             }
             catch (Exception e)
             {
@@ -246,11 +247,11 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> UpdateCaptain(long id,[FromBody] CaptainUser user)
+        public async Task<IActionResult> UpdateCaptain(string? id,[FromBody] CaptainUserDto user)
         {
             try
             {
-                return Ok(await _captainService.UpdateCaptainAsync(id,user));
+                return Ok(await _captainService.UpdateCaptainUserAsync(id,user));
             }
             catch (Exception e)
             {
@@ -288,7 +289,7 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> Delete(long id)
+        public async Task<IActionResult> Delete(string? id)
         {
 
             try
@@ -309,7 +310,7 @@ namespace TreePorts.Controllers
         [HttpGet("{id}/Payments")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetOrdersPaymentsByUserId(long id)
+        public async Task<IActionResult> GetOrdersPaymentsByUserId(string? id)
         {
             try
             {
@@ -329,7 +330,7 @@ namespace TreePorts.Controllers
         [HttpGet("{id}/Bookkeeping/Paging")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetBookkeepingPagingByCaptainId(long id, [FromQuery] FilterParameters parameters)// , [FromBody] Pagination pagination)
+        public async Task<IActionResult> GetBookkeepingPagingByCaptainId(string? id, [FromQuery] FilterParameters parameters)// , [FromBody] Pagination pagination)
         {
             try
             {
@@ -348,7 +349,7 @@ namespace TreePorts.Controllers
         [HttpPost("{id}/Bookkeeping")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Bookkeeping>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetBookkeepingByCaptainId(long id)
+        public async Task<IActionResult> GetBookkeepingByCaptainId(string? id)
         {
             try
             {
@@ -369,7 +370,7 @@ namespace TreePorts.Controllers
         [HttpGet("{id}/Bookkeeping/Untransferred")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(decimal))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetUntransferredBookkeepingByCaptainId(long id)
+        public async Task<IActionResult> GetUntransferredBookkeepingByCaptainId(string? id)
         {
             try
             {
@@ -390,7 +391,7 @@ namespace TreePorts.Controllers
         [HttpGet("{id}/Assigned/Orders/Paging")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Order>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetAllOrdersAssignments(long id, [FromQuery] FilterParameters parameters)//[FromBody] Pagination pagination)
+        public async Task<IActionResult> GetAllOrdersAssignments(string? id, [FromQuery] FilterParameters parameters)//[FromBody] Pagination pagination)
         {
             try
             {
@@ -427,7 +428,7 @@ namespace TreePorts.Controllers
         [HttpDelete("{id}/Shifts/{shiftId}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CaptainUserShift))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> DeleteUserShift([FromRoute(Name = "id")] long userId, [FromRoute(Name = "shiftId")] long shiftId)
+        public async Task<IActionResult> DeleteUserShift([FromRoute(Name = "id")] string? userId, [FromRoute(Name = "shiftId")] long shiftId)
         {
 
             try
@@ -446,7 +447,7 @@ namespace TreePorts.Controllers
         [HttpGet("{id}/Shifts/{shiftId}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CaptainUserShift))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetUsershift( [FromRoute(Name ="id")] long userId , [FromRoute(Name = "shiftId")] long shiftId)//[FromBody] UserShift userShift)
+        public async Task<IActionResult> GetUsershift( [FromRoute(Name ="id")] string? userId , [FromRoute(Name = "shiftId")] long shiftId)//[FromBody] UserShift userShift)
         {
 
             try
@@ -466,7 +467,7 @@ namespace TreePorts.Controllers
         [HttpPost("{id}/Shifts/Dates")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetShiftsAndUserShiftsByDate(long id ,[FromBody] Shift shift)
+        public async Task<IActionResult> GetShiftsAndUserShiftsByDate(string? id ,[FromBody] Shift shift)
         {
             try
             {
@@ -499,7 +500,7 @@ namespace TreePorts.Controllers
         }
 
 
-        /* Get Orders  Report*/
+        /* Get Orders  Report*//*
         [HttpGet("Reports")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -517,13 +518,13 @@ namespace TreePorts.Controllers
             }  
           
         }
-        /* Get Orders Reports */
+        *//* Get Orders Reports */
         
         
         
         
         
-        /* Search */
+        /* Search *//*
         [HttpGet("Search")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -538,7 +539,7 @@ namespace TreePorts.Controllers
                 return NoContent();// new ObjectResult(e.Message) { StatusCode = 666 };
             }
         }
-        /**/
+        *//**/
 
         /*Charts*/
         [HttpGet("Charts")]
@@ -619,7 +620,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                return Ok(await _captainService.GetCaptainsUsersNearToLocation(location));
+                return Ok(await _captainService.GetCaptainsUsersNearToLocationAsync(location));
             }
             catch (Exception e)
             {

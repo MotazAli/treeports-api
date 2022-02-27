@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using TreePorts.Utilities;
 
 namespace TreePorts.Repositories
 {
@@ -18,10 +19,10 @@ namespace TreePorts.Repositories
         {
             _context = context;
         }
-        public async Task<AdminUser> DeleteAdminUserAsync(long id)
+        public async Task<AdminUser?> DeleteAdminUserAsync(string? id)
         {
             var userAccount = await _context.AdminUserAccounts.Where(u => u.AdminUserId == id).FirstOrDefaultAsync();
-            if (userAccount == null) throw new NotFoundException("User not found");
+            if (userAccount == null) return null;
 
             userAccount.IsDeleted = true;
             _context.Entry<AdminUserAccount>(userAccount).State = EntityState.Modified;
@@ -29,10 +30,10 @@ namespace TreePorts.Repositories
             return user;
         }
 
-        public async Task<AdminCurrentStatus> DeleteAdminCurrentStatusAsync(long id)
+        public async Task<AdminCurrentStatus?> DeleteAdminCurrentStatusAsync(string? id)
         {
-            var oldStatus = await _context.AdminCurrentStatuses.FirstOrDefaultAsync(u => u.AdminId == id);
-            if (oldStatus == null) throw new NotFoundException("User not found");
+            var oldStatus = await _context.AdminCurrentStatuses.FirstOrDefaultAsync(u => u.AdminUserAccountId == id);
+            if (oldStatus == null) return null;
 
             _context.AdminCurrentStatuses.Remove(oldStatus);
             return oldStatus;
@@ -43,7 +44,7 @@ namespace TreePorts.Repositories
             return await _context.AdminUserMessageHubs.ToListAsync();
         }
 
-        public async Task<AdminUserMessageHub> GetAdminUserMessageHubByIdAsync(long id)
+        public async Task<AdminUserMessageHub?> GetAdminUserMessageHubByIdAsync(long id)
         {
             return await _context.AdminUserMessageHubs.FirstOrDefaultAsync(h => h.Id == id);
         }
@@ -55,11 +56,10 @@ namespace TreePorts.Repositories
 
         public async Task<AdminUserMessageHub> InsertAdminUserMessageHubAsync(AdminUserMessageHub adminUserMessageHub)
         {
-            var oldUserHub = await _context.AdminUserMessageHubs.FirstOrDefaultAsync(h => h.AdminUserId == adminUserMessageHub.AdminUserId);
+            var oldUserHub = await _context.AdminUserMessageHubs.FirstOrDefaultAsync(h => h.AdminUserAccountId == adminUserMessageHub.AdminUserAccountId);
             if (oldUserHub != null && oldUserHub.Id > 0)
             {
                 oldUserHub.ConnectionId = adminUserMessageHub.ConnectionId;
-                oldUserHub.ModifiedBy = 1;
                 oldUserHub.ModificationDate = DateTime.Now;
                 _context.Entry<AdminUserMessageHub>(oldUserHub).State = EntityState.Modified;
                 return oldUserHub;
@@ -68,20 +68,18 @@ namespace TreePorts.Repositories
             {
                 //SupportUserMessageHub newHub = new UserMessageHub() { UserId = ID, ConnectionId = ConnectionID, CreationDate = DateTime.Now, CreatedBy = 1 };
                 adminUserMessageHub.CreationDate = DateTime.Now;
-                adminUserMessageHub.CreatedBy = 1;
                 var insertResult = await _context.AdminUserMessageHubs.AddAsync(adminUserMessageHub);
                 return insertResult.Entity;
             }
         }
 
-        public async Task<AdminUserMessageHub> UpdateAdminUserMessageHubAsync(AdminUserMessageHub adminUserMessageHub)
+        public async Task<AdminUserMessageHub?> UpdateAdminUserMessageHubAsync(AdminUserMessageHub adminUserMessageHub)
         {
-            var oldUserHub = await _context.AdminUserMessageHubs.FirstOrDefaultAsync(h => h.AdminUserId == adminUserMessageHub.AdminUserId);
+            var oldUserHub = await _context.AdminUserMessageHubs.FirstOrDefaultAsync(h => h.AdminUserAccountId == adminUserMessageHub.AdminUserAccountId);
             if (oldUserHub == null ) return null;
 
-            oldUserHub.AdminUserId = adminUserMessageHub.AdminUserId;
+            oldUserHub.AdminUserAccountId = adminUserMessageHub.AdminUserAccountId;
             oldUserHub.ConnectionId = adminUserMessageHub.ConnectionId;
-            oldUserHub.ModifiedBy = 1;
             oldUserHub.ModificationDate = DateTime.Now;
             _context.Entry<AdminUserMessageHub>(oldUserHub).State = EntityState.Modified;
             return oldUserHub;
@@ -92,7 +90,7 @@ namespace TreePorts.Repositories
             return await _context.AdminCurrentStatuses.Where(predicate).ToListAsync();
         }
 
-        public async Task<AdminCurrentStatus> GetAdminCurrentStatusByIdAsync(long id)
+        public async Task<AdminCurrentStatus?> GetAdminCurrentStatusByIdAsync(long id)
         {
             return await _context.AdminCurrentStatuses.FirstOrDefaultAsync(a => a.Id == id);
         }
@@ -117,29 +115,39 @@ namespace TreePorts.Repositories
             return await _context.AdminUserAccounts.Where(predicate).ToListAsync();
         }
 
-        public async Task<AdminUser> GetAdminUserByIdAsync(long id)
+        public async Task<AdminUser?> GetAdminUserByIdAsync(string? id)
         {
             return await _context.AdminUsers.FirstOrDefaultAsync(u => u.Id == id);
         }
 
-        public async Task<AdminUserAccount> GetAdminUserAccountByIdAsync(long id) {
+        public async Task<AdminUserAccount?> GetAdminUserAccountByIdAsync(string? id) {
             return await _context.AdminUserAccounts.FirstOrDefaultAsync(u => u.Id == id);
         }
 
-        public async Task<AdminUserAccount> GetAdminUserAccountByAdminUserIdAsync(long id)
+        public async Task<AdminUserAccount?> GetAdminUserAccountByAdminUserIdAsync(string? id)
         {
-            return await _context.AdminUserAccounts.FirstOrDefaultAsync(u => u.AdminUserId == id);
+            return await _context.AdminUserAccounts.FirstOrDefaultAsync(u => u.Id == id);
         }
 
         public async Task<AdminUser> InsertAdminUserAsync(AdminUser user)
         {
+            user.Id = Guid.NewGuid().ToString();
+            user.CreationDate = DateTime.Now;
             var result = await _context.AdminUsers.AddAsync(user);
+            return result.Entity;
+        }
+
+        public async Task<AdminUserAccount> InsertAdminUserAccountAsync(AdminUserAccount userAccount)
+        {
+            userAccount.Id = Guid.NewGuid().ToString();
+            userAccount.CreationDate = DateTime.Now;
+            var result = await _context.AdminUserAccounts.AddAsync(userAccount);
             return result.Entity;
         }
 
         public async Task<AdminCurrentStatus> InsertAdminCurrentStatusAsync(AdminCurrentStatus adminCurrentStatus)
         {
-            var oldStatus = await _context.AdminCurrentStatuses.FirstOrDefaultAsync(a => a.AdminId == adminCurrentStatus.AdminId && a.IsCurrent == true);
+            var oldStatus = await _context.AdminCurrentStatuses.FirstOrDefaultAsync(a => a.AdminUserAccountId == adminCurrentStatus.AdminUserAccountId && a.IsCurrent == true);
             if (oldStatus != null)
             {
                 oldStatus.IsCurrent = false;
@@ -154,51 +162,45 @@ namespace TreePorts.Repositories
             return insertResult.Entity;
         }
 
-        public async Task<AdminUser> UpdateAdminUserAsync(AdminUser user)
+        public async Task<AdminUser?> UpdateAdminUserAsync(AdminUser user)
         {
             var oldUser = await _context.AdminUsers.FirstOrDefaultAsync(u => u.Id == user.Id);
             if (oldUser == null) return null;
 
 
-            if (oldUser.Email.ToLower() != user.Email.ToLower()) {
-                var adminUserAccount = await UpdateAdminUserAccountEmailProperty(user);
-            }
+            
 
-            oldUser.Fullname = user.Fullname ?? oldUser.Fullname;
+            oldUser.FirstName = user.FirstName ?? oldUser.FirstName;
+            oldUser.LastName = user.LastName ?? oldUser.LastName;
             oldUser.NationalNumber = user.NationalNumber ?? oldUser.NationalNumber;
             oldUser.CountryId = user.CountryId ?? oldUser.CountryId;
             oldUser.CityId = user.CityId ?? oldUser.CityId;
             oldUser.Address = user.Address ?? oldUser.Address;
             oldUser.Gender = user.Gender ?? oldUser.Gender;
-            oldUser.BirthDay = user.BirthDay ?? oldUser.BirthDay;
-            oldUser.BirthMonth = user.BirthMonth ?? oldUser.BirthMonth;
-            oldUser.BirthYear = user.BirthYear ?? oldUser.BirthYear;
+            oldUser.BirthDate = user.BirthDate ?? oldUser.BirthDate;
             oldUser.Mobile = user.Mobile ?? oldUser.Mobile;
-            oldUser.Email = user.Email ?? oldUser.Email;
-            oldUser.ResidenceExpireDay = user.ResidenceExpireDay ?? oldUser.ResidenceExpireDay;
-            oldUser.ResidenceExpireMonth = user.ResidenceExpireMonth ?? oldUser.ResidenceExpireMonth;
-            oldUser.ResidenceExpireYear = user.ResidenceExpireYear ?? oldUser.ResidenceExpireYear;
+            oldUser.ResidenceExpireDate = user.ResidenceExpireDate ?? oldUser.ResidenceExpireDate;
             oldUser.ResidenceCountryId = user.ResidenceCountryId ?? oldUser.ResidenceCountryId;
             oldUser.ResidenceCityId = user.ResidenceCityId ?? oldUser.ResidenceCityId;
-            oldUser.Image = user.Image ?? oldUser.Image;
+            oldUser.PersonalImage = user.PersonalImage ?? oldUser.PersonalImage;
             oldUser.ModifiedBy = user.ModifiedBy ?? oldUser.ModifiedBy;
             oldUser.CreatedBy = user.CreatedBy ?? oldUser.CreatedBy;
             oldUser.CreationDate = user.CreationDate ?? oldUser.CreationDate;
             oldUser.ModificationDate = DateTime.Now;
 
-            if (user.AdminUserAccounts?.Count > 0)
-                await UpdateAdminUserAccountAsync(user.AdminUserAccounts?.FirstOrDefault());
+            /*if (user.AdminUserAccounts?.Count > 0)
+                await UpdateAdminUserAccountAsync(user.AdminUserAccounts?.FirstOrDefault());*/
 
             _context.Entry<AdminUser>(oldUser).State = EntityState.Modified;
             return oldUser;
         }
 
-        public async Task<AdminUser> UpdateAdminUserImageAsync(AdminUser user)
+        public async Task<AdminUser?> UpdateAdminUserImageAsync(AdminUser user)
         {
             var oldUser = await _context.AdminUsers.FirstOrDefaultAsync(u => u.Id == user.Id);
             if (oldUser == null) return null;
 
-            oldUser.Image = user.Image ?? oldUser.Image;
+            oldUser.PersonalImage = user.PersonalImage ?? oldUser.PersonalImage;
             oldUser.ModifiedBy = user.ModifiedBy ?? oldUser.ModifiedBy;
             oldUser.ModificationDate = DateTime.Now;
 
@@ -207,18 +209,18 @@ namespace TreePorts.Repositories
         }
 
 
-        private async Task<AdminUserAccount> UpdateAdminUserAccountEmailProperty(AdminUser user) {
+        private async Task<AdminUserAccount?> UpdateAdminUserAccountEmailProperty(AdminUserAccount adminUserAccount) {
 
-            var userAccount = await _context.AdminUserAccounts.FirstOrDefaultAsync(u => u.AdminUserId == user.Id);
-            if (userAccount == null || userAccount.Id <= 0) return null;
+            var targetAdminUserAccount = await _context.AdminUserAccounts.FirstOrDefaultAsync(u => u.Id == adminUserAccount.Id);
+            if (targetAdminUserAccount == null) return null;
 
-            userAccount.Email = user.Email;
-            _context.Entry<AdminUserAccount>(userAccount).State = EntityState.Modified;
-            return userAccount;
+            targetAdminUserAccount.Email = targetAdminUserAccount.Email;
+            _context.Entry<AdminUserAccount>(targetAdminUserAccount).State = EntityState.Modified;
+            return targetAdminUserAccount;
 
         }
 
-        public async Task<AdminUserAccount> UpdateAdminUserAccountAsync(AdminUserAccount account)
+        public async Task<AdminUserAccount?> UpdateAdminUserAccountAsync(AdminUserAccount account)
         {
             var oldAccount = await _context.AdminUserAccounts.FirstOrDefaultAsync(a => a.Id == account.Id);
             if (oldAccount == null) return null;
@@ -239,12 +241,12 @@ namespace TreePorts.Repositories
             return oldAccount;
         }
 
-        public async Task<AdminCurrentStatus> UpdateAdminCurrentStatusAsync(AdminCurrentStatus adminCurrentStatus)
+        public async Task<AdminCurrentStatus?> UpdateAdminUserAccountCurrentStatusAsync(AdminCurrentStatus adminCurrentStatus)
         {
             var oldStatus = await _context.AdminCurrentStatuses.FirstOrDefaultAsync(a => a.Id == adminCurrentStatus.Id);
             if (oldStatus == null) throw new NotFoundException("User not found");
 
-            oldStatus.AdminId = adminCurrentStatus.AdminId;
+            oldStatus.AdminUserAccountId = adminCurrentStatus.AdminUserAccountId;
             oldStatus.StatusTypeId = adminCurrentStatus.StatusTypeId;
             oldStatus.IsCurrent = adminCurrentStatus.IsCurrent;
             oldStatus.ModifiedBy = adminCurrentStatus.ModifiedBy;
@@ -254,14 +256,12 @@ namespace TreePorts.Repositories
         }
 
 
-        public async Task<AdminUserAccount> GetAdminUserAccountByEmailAsync(string email) {
+        public async Task<AdminUserAccount?> GetAdminUserAccountByEmailAsync(string? email) {
             return await _context.AdminUserAccounts.FirstOrDefaultAsync(u => u.Email == email);
         }
 
 
-        public async Task<AdminUser> GetAdminUserByEmailAsync(string email) {
-            return await _context.AdminUsers.FirstOrDefaultAsync(u => u.Email == email);
-        }
+        
 
         public IQueryable<AdminUser> GetByQuerable(Expression<Func<AdminUser, bool>> predicate)
 		{
@@ -273,11 +273,15 @@ namespace TreePorts.Repositories
             return await _context.AdminUsers.OrderByDescending(a => a.CreationDate).Skip(skip).Take(take).ToListAsync();
         }
 
+
+
         public IQueryable<AdminUser> GetAllQuerable()
-		{
-            return _context.AdminUsers.OrderByDescending(a => a.CreationDate).Include(a => a.Country)
-                                       .Include(a => a.City);
+        {
+            return _context.AdminUsers
+                .OrderByDescending(a => a.CreationDate);
+                //.Include(a => a.Country)
+                //.Include(a => a.City);
 
         }
-	}
+    }
 }

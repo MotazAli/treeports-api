@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using TreePorts.DTO;
+using TreePorts.DTO.Records;
 
 namespace TreePorts.Controllers
 {
@@ -41,12 +42,12 @@ namespace TreePorts.Controllers
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AdminUser))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetAdminUser(long id)
+        public async Task<IActionResult> GetAdminUser(string? id)
         {
             try
             {
                 
-                return Ok(await _adminService.GetAdminUserByIdAsync(id));
+                return Ok(await _adminService.GetAdminUserByIdAsync(id ?? ""));
 
             }
             catch (Exception e)
@@ -79,7 +80,7 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> Post([FromBody] AdminUser user)
+        public async Task<IActionResult> Post([FromBody] AdminUserDto user)
         {
             try {
                 
@@ -98,7 +99,7 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AdminUser))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
-        public async Task<IActionResult> Put(long? id , [FromBody] AdminUser user)
+        public async Task<IActionResult> Put(string? id , [FromBody] AdminUserDto user)
         {
             try
             {
@@ -114,7 +115,7 @@ namespace TreePorts.Controllers
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> Delete(long id)
+        public async Task<IActionResult> Delete(string? id)
         {
             try
             {
@@ -134,7 +135,7 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AdminUserAccount))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> Login([FromBody] LoginUser user)
+        public async Task<IActionResult> Login([FromBody] LoginUserDto user)
         {
             try
             {
@@ -188,7 +189,7 @@ namespace TreePorts.Controllers
 
 
 
-        /* Get Orders  Report*/
+        /* Get Orders  Report*//*
         [HttpGet("Reports")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -207,7 +208,7 @@ namespace TreePorts.Controllers
                 
           
         }
-        /* Get Orders Reports */
+        *//* Get Orders Reports */
 
         /* SendFirebaseNotification*/
         [HttpPost("SendFirebaseNotification")]

@@ -16,7 +16,7 @@ namespace TreePorts.Interfaces.Repositories
         ISupportRepository SupportRepository { get; }
         IAgentRepository AgentRepository { get; }
         IOrderRepository OrderRepository { get; }
-        IHookRepository HookRepository { get; }
+        IWebhookRepository HookRepository { get; }
         IPaymentRepository PaymentRepository { get; }
         Task<int> Save();
     }

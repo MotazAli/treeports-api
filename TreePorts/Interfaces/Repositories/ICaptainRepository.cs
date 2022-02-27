@@ -4,193 +4,194 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using TreePorts.DTO.Records;
 using TreePorts.Models;
 
 namespace TreePorts.Interfaces.Repositories;
 
     public interface ICaptainRepository
     {
-        Task<List<CaptainUser>> GetUsersAsync();
-        Task<CaptainUser> GetUserByIdAsync(long id);
+        Task<IEnumerable<CaptainUser>> GetCaptainUsersAsync();
+        Task<CaptainUser?> GetCaptainUserByIdAsync(string id);
 
-        Task<CaptainUser> GetUserNearestLocationAsync(string pickupLatitude ,string pickupLongitude);
-        Task<List<CaptainUser>> GetCaptainsUsersNearToLocationAsync(string pickupLatitude ,string pickupLongitude);
-        Task<List<CaptainUser>> GetUsersByAsync(Expression<Func<CaptainUser, bool>> predicate);
-        Task<CaptainUser> InsertUserAsync(CaptainUser user);
-        Task<CaptainUser> UpdateUserAsync(CaptainUser user);
-        Task<CaptainUser> DeleteUserAsync(long id);
-
-
-        Task<List<CaptainUserAccount>> GetUsersAccountsAsync();
-        Task<CaptainUserAccount> GetUserAccountByIdAsync(long id);
-        Task<List<CaptainUserAccount>> GetUsersAccountsByAsync(Expression<Func<CaptainUserAccount, bool>> predicate);
-        Task<CaptainUserAccount> InsertUserAccountAsync(CaptainUserAccount account);
-        Task<CaptainUserAccount> UpdateUserAccountAsync(CaptainUserAccount account);
-        Task<CaptainUserAccount> DeleteUserAccountAsync(long id);
-        IQueryable<CaptainUserAccount> GetUserAccountByQuerable(Expression<Func<CaptainUserAccount, bool>> predicate);
-        IQueryable<CaptainUserAccount> GetUserAccountByQuerable();
+        Task<CaptainUserAccount?> GetCaptainUserAccountNearestLocationAsync(string pickupLatitude ,string pickupLongitude);
+        Task<IEnumerable<NearCaptainUser>> GetCaptainsUsersNearToLocationAsync(string pickupLatitude ,string pickupLongitude);
+        Task<IEnumerable<CaptainUser>> GetCaptainUsersByAsync(Expression<Func<CaptainUser, bool>> predicate);
+        Task<CaptainUser> InsertCaptainUserAsync(CaptainUser user);
+        Task<CaptainUser?> UpdateCaptainUserAsync(CaptainUser user);
+        Task<CaptainUser?> DeleteCaptainUserAsync(string id);
 
 
-
-        Task<List<CaptainUserMessageHub>> GetUsersMessageHubsAsync();
-        Task<CaptainUserMessageHub> GetUserMessageHubByIdAsync(long id);
-        Task<List<CaptainUserMessageHub>> GetUsersMessageHubsByAsync(Expression<Func<CaptainUserMessageHub, bool>> predicate);
-        Task<CaptainUserMessageHub> InsertUserMessageHubAsync(long id,string connectionId);
-        Task<CaptainUserMessageHub> UpdateUserMessageHubAsync(long id, string connectionId);
+        Task<IEnumerable<CaptainUserAccount>> GetCaptainUsersAccountsAsync();
+        Task<CaptainUserAccount?> GetCaptainUserAccountByIdAsync(string id);
+        Task<IEnumerable<CaptainUserAccount>> GetCaptainUsersAccountsByAsync(Expression<Func<CaptainUserAccount, bool>> predicate);
+        Task<CaptainUserAccount> InsertCaptainUserAccountAsync(CaptainUserAccount account);
+        Task<CaptainUserAccount?> UpdateCaptainUserAccountAsync(CaptainUserAccount account);
+        Task<CaptainUserAccount?> DeleteCaptainUserAccountAsync(string id);
+        IQueryable<CaptainUserAccount> GetCaptainUserAccountByQuerable(Expression<Func<CaptainUserAccount, bool>> predicate);
+        IQueryable<CaptainUserAccount> GetCaptainUserAccountByQuerable();
 
 
 
-        Task<List<CaptainUserNewRequest>> GetUsersNewRequestsAsync();
-        Task<CaptainUserNewRequest> GetUserNewRequestByIdAsync(long id);
-        Task<List<CaptainUserNewRequest>> GetUsersNewRequestsByAsync(Expression<Func<CaptainUserNewRequest, bool>> predicate);
-        Task<CaptainUserNewRequest> InsertUserNewRequestAsync(CaptainUserNewRequest userRequest);
-        Task<CaptainUserNewRequest> UpdateUserNewRequestAsync(CaptainUserNewRequest userRequest);
-        Task<CaptainUserNewRequest> DeleteUserNewRequestAsync(long id);
-        Task<CaptainUserNewRequest> DeleteUserNewRequestByOrderIdAsync(long id);
-        Task<List<CaptainUserNewRequest>> DeleteUserNewRequestByUserIdAsync(long id);
-
-        Task<List<CaptainUserAcceptedRequest>> GetUsersAcceptedRequestsAsync();
-        Task<CaptainUserAcceptedRequest> GetUserAcceptedRequestByIdAsync(long id);
-        Task<List<CaptainUserAcceptedRequest>> GetUsersAcceptedRequestsByAsync(Expression<Func<CaptainUserAcceptedRequest, bool>> predicate);
-        Task<CaptainUserAcceptedRequest> InsertUserAcceptedRequestAsync(CaptainUserAcceptedRequest userAcceptedRequest);
-        Task<CaptainUserAcceptedRequest> UpdateUserAcceptedRequestAsync(CaptainUserAcceptedRequest userAcceptedRequest);
-        Task<CaptainUserAcceptedRequest> DeleteUserAcceptedRequestAsync(long id);
+        Task<IEnumerable<CaptainUserMessageHub>> GetCaptainUsersMessageHubsAsync();
+        Task<CaptainUserMessageHub?> GetCaptainUserMessageHubByIdAsync(long id);
+        Task<IEnumerable<CaptainUserMessageHub>> GetCaptainUsersMessageHubsByAsync(Expression<Func<CaptainUserMessageHub, bool>> predicate);
+        Task<CaptainUserMessageHub> InsertCaptainUserMessageHubByCaptainUserAccountIdAsync(string id,string connectionId);
+        Task<CaptainUserMessageHub?> UpdateCaptainUserMessageHubByCaptainUserAccountIdAsync(string id, string connectionId);
 
 
 
+        Task<IEnumerable<CaptainUserNewRequest>> GetCaptainUsersNewRequestsAsync();
+        Task<CaptainUserNewRequest?> GetCaptainUserNewRequestByIdAsync(long id);
+        Task<IEnumerable<CaptainUserNewRequest>> GetCaptainUsersNewRequestsByAsync(Expression<Func<CaptainUserNewRequest, bool>> predicate);
+        Task<CaptainUserNewRequest> InsertCaptainUserNewRequestAsync(CaptainUserNewRequest userRequest);
+        Task<CaptainUserNewRequest?> UpdateCaptainUserNewRequestAsync(CaptainUserNewRequest userRequest);
+        Task<CaptainUserNewRequest?> DeleteCaptainUserNewRequestAsync(long id);
+        Task<CaptainUserNewRequest?> DeleteCaptainUserNewRequestByOrderIdAsync(long id);
+        Task<IEnumerable<CaptainUserNewRequest>?> DeleteCaptainUserNewRequestByUserIdAsync(string id);
 
-		Task<List<BoxType>> GetBoxTypesAsync();
-        Task<BoxType> GetBoxTypeByIdAsync(long id);
-        Task<List<CaptainUserBox>> GetUsersBoxesAsync();
-        Task<CaptainUserBox> GetUserBoxById(long id);
-        Task<List<CaptainUserBox>> GetUsersBoxesByAsync(Expression<Func<CaptainUserBox, bool>> predicate);
-        Task<CaptainUserBox> InsertUserBoxAsync(CaptainUserBox userBox);
-        Task<CaptainUserBox> UpdateUserBoxAsync(CaptainUserBox userBox);
-        Task<CaptainUserBox> DeleteUserBoxAsync(long id);
-
-
-		Task<List<CaptainUserActivity>> GetUsersActivitiesAsync();
-        Task<CaptainUserActivity> GetUserActivityByIdAsync(long id);
-        Task<List<CaptainUserActivity>> GetUsersActivitiesByAsync(Expression<Func<CaptainUserActivity, bool>> predicate);
-        Task<CaptainUserActivity> InsertUserActivityAsync(CaptainUserActivity userActivity);
-        Task<CaptainUserActivity> UpdateUserActivityAsync(CaptainUserActivity userActivity);
-        Task<CaptainUserActivity> DeleteUserActivityAsync(long id);
+        Task<IEnumerable<CaptainUserAcceptedRequest>> GetCaptainUsersAcceptedRequestsAsync();
+        Task<CaptainUserAcceptedRequest?> GetCaptainUserAcceptedRequestByIdAsync(long id);
+        Task<IEnumerable<CaptainUserAcceptedRequest>> GetCaptainUsersAcceptedRequestsByAsync(Expression<Func<CaptainUserAcceptedRequest, bool>> predicate);
+        Task<CaptainUserAcceptedRequest> InsertCaptainUserAcceptedRequestAsync(CaptainUserAcceptedRequest userAcceptedRequest);
+        Task<CaptainUserAcceptedRequest?> UpdateCaptainUserAcceptedRequestAsync(CaptainUserAcceptedRequest userAcceptedRequest);
+        Task<CaptainUserAcceptedRequest?> DeleteCaptainUserAcceptedRequestAsync(long id);
 
 
 
 
-        Task<List<CaptainUserCurrentBalance>> GetUsersCurrentBalancesAsync();
-        Task<CaptainUserCurrentBalance> GetUserCurrentBalanceByIdAsync(long id);
-        Task<List<CaptainUserCurrentBalance>> GetUsersCurrentBalancesByAsync(Expression<Func<CaptainUserCurrentBalance, bool>> predicate);
-        Task<CaptainUserCurrentBalance> InsertUserCurrentBalanceAsync(CaptainUserCurrentBalance userCurrentBalance);
-        Task<CaptainUserCurrentBalance> UpdateUserCurrentBalanceAsync(CaptainUserCurrentBalance userCurrentBalance);
-        Task<CaptainUserCurrentBalance> DeleteUserCurrentBalanceAsync(long id);
+		Task<IEnumerable<BoxType>> GetBoxTypesAsync();
+        Task<BoxType?> GetBoxTypeByIdAsync(long id);
+        Task<IEnumerable<CaptainUserBox>> GetCaptainUsersBoxesAsync();
+        Task<CaptainUserBox?> GetCaptainUserBoxById(long id);
+        Task<IEnumerable<CaptainUserBox>> GetCaptainUsersBoxesByAsync(Expression<Func<CaptainUserBox, bool>> predicate);
+        Task<CaptainUserBox> InsertCaptainUserBoxAsync(CaptainUserBox userBox);
+        Task<CaptainUserBox?> UpdateCaptainUserBoxAsync(CaptainUserBox userBox);
+        Task<CaptainUserBox?> DeleteCaptainUserBoxAsync(long id);
 
 
-        Task<List<CaptainUserCurrentLocation>> GetUsersCurrentLocationsAsync();
-        Task<CaptainUserCurrentLocation> GetUserCurrentLocationByIdAsync(long id);
-        Task<List<CaptainUserCurrentLocation>> GetUsersCurrentLocationsByAsync(Expression<Func<CaptainUserCurrentLocation, bool>> predicate);
-        Task<CaptainUserCurrentLocation> InsertUserCurrentLocationAsync(CaptainUserCurrentLocation userCurrentLocation);
-        Task<CaptainUserCurrentLocation> UpdateUserCurrentLocationAsync(CaptainUserCurrentLocation userCurrentLocation);
-        Task<CaptainUserCurrentLocation> DeleteUserCurrentLocationAsync(long id);
+		Task<IEnumerable<CaptainUserActivity>> GetCaptainUsersActivitiesAsync();
+        Task<CaptainUserActivity?> GetCaptainUserActivityByIdAsync(long id);
+        Task<IEnumerable<CaptainUserActivity>> GetCaptainUsersActivitiesByAsync(Expression<Func<CaptainUserActivity, bool>> predicate);
+        Task<CaptainUserActivity> InsertCaptainUserActivityAsync(CaptainUserActivity userActivity);
+        Task<CaptainUserActivity?> UpdateCaptainUserActivityAsync(CaptainUserActivity userActivity);
+        Task<CaptainUserActivity?> DeleteCaptainUserActivityAsync(long id);
 
 
-        Task<List<CaptainUserCurrentStatus>> GetUsersCurrentStatusesAsync();
-        Task<CaptainUserCurrentStatus> GetUserCurrentStatusByIdAsync(long id);
-        Task<List<CaptainUserCurrentStatus>> GetUsersCurrentStatusesByAsync(Expression<Func<CaptainUserCurrentStatus, bool>> predicate);
-        Task<CaptainUserCurrentStatus> InsertUserCurrentStatusAsync(CaptainUserCurrentStatus userCurrentStatus);
-        Task<CaptainUserCurrentStatus> UpdateUserCurrentStatusAsync(CaptainUserCurrentStatus userCurrentStatus);
-        Task<CaptainUserCurrentStatus> DeleteUserCurrentStatusAsync(long id);
 
 
-        Task<List<CaptainUserIgnoredPenalty>> GetUsersIgnoredPenaltiesAsync();
-        Task<CaptainUserIgnoredPenalty> GetUserIgnoredPenaltyByIdAsync(long id);
-        Task<List<CaptainUserIgnoredPenalty>> GetUsersIgnoredPenaltiesByAsync(Expression<Func<CaptainUserIgnoredPenalty, bool>> predicate);
-        Task<CaptainUserIgnoredPenalty> InsertUserIgnoredPenaltyAsync(CaptainUserIgnoredPenalty userIgnoredPenalty);
-        Task<CaptainUserIgnoredPenalty> UpdateUserIgnoredPenaltyAsync(CaptainUserIgnoredPenalty userIgnoredPenalty);
-        Task<CaptainUserIgnoredPenalty> DeleteUserIgnoredPenaltyAsync(long id);
+        Task<IEnumerable<CaptainUserCurrentBalance>> GetCaptainUsersCurrentBalancesAsync();
+        Task<CaptainUserCurrentBalance?> GetCaptainUserCurrentBalanceByIdAsync(long id);
+        Task<IEnumerable<CaptainUserCurrentBalance>> GetCaptainUsersCurrentBalancesByAsync(Expression<Func<CaptainUserCurrentBalance, bool>> predicate);
+        Task<CaptainUserCurrentBalance> InsertCaptainUserCurrentBalanceAsync(CaptainUserCurrentBalance userCurrentBalance);
+        Task<CaptainUserCurrentBalance?> UpdateCaptainUserCurrentBalanceAsync(CaptainUserCurrentBalance userCurrentBalance);
+        Task<CaptainUserCurrentBalance?> DeleteCaptainUserCurrentBalanceAsync(long id);
+
+
+        Task<IEnumerable<CaptainUserCurrentLocation>> GetCaptainUsersCurrentLocationsAsync();
+        Task<CaptainUserCurrentLocation?> GetCaptainUserCurrentLocationByIdAsync(long id);
+        Task<IEnumerable<CaptainUserCurrentLocation>> GetCaptainUsersCurrentLocationsByAsync(Expression<Func<CaptainUserCurrentLocation, bool>> predicate);
+        Task<CaptainUserCurrentLocation> InsertCaptainUserCurrentLocationAsync(CaptainUserCurrentLocation userCurrentLocation);
+        Task<CaptainUserCurrentLocation?> UpdateCaptainUserCurrentLocationAsync(CaptainUserCurrentLocation userCurrentLocation);
+        Task<CaptainUserCurrentLocation?> DeleteCaptainUserCurrentLocationByCaptainUserAccountIdAsync(string id);
+
+
+        Task<IEnumerable<CaptainUserCurrentStatus>> GetCaptainUsersCurrentStatusesAsync();
+        Task<CaptainUserCurrentStatus?> GetCaptainUserCurrentStatusByIdAsync(long id);
+        Task<IEnumerable<CaptainUserCurrentStatus>> GetCaptainUsersCurrentStatusesByAsync(Expression<Func<CaptainUserCurrentStatus, bool>> predicate);
+        Task<CaptainUserCurrentStatus> InsertCaptainUserCurrentStatusAsync(CaptainUserCurrentStatus userCurrentStatus);
+        Task<CaptainUserCurrentStatus?> UpdateCaptainUserCurrentStatusAsync(CaptainUserCurrentStatus userCurrentStatus);
+        Task<CaptainUserCurrentStatus?> DeleteCaptainUserCurrentStatusAsync(long id);
+
+
+        Task<IEnumerable<CaptainUserIgnoredPenalty>> GetCaptainUsersIgnoredPenaltiesAsync();
+        Task<CaptainUserIgnoredPenalty?> GetCaptainUserIgnoredPenaltyByIdAsync(long id);
+        Task<IEnumerable<CaptainUserIgnoredPenalty>> GetCaptainUsersIgnoredPenaltiesByAsync(Expression<Func<CaptainUserIgnoredPenalty, bool>> predicate);
+        Task<CaptainUserIgnoredPenalty> InsertCaptainUserIgnoredPenaltyAsync(CaptainUserIgnoredPenalty userIgnoredPenalty);
+        Task<CaptainUserIgnoredPenalty?> UpdateCaptainUserIgnoredPenaltyAsync(CaptainUserIgnoredPenalty userIgnoredPenalty);
+        Task<CaptainUserIgnoredPenalty?> DeleteCaptainUserIgnoredPenaltyAsync(long id);
 
         
-        Task<List<CaptainUserIgnoredRequest>> GetUsersIgnoredRequestsAsync();
-        Task<CaptainUserIgnoredRequest> GetUserIgnoredRequestByIdAsync(long id);
-        Task<List<CaptainUserIgnoredRequest>> GetUsersIgnoredRequestsByAsync(Expression<Func<CaptainUserIgnoredRequest, bool>> predicate);
-        Task<CaptainUserIgnoredRequest> InsertUserIgnoredRequestAsync(CaptainUserIgnoredRequest userIgnoredRequest);
-        Task<CaptainUserIgnoredRequest> UpdateUserIgnoredRequestAsync(CaptainUserIgnoredRequest userIgnoredRequest);
-        Task<CaptainUserIgnoredRequest> DeleteUserIgnoredRequestAsync(long id);
+        Task<IEnumerable<CaptainUserIgnoredRequest>> GetCaptainUsersIgnoredRequestsAsync();
+        Task<CaptainUserIgnoredRequest?> GetCaptainUserIgnoredRequestByIdAsync(long id);
+        Task<IEnumerable<CaptainUserIgnoredRequest>> GetCaptainUsersIgnoredRequestsByAsync(Expression<Func<CaptainUserIgnoredRequest, bool>> predicate);
+        Task<CaptainUserIgnoredRequest> InsertCaptainUserIgnoredRequestAsync(CaptainUserIgnoredRequest userIgnoredRequest);
+        Task<CaptainUserIgnoredRequest?> UpdateCaptainUserIgnoredRequestAsync(CaptainUserIgnoredRequest userIgnoredRequest);
+        Task<CaptainUserIgnoredRequest?> DeleteCaptainUserIgnoredRequestAsync(long id);
 
 
-        Task<List<CaptainUserPayment>> GetUsersPaymentsAsync();
-        Task<CaptainUserPayment> GetUserPaymentByIdAsync(long id);
-        Task<List<CaptainUserPayment>> GetUsersPaymentsByAsync(Expression<Func<CaptainUserPayment, bool>> predicate);
-        Task<CaptainUserPayment> InsertUserPaymentAsync(CaptainUserPayment userPayment);
-        Task<CaptainUserPayment> UpdateUserPaymentAsync(CaptainUserPayment userPayment);
-        Task<CaptainUserPayment> DeleteUserPaymentAsync(long id);
-        Task<CaptainUserPayment> DeleteUserPaymentByOrderIdAsync(long id);
+        Task<IEnumerable<CaptainUserPayment>> GetCaptainUsersPaymentsAsync();
+        Task<CaptainUserPayment?> GetCaptainUserPaymentByIdAsync(long id);
+        Task<IEnumerable<CaptainUserPayment>> GetCaptainUsersPaymentsByAsync(Expression<Func<CaptainUserPayment, bool>> predicate);
+        Task<CaptainUserPayment> InsertCaptainUserPaymentAsync(CaptainUserPayment userPayment);
+        Task<CaptainUserPayment?> UpdateCaptainUserPaymentAsync(CaptainUserPayment userPayment);
+        Task<CaptainUserPayment?> DeleteCaptainUserPaymentAsync(long id);
+        Task<CaptainUserPayment?> DeleteCaptainUserPaymentByOrderIdAsync(long id);
 
 
-        Task<List<CaptainUserRejectedRequest>> GetUsersRejectedRequestsAsync();
-        Task<CaptainUserRejectedRequest> GetUserRejectedRequestByIdAsync(long id);
-        Task<List<CaptainUserRejectedRequest>> GetUsersRejectedRequestsByAsync(Expression<Func<CaptainUserRejectedRequest, bool>> predicate);
-        Task<CaptainUserRejectedRequest> InsertUserRejectedRequestAsync(CaptainUserRejectedRequest userRejectedRequest);
-        Task<CaptainUserRejectedRequest> UpdateUserRejectedRequestAsync(CaptainUserRejectedRequest userRejectedRequest);
-        Task<CaptainUserRejectedRequest> DeleteUserRejectedRequestAsync(long id);
+       /* Task<IEnumerable<CaptainUserRejectedRequest>> GetCaptainUsersRejectedRequestsAsync();
+        Task<CaptainUserRejectedRequest?> GetCaptainUserRejectedRequestByIdAsync(long id);
+        Task<IEnumerable<CaptainUserRejectedRequest>> GetCaptainUsersRejectedRequestsByAsync(Expression<Func<CaptainUserRejectedRequest, bool>> predicate);
+        Task<CaptainUserRejectedRequest> InsertCaptainUserRejectedRequestAsync(CaptainUserRejectedRequest userRejectedRequest);
+        Task<CaptainUserRejectedRequest?> UpdateCaptainUserRejectedRequestAsync(CaptainUserRejectedRequest userRejectedRequest);
+        Task<CaptainUserRejectedRequest?> DeleteCaptainUserRejectedRequestAsync(long id);
 
 
-        Task<List<CaptainUserRejectPenalty>> GetUsersRejectPenaltiesAsync();
-        Task<CaptainUserRejectPenalty> GetUserRejectPenaltyByIdAsync(long id);
-        Task<List<CaptainUserRejectPenalty>> GetUsersRejectPenaltiesByAsync(Expression<Func<CaptainUserRejectPenalty, bool>> predicate);
-        Task<CaptainUserRejectPenalty> InsertUserRejectPenaltyAsync(CaptainUserRejectPenalty userRejectPenalty);
-        Task<CaptainUserRejectPenalty> UpdateUserRejectPenaltyAsync(CaptainUserRejectPenalty userRejectPenalty);
-        Task<CaptainUserRejectPenalty> DeleteUserRejectPenaltyAsync(long id);
-
-        Task<List<CaptainUserShift>> GetUsersShiftsAsync();
-        Task<CaptainUserShift> GetUserShiftByIdAsync(long id);
-        Task<List<CaptainUserShift>> GetUsersShiftsByAsync(Expression<Func<CaptainUserShift, bool>> predicate);
-        Task<CaptainUserShift> InsertUserShiftAsync(CaptainUserShift userShift);
-        Task<CaptainUserShift> UpdateUserShiftAsync(CaptainUserShift userShift);
-        Task<CaptainUserShift> DeleteUserShiftAsync(long id);
-
-
-        Task<List<CaptainUserStatusHistory>> GetUsersStatusHistoriesAsync();
-        Task<CaptainUserStatusHistory> GetUserStatusHistoryByIdAsync(long id);
-        Task<List<CaptainUserStatusHistory>> GetUsersStatusHistoriesByAsync(Expression<Func<CaptainUserStatusHistory, bool>> predicate);
-        Task<CaptainUserStatusHistory> InsertUserStatusHistoryAsync(CaptainUserStatusHistory userStatusHistory);
-        Task<CaptainUserStatusHistory> UpdateUserStatusHistoryAsync(CaptainUserStatusHistory userStatusHistory);
-        Task<CaptainUserStatusHistory> DeleteUserStatusHistoryAsync(long id);
+        Task<IEnumerable<CaptainUserRejectPenalty>> GetCaptainUsersRejectPenaltiesAsync();
+        Task<CaptainUserRejectPenalty?> GetCaptainUserRejectPenaltyByIdAsync(long id);
+        Task<IEnumerable<CaptainUserRejectPenalty>> GetCaptainUsersRejectPenaltiesByAsync(Expression<Func<CaptainUserRejectPenalty, bool>> predicate);
+        Task<CaptainUserRejectPenalty> InsertCaptainUserRejectPenaltyAsync(CaptainUserRejectPenalty userRejectPenalty);
+        Task<CaptainUserRejectPenalty?> UpdateCaptainUserRejectPenaltyAsync(CaptainUserRejectPenalty userRejectPenalty);
+        Task<CaptainUserRejectPenalty?> DeleteCaptainUserRejectPenaltyAsync(long id);
+*/
+        Task<IEnumerable<CaptainUserShift>> GetCaptainUsersShiftsAsync();
+        Task<CaptainUserShift?> GetCaptainUserShiftByIdAsync(long id);
+        Task<IEnumerable<CaptainUserShift>> GetCaptainUsersShiftsByAsync(Expression<Func<CaptainUserShift, bool>> predicate);
+        Task<CaptainUserShift> InsertCaptainUserShiftAsync(CaptainUserShift userShift);
+        Task<CaptainUserShift?> UpdateCaptainUserShiftAsync(CaptainUserShift userShift);
+        Task<CaptainUserShift?> DeleteCaptainUserShiftAsync(long id);
 
 
+        Task<IEnumerable<CaptainUserStatusHistory>> GetCaptainUsersStatusHistoriesAsync();
+        Task<CaptainUserStatusHistory?> GetCaptainUserStatusHistoryByIdAsync(long id);
+        Task<IEnumerable<CaptainUserStatusHistory>> GetCaptainUsersStatusHistoriesByAsync(Expression<Func<CaptainUserStatusHistory, bool>> predicate);
+        Task<CaptainUserStatusHistory> InsertCaptainUserStatusHistoryAsync(CaptainUserStatusHistory userStatusHistory);
+        Task<CaptainUserStatusHistory?> UpdateCaptainUserStatusHistoryAsync(CaptainUserStatusHistory userStatusHistory);
+        Task<CaptainUserStatusHistory?> DeleteCaptainUserStatusHistoryAsync(long id);
 
-        Task<List<Vehicle>> GetVehiclesAsync();
-        Task<Vehicle> GetVehicleByIdAsync(long id);
-        Task<List<CaptainUserVehicle>> GetUsersVehiclesAsync();
-        Task<CaptainUserVehicle> GetUserVehicleByIdAsync(long id);
-        Task<List<CaptainUserVehicle>> GetUsersVehiclesByAsync(Expression<Func<CaptainUserVehicle, bool>> predicate);
-        Task<CaptainUserVehicle> InsertUserVehicleAsync(CaptainUserVehicle userVehicle);
-        Task<CaptainUserVehicle> UpdateUserVehicleAsync(CaptainUserVehicle userVehicle);
-        Task<CaptainUserVehicle> DeleteUserVehicleAsync(long id);
 
-        IQueryable<CaptainUserRejectedRequest> GetUserRejectedRequestByQuerable(Expression<Func<CaptainUserRejectedRequest, bool>> predicate);
-        IQueryable<CaptainUserAcceptedRequest> GetUserAcceptedRequestByQuerable(Expression<Func<CaptainUserAcceptedRequest, bool>> predicate);
-        IQueryable<CaptainUserIgnoredRequest> GetUserIgnoredRequestByQuerable(Expression<Func<CaptainUserIgnoredRequest, bool>> predicate);
+
+        Task<IEnumerable<Vehicle>> GetVehiclesAsync();
+        Task<Vehicle?> GetVehicleByIdAsync(long id);
+        Task<IEnumerable<CaptainUserVehicle>> GetCaptainUsersVehiclesAsync();
+        Task<CaptainUserVehicle?> GetCaptainUserVehicleByIdAsync(long id);
+        Task<IEnumerable<CaptainUserVehicle>> GetCaptainUsersVehiclesByAsync(Expression<Func<CaptainUserVehicle, bool>> predicate);
+        Task<CaptainUserVehicle> InsertCaptainUserVehicleAsync(CaptainUserVehicle userVehicle);
+        Task<CaptainUserVehicle?> UpdateCaptainUserVehicleAsync(CaptainUserVehicle userVehicle);
+        Task<CaptainUserVehicle?> DeleteCaptainUserVehicleAsync(long id);
+
+        //IQueryable<CaptainUserRejectedRequest> GetCaptainUserRejectedRequestByQuerable(Expression<Func<CaptainUserRejectedRequest, bool>> predicate);
+        IQueryable<CaptainUserAcceptedRequest> GetCaptainUserAcceptedRequestByQuerable(Expression<Func<CaptainUserAcceptedRequest, bool>> predicate);
+        IQueryable<CaptainUserIgnoredRequest> GetCaptainUserIgnoredRequestByQuerable(Expression<Func<CaptainUserIgnoredRequest, bool>> predicate);
 
        // int GetAllRejectedRequestByQuerable();
-        IQueryable<CaptainUserAcceptedRequest> GetAllAcceptedRequestByQuerable();
+        //IQueryable<CaptainUserAcceptedRequest> GetAllAcceptedRequestByQuerable();
         //int GetAllIgnoredRequestByQuerable();
 
-        IQueryable<CaptainUserRejectedRequest> GetAllRejectedRequestByQuerable();
-        IQueryable<CaptainUserIgnoredRequest> GetAllIgnoredRequestByQuerable();
-        IQueryable<CaptainUser> GetByQuerable();
-        List<CaptainUser> GetByStatusType(long? statusTypeId, List<CaptainUser> query);
-        IQueryable<CaptainUser> GetByStatusQuerableS(long? statusTypeId);
+        //IQueryable<CaptainUserRejectedRequest> GetAllRejectedRequestByQuerable();
+        //IQueryable<CaptainUserIgnoredRequest> GetAllIgnoredRequestByQuerable();
+        //IQueryable<CaptainUser> GetByQuerable();
+        //IEnumerable<CaptainUser> GetCaptainUserByStatusType(long? statusTypeId, IEnumerable<CaptainUser> query);
+        //IQueryable<CaptainUser> GetCaptainUserByStatusQuerableS(long? statusTypeId);
         Object UserReportCount();
 
-        Task<Bonus> GetBonusByCountryAsync(long? countryId);
-        Task<CaptainUserBonus> InsertBonusAsync(CaptainUserBonus userBonus);
-        Task<List<Qrcode>> GetQRCodeByAsync(Expression<Func<Qrcode, bool>> predicate);
-        Task<List<CaptainUserAcceptedRequest>> GetUserAcceptedRequestAsync(Expression<Func<CaptainUserAcceptedRequest, bool>> predicate);
+        Task<Bonus?> GetBonusByCountryAsync(long? countryId);
+        Task<CaptainUserBonus> InsertCaptainUserBonusAsync(CaptainUserBonus userBonus);
+        Task<IEnumerable<OrderQrcode>> GetOrderQRCodeByAsync(Expression<Func<OrderQrcode, bool>> predicate);
+        Task<IEnumerable<CaptainUserAcceptedRequest>> GetCaptainUserAcceptedRequestAsync(Expression<Func<CaptainUserAcceptedRequest, bool>> predicate);
 
-        Task<List<CaptainUserAccount>> GetActiveUsersAccountsPaginationAsync(int skip, int take);
-        Task<List<CaptainUserAccount>> GetReviewingUsersAccountsPaginationAsync(int skip, int take);
+        Task<IEnumerable<CaptainUserAccount>> GetActiveCaptainUsersAccountsPaginationAsync(int skip, int take);
+        Task<IEnumerable<CaptainUserAccount>> GetReviewingCaptainUsersAccountsPaginationAsync(int skip, int take);
 
     }
 

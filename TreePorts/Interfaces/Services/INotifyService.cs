@@ -10,9 +10,9 @@ namespace TreePorts.Interfaces.Services
 {
     public interface INotifyService 
     {
-        Task<bool> NotifyNewOrder(long orderId, long agentId);
-        Task<bool> NotifyOrderStatusChanged(OrderStatusTypes status ,long orderId, long agentId);
-        Task<bool> ChangeOrderStatusAndNotify(OrderStatusTypes status ,long orderId, long agentId);
-        Task<bool> SendGoogleCloudMessageToCaptain(long userId, string title, string message);
+        Task<bool> NotifyNewOrder(long orderId, string agentId);
+        Task<bool> NotifyOrderStatusChanged(OrderStatusTypes status ,long orderId, string agentId);
+        Task<bool> ChangeOrderStatusAndNotify(OrderStatusTypes status ,long orderId, string agentId);
+        Task<bool> SendGoogleCloudMessageToCaptain(string captainUserAccountId, string title, string message);
     }
 }

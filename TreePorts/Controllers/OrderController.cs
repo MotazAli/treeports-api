@@ -17,6 +17,7 @@ using Nancy.Json;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using TreePorts.DTO;
+using TreePorts.DTO.Records;
 using TreePorts.DTO.ReturnDTO;
 using TreePorts.Hubs;
 using TreePorts.Models;
@@ -79,12 +80,12 @@ namespace TreePorts.Controllers
         [HttpGet("Agents/{id}/Paging")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> UserOrdersPaging( long id , [FromQuery] FilterParameters parameters)
+        public async Task<IActionResult> UserOrdersPaging( string? id , [FromQuery] FilterParameters parameters)
         {
             try
             {
                 
-                return Ok(await _orderService.UserOrdersPagingAsync(id,parameters));
+                return Ok(await _orderService.UserOrdersPagingByAgentIdAsync(id ?? "",parameters));
             }
             catch (Exception e)
             {
@@ -150,11 +151,11 @@ namespace TreePorts.Controllers
 
         // Post: Order/GetOrderDetails
         //[HttpPost("GetOrderDetails")]
-        [HttpGet("{id}/Details/{captainId}")]
+        [HttpGet("{id}/Details/{captainAccountId}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetOrderDetails([FromRoute(Name ="id")] long orderId, [FromRoute(Name = "captainId")] long captainId)//[FromBody] OrderRequest orderRequest)
+        public async Task<IActionResult> GetOrderDetails([FromRoute(Name ="id")] long orderId, [FromRoute(Name = "captainAccountId")] string captainId)//[FromBody] OrderRequest orderRequest)
         {
             try
             {
@@ -173,15 +174,15 @@ namespace TreePorts.Controllers
 
         // GET: Order/GetRunningOrderByDriverID
         //[HttpGet("GetRunningOrderByDriverID/{id}")]
-        [HttpGet("Running/Captains/{captainId}")]
+        [HttpGet("Running/Captains/{captainAccountId}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetRunningOrderByCaptainId( [FromRoute(Name = "captainId")] long captainId)
+        public async Task<IActionResult> GetRunningOrderByCaptainId( [FromRoute(Name = "captainAccountId")] string? captainId)
         {
             try
             {
 
-                return Ok(await _orderService.GetRunningOrderByCaptainIdAsync(captainId));
+                return Ok(await _orderService.GetRunningOrderByCaptainUserAccountIdAsync(captainId ?? ""));
                 
 
             }
@@ -221,7 +222,7 @@ namespace TreePorts.Controllers
         [HttpGet("FakeCancel/{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> FakeCancel(long id)
+        public async Task<IActionResult> FakeCancel(string? id)
         {
             try
             {
@@ -310,7 +311,7 @@ namespace TreePorts.Controllers
         }
 
 
-        // POST: Order/IgnorOrder
+       /* // POST: Order/IgnorOrder
         //[AllowAnonymous]
         //[HttpPost("RejectOrder")]
         [HttpPost("Reject")]
@@ -331,7 +332,7 @@ namespace TreePorts.Controllers
                 return NoContent(); // new ObjectResult(e.Message) { StatusCode = 666 };
             }
         }
-
+*/
 
         //[HttpGet("OrderPickedUp/{id}")]
         [HttpGet("{id}/PickedUp")]
@@ -534,7 +535,7 @@ namespace TreePorts.Controllers
             }
 		}
 
-        /* Get Orders  Report*/
+        /* Get Orders  Report*//*
         [HttpGet("Report")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -552,7 +553,7 @@ namespace TreePorts.Controllers
                 return NoContent();// new ObjectResult(e.Message) { StatusCode = 666 };
             }
 
-        }
+        }*/
         
         /* SearchDetails */
         [HttpGet("SearchDetails")]

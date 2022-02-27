@@ -55,7 +55,7 @@ namespace TreePorts.Presentation
         {
         }*/
 
-		public async Task<bool> NotifyNewOrder(long orderId, long agentId)
+		public async Task<bool> NotifyNewOrder(long orderId, string agentId)
 		{
 
 			try
@@ -70,7 +70,7 @@ namespace TreePorts.Presentation
 					var statusType = await _unitOfWork.OrderRepository.GetOrderStatusTypeByIdAsync((long)OrderStatusTypes.New);
 					var notifyStatus = new
 					{
-						order_status = new { Status = statusType.Status, ArabicStatus = statusType.ArabicStatus },
+						order_status = new { Status = statusType.Type, ArabicStatus = statusType.ArabicType },
 						order_id = orderId
 					};
 					var isRegistered = await _unitOfWork.HookRepository.GetWebhookByTypeIdAndAgentIdAsync(agentId, (long)WebHookTypes.OrderStatus);
@@ -94,7 +94,7 @@ namespace TreePorts.Presentation
 
 
 
-        public async Task<bool> ChangeOrderStatusAndNotify(OrderStatusTypes status, long orderId, long agentId)
+        public async Task<bool> ChangeOrderStatusAndNotify(OrderStatusTypes status, long orderId, string agentId)
         {
 
             try
@@ -109,10 +109,10 @@ namespace TreePorts.Presentation
 					if (_unitOfWork == null) 
 						_unitOfWork = services.GetRequiredService<IUnitOfWork>(); ;
 
-                    OrderCurrentStatus orderCurrentStatus = new OrderCurrentStatus()
+                    OrderCurrentStatus orderCurrentStatus = new ()
                     {
                         OrderId = orderId,
-                        StatusTypeId = (long)status,
+                        OrderStatusTypeId = (long)status,
                         IsCurrent = true
                     };
                     var insertResult = await _unitOfWork.OrderRepository.InsertOrderStatusAsync(orderCurrentStatus);
@@ -141,7 +141,7 @@ namespace TreePorts.Presentation
                     var statusType = await _unitOfWork.OrderRepository.GetOrderStatusTypeByIdAsync((long)status);
                     var notifyStatus = new
                     {
-                        order_status = new { Status = statusType.Status, ArabicStatus = statusType.ArabicStatus },
+                        order_status = new { Status = statusType.Type, ArabicStatus = statusType.ArabicType },
                         order_id = orderId
                     };
                     var isRegistered = await _unitOfWork.HookRepository.GetWebhookByTypeIdAndAgentIdAsync(agentId, (long)WebHookTypes.OrderStatus);
@@ -165,7 +165,7 @@ namespace TreePorts.Presentation
 
 
 
-        public async Task<bool> NotifyOrderStatusChanged(OrderStatusTypes status, long orderId, long agentId)
+        public async Task<bool> NotifyOrderStatusChanged(OrderStatusTypes status, long orderId, string agentId)
 		{
 
 			try
@@ -193,7 +193,7 @@ namespace TreePorts.Presentation
 					var statusType = await _unitOfWork.OrderRepository.GetOrderStatusTypeByIdAsync((long)status);
 					var notifyStatus = new
 					{
-						order_status = new { Status = statusType.Status, ArabicStatus = statusType.ArabicStatus },
+						order_status = new { Status = statusType.Type, ArabicStatus = statusType.ArabicType },
 						order_id = orderId
 					};
 					var isRegistered = await _unitOfWork.HookRepository.GetWebhookByTypeIdAndAgentIdAsync(agentId, (long)WebHookTypes.OrderStatus);
@@ -216,7 +216,7 @@ namespace TreePorts.Presentation
 		}
 
 
-		public async Task<bool> SendGoogleCloudMessageToCaptain(long userId ,string title,string message) 
+		public async Task<bool> SendGoogleCloudMessageToCaptain(string captainUserAccountId, string title,string message) 
 		{
 
 			try
@@ -228,7 +228,7 @@ namespace TreePorts.Presentation
 					var _unitOfWork = services.GetRequiredService<IUnitOfWork>();
 					if (_unitOfWork == null) return false;
 
-					var usersMessageHub = await _unitOfWork.CaptainRepository.GetUsersMessageHubsByAsync(u => u.UserId == userId);
+					var usersMessageHub = await _unitOfWork.CaptainRepository.GetCaptainUsersMessageHubsByAsync(u => u.CaptainUserAccountId == captainUserAccountId);
 					var userMessageHub = usersMessageHub.FirstOrDefault();
 					if (userMessageHub != null && userMessageHub.Id > 0)
 					{

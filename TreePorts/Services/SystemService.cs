@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
 using TreePorts.DTO;
+using TreePorts.DTO.Records;
 using TreePorts.Utilities;
 
 namespace TreePorts.Services;
@@ -21,7 +22,7 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<SystemSetting> GetSystemSettingAsync()
+    public async Task<SystemSetting?> GetSystemSettingAsync()
     {
         try
         {
@@ -119,7 +120,7 @@ public class SystemService  : ISystemService
     }
 
     
-    public async Task<AndroidVersion> GetCurrentAndroidVersionAsync()
+    public async Task<AndroidVersion?> GetCurrentAndroidVersionAsync()
     {
         try
         {
@@ -150,7 +151,7 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<AndroidVersion> GetAndroidVersionByIdAsync(long id)
+    public async Task<AndroidVersion?> GetAndroidVersionByIdAsync(long id)
     {
         try
         {
@@ -175,7 +176,7 @@ public class SystemService  : ISystemService
             var insertResult = await _unitOfWork.SystemRepository.InsertAndroidVersionAsync(androidVersion);
             var result = await _unitOfWork.Save();
             if (result == 0)
-                throw new Exception("Service Unavailable");
+                throw new ServiceUnavailableException("Service Unavailable");
 
             return insertResult;
         
@@ -183,7 +184,7 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<AndroidVersion> UpdateAndroidVersionsAsync(long id, AndroidVersion androidVersion)
+    public async Task<AndroidVersion?> UpdateAndroidVersionsAsync(long id, AndroidVersion androidVersion)
     {
         
             if (id <= 0 || androidVersion == null || androidVersion.Id <= 0) throw new Exception("NoContent");
@@ -193,7 +194,7 @@ public class SystemService  : ISystemService
             var updateResult = await _unitOfWork.SystemRepository.UpdateAndroidVersionAsync(androidVersion);
             var result = await _unitOfWork.Save();
             if (result == 0)
-                throw new Exception("Service Unavailable");
+                throw new ServiceUnavailableException("Service Unavailable");
 
             return updateResult;
         
@@ -367,14 +368,14 @@ public class SystemService  : ISystemService
     public async Task<CountryPrice> AddCountryPriceAsync(HttpContext httpContext  , CountryPrice countryPrice)
     {
         
-            long modifierID = -1;
-            string modifierType = "";
-            Utility.getRequestUserIdFromToken(httpContext, out modifierID, out modifierType);
+            //long modifierID = -1;
+            //string modifierType = "";
+            Utility.getRequestUserIdFromToken(httpContext, out string modifierID, out string modifierType);
             countryPrice.CreatedBy = modifierID;
             var insertResult = await _unitOfWork.CountryRepository.InsertCountryPriceAsync(countryPrice);
             var result = await _unitOfWork.Save();
             if (result == 0)
-                throw new Exception("Service Unavailable");
+                throw new ServiceUnavailableException("Service Unavailable");
 
 
             return insertResult;
@@ -413,7 +414,7 @@ public class SystemService  : ISystemService
     }
 
     
-    public async Task<SystemSetting> GetSystemSettingByIdAsync(long id)
+    public async Task<SystemSetting?> GetSystemSettingByIdAsync(long id)
     {
         try
         {
@@ -431,15 +432,15 @@ public class SystemService  : ISystemService
     public async Task<SystemSetting> AddSystemSettingAsync( SystemSetting setting, HttpContext httpContext)
     {
         
-            long modifierID = -1;
-            string modifierType = "";
-            Utility.getRequestUserIdFromToken(httpContext, out modifierID, out modifierType);
+            //long modifierID = -1;
+            //string modifierType = "";
+            Utility.getRequestUserIdFromToken(httpContext, out string modifierID, out string modifierType);
 
             setting.CreatedBy = modifierID;
             var insertResult = await _unitOfWork.SystemRepository.InsertSystemSettingAsync(setting);
             var result = await _unitOfWork.Save();
             if (result == 0)
-                throw new Exception("Service Unavailable");
+                throw new ServiceUnavailableException("Service Unavailable");
 
 
             return insertResult;
@@ -456,15 +457,15 @@ public class SystemService  : ISystemService
     public async Task<CityPrice> AddCityPriceAsync( CityPrice cityPrice, HttpContext httpContext)
     {
        
-            long modifierID = -1;
-            string modifierType = "";
-            Utility.getRequestUserIdFromToken(httpContext, out modifierID, out modifierType);
+            //long modifierID = -1;
+            //string modifierType = "";
+            Utility.getRequestUserIdFromToken(httpContext, out string modifierID, out string modifierType);
 
             cityPrice.CreatedBy = modifierID;
             var insertResult = await _unitOfWork.CountryRepository.InsertCityPriceAsync(cityPrice);
             var result = await _unitOfWork.Save();
             if (result <= 0)
-                throw new Exception("Service Unavailable");
+                throw new ServiceUnavailableException("Service Unavailable");
 
 
             return insertResult;
@@ -489,7 +490,7 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<object> GetCityPriceByIdAsync(long id)
+    public async Task<object?> GetCityPriceByIdAsync(long id)
     {
         try
         {
@@ -523,14 +524,14 @@ public class SystemService  : ISystemService
     {
         
             var result = await _unitOfWork.CountryRepository.DeleteCityPriceAsync(id);
-            if (result == null) throw new Exception("NoContent");
+            if (result == null) throw new NoContentException("NoContent");
 
             return true;
         
     }
 
     
-    public async Task<IEnumerable<RejectPerType>> GetRejectPerTypesAsync()
+   /* public async Task<IEnumerable<RejectPerType>> GetRejectPerTypesAsync()
     {
         try
         {
@@ -541,7 +542,7 @@ public class SystemService  : ISystemService
         {
             return new List<RejectPerType>();// new ObjectResult(e.Message) { StatusCode = 666 };
         }
-    }
+    }*/
 
 
     
@@ -590,7 +591,7 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<Promotion> GetCurrentPromotionAsync()
+    public async Task<Promotion?> GetCurrentPromotionAsync()
     {
         try
         {
@@ -610,7 +611,7 @@ public class SystemService  : ISystemService
 
 
    
-    public async Task<Promotion> GetPromotionByIdAsync(long id)
+    public async Task<Promotion?> GetPromotionByIdAsync(long id)
     {
         try
         {
@@ -676,7 +677,7 @@ public class SystemService  : ISystemService
             var insertResult = await _unitOfWork.SystemRepository.InsertPromotionAsync(promotion);
             var result = await _unitOfWork.Save();
             if (result == 0)
-                throw new Exception("Service Unavailable");
+                throw new ServiceUnavailableException("Service Unavailable");
 
             return insertResult;
         
@@ -684,7 +685,7 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<Promotion> UpdatePromotionAsync(long id, Promotion promotion)
+    public async Task<Promotion?> UpdatePromotionAsync(long id, Promotion promotion)
     {
         
 
@@ -693,7 +694,7 @@ public class SystemService  : ISystemService
             var insertResult = await _unitOfWork.SystemRepository.UpdatePromotionAsync(promotion);
             var result = await _unitOfWork.Save();
             if (result == 0)
-                throw new Exception("Service Unavailable");
+                throw new ServiceUnavailableException("Service Unavailable");
 
             return insertResult;
         
@@ -707,7 +708,7 @@ public class SystemService  : ISystemService
             var insertResult = await _unitOfWork.SystemRepository.DeletePromotionAsync(id);
             var result = await _unitOfWork.Save();
             if (result == 0)
-                throw new Exception("Server not available");
+                throw new ServiceUnavailableException("Server not available");
 
             return true;
         
@@ -726,11 +727,11 @@ public class SystemService  : ISystemService
                 responseResult = JsonConvert.DeserializeObject<FirebaseNotificationResponse>(result);
 
             if (responseResult == null || responseResult.messageId == "")
-                throw new Exception ("NotFound - Failed to publish the promotion");
+                throw new NotFoundException ("NotFound - Failed to publish the promotion");
             else if (responseResult != null && responseResult.messageId != "")
                 return new { Result = true, Message = "Promotion published successfuly" };
             else
-                throw new Exception("Service Unavailable");
+                throw new ServiceUnavailableException("Service Unavailable");
             //await _HubContext.Clients.All.SendAsync("newPromotion", id.ToString());
 
 
@@ -753,7 +754,7 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<PromotionType> GetPromotionTypeByIdAsync(long id)
+    public async Task<PromotionType?> GetPromotionTypeByIdAsync(long id)
     {
         try
         {
@@ -774,7 +775,7 @@ public class SystemService  : ISystemService
             var insertResult = await _unitOfWork.SystemRepository.InsertPromotionTypeAsync(promotionType);
             var result = await _unitOfWork.Save();
             if (result == 0)
-                throw new Exception("Service Unavailable");
+                throw new ServiceUnavailableException("Service Unavailable");
 
             return insertResult;
         
@@ -782,15 +783,15 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<PromotionType> UpdatePromotionTypeAsync(long id,  PromotionType promotionType)
+    public async Task<PromotionType?> UpdatePromotionTypeAsync(long id,  PromotionType promotionType)
     {
         
-            if (id <= 0 || promotionType == null || promotionType.Id <= 0) throw new Exception("NoContent");//
+            if (id <= 0 || promotionType == null || promotionType.Id <= 0) throw new NoContentException("NoContent");//
 
             var insertResult = await _unitOfWork.SystemRepository.UpdatePromotionTypeAsync(promotionType);
             var result = await _unitOfWork.Save();
             if (result == 0)
-                throw new Exception("Service Unavailable");
+                throw new ServiceUnavailableException("Service Unavailable");
 
             return insertResult;
         
@@ -804,7 +805,7 @@ public class SystemService  : ISystemService
             var deletedResult = await _unitOfWork.SystemRepository.DeletePromotionTypeAsync(id);
             var result = await _unitOfWork.Save();
             if (result == 0)
-                throw new Exception("Service Unavailable") ;
+                throw new ServiceUnavailableException("Service Unavailable") ;
 
             return true;
         
@@ -873,11 +874,11 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<CaptainUserIgnoredPenalty> GetCurrentUserIgnoredRequestsPenaltyByCaptainUserAccountIdAsync(long userId)
+    public async Task<CaptainUserIgnoredPenalty?> GetCurrentUserIgnoredRequestsPenaltyByCaptainUserAccountIdAsync(string captainUserAccountId)
     {
         try
         {
-            return await _unitOfWork.SystemRepository.GetUserIgnoredPenaltyByUserIdAsync(userId);
+            return await _unitOfWork.SystemRepository.GetCaptainUserIgnoredPenaltyByCaptainUserAccountIdAsync(captainUserAccountId);
 
         }
         catch (Exception e)
@@ -887,7 +888,7 @@ public class SystemService  : ISystemService
     }
 
     
-    public async Task<CaptainUserRejectPenalty> GetCurrentUserRejectedRequestsPenaltyByCaptainUserAccountIdAsync(long userId)
+    /*public async Task<CaptainUserRejectPenalty> GetCurrentUserRejectedRequestsPenaltyByCaptainUserAccountIdAsync(long userId)
     {
 
         try
@@ -901,15 +902,15 @@ public class SystemService  : ISystemService
             return new CaptainUserRejectPenalty();// new ObjectResult(e.Message) { StatusCode = 666 };
         }
 
-    }
+    }*/
 
     
-    public async Task<IEnumerable<CaptainUserIgnoredPenalty>> GetUserIgnoredRequestsPenaltiesByCaptainUserAccountIdAsync(long userId)
+    public async Task<IEnumerable<CaptainUserIgnoredPenalty>> GetUserIgnoredRequestsPenaltiesByCaptainUserAccountIdAsync(string captainUserAccountId)
     {
 
         try
         {
-            return await _unitOfWork.SystemRepository.GetUserIgnoredPenaltiesByUserIdAsync(userId);
+            return await _unitOfWork.SystemRepository.GetCaptainUserIgnoredPenaltiesByCaptainUserAccountIdAsync(captainUserAccountId);
 
             
         }
@@ -920,7 +921,7 @@ public class SystemService  : ISystemService
     }
 
     
-    public async Task<IEnumerable<CaptainUserRejectPenalty>> GetUserRejectedRequestsPenaltiesByCaptainUserAccountIdAsync(long userId)
+   /* public async Task<IEnumerable<CaptainUserRejectPenalty>> GetUserRejectedRequestsPenaltiesByCaptainUserAccountIdAsync(long userId)
     {
         try
         {
@@ -931,7 +932,7 @@ public class SystemService  : ISystemService
         {
             return new List<CaptainUserRejectPenalty>();// new ObjectResult(e.Message) { StatusCode = 666 };
         }
-    }
+    }*/
 
     //// POST: System/
     //[HttpGet("IgnorPerTypes")]
@@ -992,7 +993,7 @@ public class SystemService  : ISystemService
             var deleteResult = await _unitOfWork.SystemRepository.DeleteSystemSettingAsync(id);
             var result = await _unitOfWork.Save();
             if (result == 0)
-                throw new Exception("Service Unavailable");
+                throw new ServiceUnavailableException("Service Unavailable");
 
             return true;
         
@@ -1016,7 +1017,7 @@ public class SystemService  : ISystemService
             var result = await _unitOfWork.Save();
 
             if (result == 0)
-                throw new Exception("Service Unavailable");
+                throw new ServiceUnavailableException("Service Unavailable");
 
             return true;
         
@@ -1029,23 +1030,23 @@ public class SystemService  : ISystemService
     {
 
        
-            long modifierID = -1;
-            string modifierType = "";
-            Utility.getRequestUserIdFromToken(httpContext, out modifierID, out modifierType);
+            //long modifierID = -1;
+            //string modifierType = "";
+            Utility.getRequestUserIdFromToken(httpContext, out string modifierID, out string modifierType);
 
             switch (statusAction.UserType.ToLower())
             {
                 case "driver":
                     {
-                        var users = await _unitOfWork.CaptainRepository.GetUsersAccountsByAsync(u => u.UserId == statusAction.UserId);
+                        var users = await _unitOfWork.CaptainRepository.GetCaptainUsersAccountsByAsync(u => u.Id == statusAction.UserAccountId);
                         var user = users.FirstOrDefault();
-                        if (user == null) throw new Exception("NotFound");
+                        if (user == null) throw new NotFoundException("NotFound");
 
                         user.StatusTypeId = statusAction.StatusTypeId;
 
-                        CaptainUserCurrentStatus userCurrentStatus = new CaptainUserCurrentStatus()
+                        CaptainUserCurrentStatus userCurrentStatus = new ()
                         {
-                            UserId = user.UserId,
+                            CaptainUserAccountId = user.Id,
                             StatusTypeId = statusAction.StatusTypeId,
                             IsCurrent = true,
                             CreationDate = DateTime.Now,
@@ -1057,39 +1058,39 @@ public class SystemService  : ISystemService
                         if (statusAction.StatusTypeId == (long)StatusTypes.Suspended ||
                             statusAction.StatusTypeId == (long)StatusTypes.Stopped)
                         {
-                            CaptainUserActivity userActivity = new CaptainUserActivity()
+                            CaptainUserActivity userActivity = new ()
                             {
-                                UserId = user.UserId,
+                                CaptainUserAccountId = user.Id,
                                 StatusTypeId = (long)StatusTypes.Inactive,
                                 IsCurrent = true,
                                 CreationDate = DateTime.Now
                             };
-                            var insertedUserActivity = await _unitOfWork.CaptainRepository.InsertUserActivityAsync(userActivity);
+                            var insertedUserActivity = await _unitOfWork.CaptainRepository.InsertCaptainUserActivityAsync(userActivity);
                         }
 
-                        var insertResult = await _unitOfWork.CaptainRepository.InsertUserCurrentStatusAsync(userCurrentStatus);
-                        var updateResult = await _unitOfWork.CaptainRepository.UpdateUserAccountAsync(user);
+                        var insertResult = await _unitOfWork.CaptainRepository.InsertCaptainUserCurrentStatusAsync(userCurrentStatus);
+                        var updateResult = await _unitOfWork.CaptainRepository.UpdateCaptainUserAccountAsync(user);
                         var result = await _unitOfWork.Save();
 
                         if (result == 0)
-                            throw new Exception("Service Unavailable");
+                            throw new ServiceUnavailableException("Service Unavailable");
 
-                        string statusCacheKey = $"{user.UserId}:driver:status";
+                        string statusCacheKey = $"{user.Id}:driver:status";
                         Utility.SetCacheForAuth(statusCacheKey, user.StatusTypeId, _cache);
 
                         return true;
                     }
                 case "support":
                     {
-                        var users = await _unitOfWork.SupportRepository.GetSupportUsersAccountsByAsync(u => u.SupportUserId == statusAction.UserId);
+                        var users = await _unitOfWork.SupportRepository.GetSupportUsersAccountsByAsync(u => u.SupportUserId == statusAction.UserAccountId);
                         var user = users.FirstOrDefault();
-                        if (user == null) throw new Exception("NotFound");
+                        if (user == null) throw new NotFoundException("NotFound");
 
                         user.StatusTypeId = statusAction.StatusTypeId;
 
-                        SupportUserCurrentStatus userCurrentStatus = new SupportUserCurrentStatus()
+                        SupportUserCurrentStatus userCurrentStatus = new()
                         {
-                            SupportUserId = user.SupportUserId,
+                            SupportUserAccountId = user.Id,
                             StatusTypeId = statusAction.StatusTypeId,
                             IsCurrent = true,
                             CreationDate = DateTime.Now,
@@ -1103,24 +1104,24 @@ public class SystemService  : ISystemService
                         var result = await _unitOfWork.Save();
 
                         if (result == 0)
-                            throw new Exception("Service Unavailable");
+                            throw new ServiceUnavailableException("Service Unavailable");
 
-                        string statusCacheKey = $"{user.SupportUserId}:support:status";
+                        string statusCacheKey = $"{user.Id}:support:status";
                         Utility.SetCacheForAuth(statusCacheKey, user.StatusTypeId, _cache);
 
                         return true;
                     }
                 case "admin":
                     {
-                        var user = await _unitOfWork.AdminRepository.GetAdminUserAccountByAdminUserIdAsync(statusAction.UserId);
+                        var user = await _unitOfWork.AdminRepository.GetAdminUserAccountByAdminUserIdAsync(statusAction.UserAccountId);
                         //var user = users.FirstOrDefault();
                         if (user == null) throw new Exception("NotFound");
 
                         user.StatusTypeId = statusAction.StatusTypeId;
 
-                        AdminCurrentStatus userCurrentStatus = new AdminCurrentStatus()
+                        AdminCurrentStatus userCurrentStatus = new ()
                         {
-                            AdminId = user.AdminUserId,
+                            AdminUserAccountId = user.Id,
                             StatusTypeId = statusAction.StatusTypeId,
                             IsCurrent = true,
                             CreationDate = DateTime.Now,
@@ -1134,25 +1135,25 @@ public class SystemService  : ISystemService
                         var result = await _unitOfWork.Save();
 
                         if (result == 0)
-                            throw new Exception("Service Unavailable");
+                            throw new ServiceUnavailableException("Service Unavailable");
 
 
-                        string statusCacheKey = $"{user.AdminUserId}:admin:status";
+                        string statusCacheKey = $"{user.Id}:admin:status";
                         Utility.SetCacheForAuth(statusCacheKey, user.StatusTypeId, _cache);
 
                         return true;
                     }
                 case "agent":
                     {
-                        var user = await _unitOfWork.AgentRepository.GetAgentByIdAsync(statusAction.UserId);
-                        if (user == null) throw new Exception("NotFound");
+                        var user = await _unitOfWork.AgentRepository.GetAgentByIdAsync(statusAction.UserAccountId);
+                        if (user == null) throw new NotFoundException("NotFound");
 
                         user.StatusTypeId = statusAction.StatusTypeId;
 
-                        AgentCurrentStatus userCurrentStatus = new AgentCurrentStatus()
+                        AgentCurrentStatus userCurrentStatus = new ()
                         {
                             AgentId = user.Id,
-                            StatusId = statusAction.StatusTypeId,
+                            StatusTypeId = statusAction.StatusTypeId,
                             IsCurrent = true,
                             CreationDate = DateTime.Now,
                             CreatedBy = modifierID,
@@ -1165,7 +1166,7 @@ public class SystemService  : ISystemService
                         var result = await _unitOfWork.Save();
 
                         if (result == 0)
-                            throw new Exception("Service Unavailable");
+                            throw new ServiceUnavailableException("Service Unavailable");
 
                         string statusCacheKey = $"{user.Id}:agent:status";
                         Utility.SetCacheForAuth(statusCacheKey, user.StatusTypeId, _cache);
@@ -1173,7 +1174,7 @@ public class SystemService  : ISystemService
                         return true;
                     }
 
-                default: { throw new Exception("NotFound- User not found"); }
+                default: { throw new NotFoundException("NotFound- User not found"); }
             }
 
         
@@ -1190,9 +1191,9 @@ public class SystemService  : ISystemService
             {
                 case "captain":
                     {
-                        var insertedUser = await _unitOfWork.CaptainRepository.InsertUserMessageHubAsync(userHubToken.UserId, userHubToken.Token);
+                        var insertedUser = await _unitOfWork.CaptainRepository.InsertCaptainUserMessageHubByCaptainUserAccountIdAsync(userHubToken.UserAccountId, userHubToken.Token);
                         var result = await _unitOfWork.Save();
-                        if (result == 0) throw new Exception("Service Unavailable");
+                        if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
                         return true;
                     }
@@ -1202,35 +1203,35 @@ public class SystemService  : ISystemService
 
                         SupportUserMessageHub supportUserMessageHub = new SupportUserMessageHub()
                         {
-                            SupportUserId = userHubToken.UserId,
+                            SupportUserAccountId = userHubToken.UserAccountId,
                             ConnectionId = userHubToken.Token
                         };
 
                         var insertedUser = await _unitOfWork.SupportRepository.InsertSupportUserMessageHubAsync(supportUserMessageHub);
                         var result = await _unitOfWork.Save();
-                        if (result == 0) throw new Exception("Service Unavailable");
+                        if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
                         return true;
                     }
                 case "agent":
                     {
-                        var insertedUser = await _unitOfWork.CaptainRepository.InsertUserMessageHubAsync(userHubToken.UserId, userHubToken.Token);
+                        var insertedUser = await _unitOfWork.CaptainRepository.InsertCaptainUserMessageHubByCaptainUserAccountIdAsync(userHubToken.UserAccountId, userHubToken.Token);
                         var result = await _unitOfWork.Save();
-                        if (result == 0) throw new Exception("Service Unavailable");
+                        if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
                         return true;
                     }
                 case "admin":
                     {
-                        var insertedUser = await _unitOfWork.CaptainRepository.InsertUserMessageHubAsync(userHubToken.UserId, userHubToken.Token);
+                        var insertedUser = await _unitOfWork.CaptainRepository.InsertCaptainUserMessageHubByCaptainUserAccountIdAsync(userHubToken.UserAccountId, userHubToken.Token);
                         var result = await _unitOfWork.Save();
-                        if (result == 0) throw new Exception("Service Unavailable");
+                        if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
                         return true;
                     }
                 default:
                     {
-                        throw new Exception("NotFound - User not found");
+                        throw new NotFoundException("NotFound - User not found");
                     }
 
             }
@@ -1247,16 +1248,16 @@ public class SystemService  : ISystemService
             {
                 case "captain":
                     {
-                        var accounts = await _unitOfWork.CaptainRepository.GetUsersAccountsByAsync(d => d.Mobile == resetPassword.Username);
-                        if (accounts == null || accounts?.Count <= 0)
-                            throw new Exception("Unauthorized");
+                        var accounts = await _unitOfWork.CaptainRepository.GetCaptainUsersAccountsByAsync(d => d.Mobile == resetPassword.Username);
+                        if (accounts == null || accounts?.Count() <= 0)
+                            throw new UnauthorizedException("Unauthorized");
 
-                        var account = accounts.FirstOrDefault();
+                        var account = accounts?.FirstOrDefault();
                         if (account?.StatusTypeId == (long)StatusTypes.Stopped || account?.StatusTypeId == (long)StatusTypes.Suspended)
                             throw new Exception("Unauthorized");
 
-                        var user = await _unitOfWork.CaptainRepository.GetUserByIdAsync(account.Id);
-                        var country = await _unitOfWork.CountryRepository.GetCountryByIdAsync((long)user.ResidenceCountryId);
+                        var user = await _unitOfWork.CaptainRepository.GetCaptainUserByIdAsync(account.CaptainUserId);
+                        var country = await _unitOfWork.CountryRepository.GetCountryByIdAsync(user.ResidenceCountryId ?? 0);
 
                         byte[] passwordHash, passwordSalt;
                         var password = Utility.GeneratePassword();
@@ -1268,14 +1269,14 @@ public class SystemService  : ISystemService
 
 
 
-                        var updatedUser = await _unitOfWork.CaptainRepository.UpdateUserAccountAsync(account);
+                        var updatedUser = await _unitOfWork.CaptainRepository.UpdateCaptainUserAccountAsync(account);
                         var result = await _unitOfWork.Save();
 
                         if (result == 0)
-                            throw new Exception("Service Unavailable");
+                            throw new ServiceUnavailableException("Service Unavailable");
 
                         var message = "Welcome to Sender, your password has reset, the password is " + password;
-                        var phone = country.Code + account.Mobile;
+                        var phone = country?.Code + account.Mobile;
                         var responseResult = Utility.SendSMS(message, phone);
                         //if (!responseResult)
                         //    return new ObjectResult("Server not available") { StatusCode = 707 };
@@ -1283,7 +1284,7 @@ public class SystemService  : ISystemService
 
                         return true;
                     }
-                default: { throw new Exception("NoContent"); }
+                default: { throw new NoContentException("NoContent"); }
             }
 
 
@@ -1304,19 +1305,19 @@ public class SystemService  : ISystemService
                 {
                     case FirebaseTopics.Captains:
                         {
-                            if (fbNotify.UserId > 0)
+                            if (fbNotify.UserAccountId != "")
                             {
-                                var usersMessageHub = await _unitOfWork.CaptainRepository.GetUsersMessageHubsByAsync(u => u.UserId == fbNotify.UserId);
+                                var usersMessageHub = await _unitOfWork.CaptainRepository.GetCaptainUsersMessageHubsByAsync(u => u.CaptainUserAccountId == fbNotify.UserAccountId);
                                 var userMessageHub = usersMessageHub.FirstOrDefault();
                                 if (userMessageHub != null && userMessageHub.Id > 0)
                                 {
                                     result = FirebaseNotification.SendNotification(userMessageHub.ConnectionId, fbNotify.Title, fbNotify.Message);
                                 }
                             }
-                            else if (fbNotify.UserIds?.Count > 0)
+                            else if (fbNotify.UserAccountIds?.Count > 0)
                             {
-                                var usersMessageHub = await _unitOfWork.CaptainRepository.GetUsersMessageHubsByAsync(u => fbNotify.UserIds.Contains((long)u.UserId));
-                                if (usersMessageHub != null && usersMessageHub?.Count > 0)
+                                var usersMessageHub = await _unitOfWork.CaptainRepository.GetCaptainUsersMessageHubsByAsync(u => fbNotify.UserAccountIds.Contains(u.CaptainUserAccountId));
+                                if (usersMessageHub != null && usersMessageHub?.Count() > 0)
                                 {
                                     var tokens = usersMessageHub.Select(u => u.ConnectionId).ToList();
                                     result = FirebaseNotification.SendNotificationToMultiple(tokens, fbNotify.Title, fbNotify.Message);
@@ -1352,11 +1353,11 @@ public class SystemService  : ISystemService
                 responseResult = JsonConvert.DeserializeObject<FirebaseNotificationResponse>(result);
 
             if (responseResult == null || responseResult.messageId == "")
-                throw new Exception("NotFound - Failed to send the message");
+                throw new NotFoundException("NotFound - Failed to send the message");
             else if (responseResult != null && responseResult.messageId != "")
                 return new { Result = true, Message = "Message sent successfuly" };
             else
-                throw new Exception("Service Unavailable");
+                throw new ServiceUnavailableException("Service Unavailable");
 
     }
     /**/

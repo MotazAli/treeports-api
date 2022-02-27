@@ -12,11 +12,11 @@ namespace TreePorts.Models
         public int? ExtraKilometers { get; set; }
         public decimal? ExtraKiloPrice { get; set; }
         public bool? IsDeleted { get; set; }
-        public long? CreatedBy { get; set; }
-        public long? ModifiedBy { get; set; }
+        public string? CreatedBy { get; set; }
+        public long? CreatedByType { get; set; }
+        public string? ModifiedBy { get; set; }
+        public long? ModifiedByType { get; set; }
         public DateTime? CreationDate { get; set; }
         public DateTime? ModificationDate { get; set; }
-
-        public virtual CountryPrice CountryPrice { get; set; }
     }
 }

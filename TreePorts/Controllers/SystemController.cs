@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
 using TreePorts.DTO;
+using TreePorts.DTO.Records;
 using TreePorts.Hubs;
 using TreePorts.Models;
 using TreePorts.Utilities;
@@ -487,7 +488,7 @@ namespace TreePorts.Controllers
             }
         }
 
-        // POST: System/
+        /*// POST: System/
         //[HttpGet("RejectPerTypes")]
         [HttpGet("Reject/Types")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<RejectPerType>))]
@@ -502,7 +503,7 @@ namespace TreePorts.Controllers
             {
                 return NoContent();// new ObjectResult(e.Message) { StatusCode = 666 };
             }
-        }
+        }*/
 
 
         // POST: System/
@@ -791,11 +792,11 @@ namespace TreePorts.Controllers
         [HttpGet("Penalties/Captains/{id}/Ignore/Current")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CaptainUserIgnoredPenalty))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetCurrentUserIgnoredRequestsPenalty(long userId)
+        public async Task<IActionResult> GetCurrentUserIgnoredRequestsPenalty(string id)
         {
             try
             {
-                return Ok(await _systemService.GetCurrentUserIgnoredRequestsPenaltyByCaptainUserAccountIdAsync(userId));
+                return Ok(await _systemService.GetCurrentUserIgnoredRequestsPenaltyByCaptainUserAccountIdAsync(id));
             }
             catch (Exception e)
             {
@@ -803,36 +804,36 @@ namespace TreePorts.Controllers
             }
         }
 
-        // POST: System/
+/*        // POST: System/
         //[HttpGet("GetCurrentUserRejectedRequestsPenalty")]
         [HttpGet("Penalties/Captains/{id}/Reject/Current")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CaptainUserRejectPenalty))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetCurrentUserRejectedRequestsPenalty(long userId)
+        public async Task<IActionResult> GetCurrentUserRejectedRequestsPenalty(string? id)
         {
 
             try
             {
-                return Ok(await _systemService.GetCurrentUserRejectedRequestsPenaltyByCaptainUserAccountIdAsync(userId));
+                return Ok(await _systemService.GetCurrentUserRejectedRequestsPenaltyByCaptainUserAccountIdAsync(id));
             }
             catch (Exception e)
             {
                 return NoContent();// new ObjectResult(e.Message) { StatusCode = 666 };
             }
 
-        }
+        }*/
 
         // POST: System/
         //[HttpGet("GetUserIgnoredRequestsPenalties")]
-        [HttpGet("Penalties/Captains/{id}/Ignore")]
+        [HttpGet("Penalties/Captains/{Id}/Ignore")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<CaptainUserIgnoredPenalty>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetUserIgnoredRequestsPenalties(long userId)
+        public async Task<IActionResult> GetUserIgnoredRequestsPenalties(string? Id)
         {
 
             try
             {
-                return Ok(await _systemService.GetUserIgnoredRequestsPenaltiesByCaptainUserAccountIdAsync(userId));
+                return Ok(await _systemService.GetUserIgnoredRequestsPenaltiesByCaptainUserAccountIdAsync(Id??""));
             }
             catch (Exception e)
             {
@@ -840,22 +841,22 @@ namespace TreePorts.Controllers
             }
         }
 
-        // POST: System/
+        /*// POST: System/
         //[HttpGet("GetUserRejectedRequestsPenalties")]
-        [HttpGet("Penalties/Captains/{id}/Reject")]
+        [HttpGet("Penalties/Captains/{Id}/Reject")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<CaptainUserRejectPenalty>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetUserRejectedRequestsPenalties(long userId)
+        public async Task<IActionResult> GetUserRejectedRequestsPenalties(string? Id)
         {
             try
             {
-               return Ok(await _systemService.GetUserRejectedRequestsPenaltiesByCaptainUserAccountIdAsync(userId));
+               return Ok(await _systemService.GetUserRejectedRequestsPenaltiesByCaptainUserAccountIdAsync(Id));
             }
             catch (Exception e)
             {
                 return NoContent();// new ObjectResult(e.Message) { StatusCode = 666 };
             }
-        }
+        }*/
 
         //// POST: System/
         //[HttpGet("IgnorPerTypes")]

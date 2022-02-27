@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace TreePorts.DTO.ReturnDTO
 {
-	public class SupportUserResponse
+	/*public class SupportUserResponse
 	{
 
         public long Id { get; set; }
@@ -39,5 +39,5 @@ namespace TreePorts.DTO.ReturnDTO
         public string ResidenceCountryArabicName { get; set; }
         public string ResidenceCityArabicName { get; set; }
 
-    }
+    }*/
 }

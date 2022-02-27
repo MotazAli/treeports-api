@@ -1,4 +1,6 @@
-﻿namespace TreePorts.Services;
+﻿using TreePorts.Utilities;
+
+namespace TreePorts.Services;
 public class CountryService : ICountryService
 {
     private IUnitOfWork _unitOfWork;
@@ -38,7 +40,7 @@ public class CountryService : ICountryService
     }
 
     
-    public async Task<object> GetCountryByIdAsync(long id)
+    public async Task<object?> GetCountryByIdAsync(long id)
     {
         try
         {
@@ -52,12 +54,12 @@ public class CountryService : ICountryService
 
 
     
-    public async Task<Country> UpdateCountryAsync(int id, Country country)
+    public async Task<Country?> UpdateCountryAsync(int id, Country country)
     {
         
             var countryupdatedResult = await _unitOfWork.CountryRepository.UpdateCountryAsync(country);
             var result = await _unitOfWork.Save();
-            if (result <= 0) throw new Exception("Service Unavailable");
+            if (result <= 0) throw new ServiceUnavailableException("Service Unavailable");
 
             return countryupdatedResult;
     }
@@ -67,10 +69,10 @@ public class CountryService : ICountryService
     {
        
             var deletedResult = await _unitOfWork.CountryRepository.DeleteCountryAsync(id);
-            if (deletedResult == null) throw new Exception("NoContent");
+            //if (deletedResult == null) throw new Exception("NoContent");
 
             var result = await _unitOfWork.Save();
-            if (result <= 0) throw new Exception("Service Unavailable");
+            if (result <= 0) throw new ServiceUnavailableException("Service Unavailable");
 
             return true;
         
@@ -83,7 +85,7 @@ public class CountryService : ICountryService
        
             var countryPriceInsertedResult = await _unitOfWork.CountryRepository.InsertCountryPriceAsync(countryPrice);
             var result = await _unitOfWork.Save();
-            if (result <= 0) throw new Exception("Service Unavailable");
+            if (result <= 0) throw new ServiceUnavailableException("Service Unavailable");
 
             return countryPriceInsertedResult;
         
@@ -96,7 +98,7 @@ public class CountryService : ICountryService
         
             var countryProductPriceInsertedResult = await _unitOfWork.CountryRepository.InsertCountryProductPriceAsync(countryProductPrice);
             var result = await _unitOfWork.Save();
-            if (result <= 0) throw new Exception("Service Unavailable");
+            if (result <= 0) throw new ServiceUnavailableException("Service Unavailable");
 
             return countryProductPriceInsertedResult;
         
@@ -110,7 +112,7 @@ public class CountryService : ICountryService
         
             var deletedResult = await _unitOfWork.CountryRepository.DeleteCountryPriceAsync(id);
             var result = await _unitOfWork.Save();
-            if (result <= 0) throw new Exception("Service Unavailable");
+            if (result <= 0) throw new ServiceUnavailableException("Service Unavailable");
 
             return true;
     }
@@ -121,14 +123,14 @@ public class CountryService : ICountryService
        
             var deletedResult = await _unitOfWork.CountryRepository.DeleteCountryProductPriceAsync(id);
             var result = await _unitOfWork.Save();
-            if (result <= 0) throw new Exception("Service Unavailable");
+            if (result <= 0) throw new ServiceUnavailableException("Service Unavailable");
 
             return true;
     }
 
 
 
-    public async Task<IEnumerable<object>> GetCountriesCitiesAsync()
+    public async Task<IEnumerable<object>?> GetCountriesCitiesAsync()
     {
         try
         {
@@ -147,19 +149,19 @@ public class CountryService : ICountryService
        
             var insertedResult = await _unitOfWork.CountryRepository.InsertCityAsync(city);
             var result = await _unitOfWork.Save();
-            if (result <= 0) throw new Exception("Service Unavailable");
+            if (result <= 0) throw new ServiceUnavailableException("Service Unavailable");
 
             return insertedResult;
         
     }
 
     
-    public async Task<City> UpdateCityAsync(long id, City city)
+    public async Task<City?> UpdateCityAsync(long id, City city)
     {
        
             var updatedResult = await _unitOfWork.CountryRepository.UpdateCityAsync(city);
             var result = await _unitOfWork.Save();
-            if (result <= 0) throw new Exception("Service Unavailable");
+            if (result <= 0) throw new ServiceUnavailableException("Service Unavailable");
 
             return updatedResult;
         
@@ -171,10 +173,10 @@ public class CountryService : ICountryService
     {
         
             var deletedResult = await _unitOfWork.CountryRepository.DeleteCityAsync(id);
-            if (deletedResult == null) throw new Exception("NoContent");
+            //if (deletedResult == null) throw new Exception("NoContent");
 
             var result = await _unitOfWork.Save();
-            if (result <= 0) throw new Exception("Service Unavailable");
+            if (result <= 0) throw new ServiceUnavailableException("Service Unavailable");
 
             return true;
         

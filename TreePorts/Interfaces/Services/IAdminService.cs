@@ -1,21 +1,22 @@
 ﻿using TreePorts.DTO;
+using TreePorts.DTO.Records;
 
 namespace TreePorts.Interfaces.Services;
 public interface IAdminService
 {
     Task<IEnumerable<AdminUser>> GetAdminsUsersAsync();
-    Task<AdminUser> GetAdminUserByIdAsync(long id);
+    Task<AdminUserResponse?> GetAdminUserByIdAsync(string id);
     Task<IEnumerable<AdminUser>> GetAdminsUsersPaginationAsync(FilterParameters parameters);
 
-    Task<object> AddAdminUserAsync(AdminUser user);
-    Task<AdminUser> UpdateAdminUserAsync(long? id, AdminUser user);
-    Task<bool> DeleteAdminUserAsync(long id);
-    Task<AdminUserAccount> Login(LoginUser user);
+    Task<AdminUserResponse?> AddAdminUserAsync(AdminUserDto user);
+    Task<AdminUserResponse> UpdateAdminUserAsync(string? adminUserAccountId, AdminUserDto adminUserDto);
+    Task<bool> DeleteAdminUserAsync(string? id);
+    Task<AdminUserResponse> Login(LoginUserDto loginUserDto);
     Task<bool> UploadFileAsync(HttpContext httpContext);
 
     Task<IEnumerable<AdminResponse>> SearchAsync(FilterParameters parameters);
 
-    Task<object> ReportAsync(FilterParameters reportParameters);
+    //Task<object> ReportAsync(FilterParameters reportParameters);
     Task<string> SendFirebaseNotification(FBNotify fbNotify);
 
 }

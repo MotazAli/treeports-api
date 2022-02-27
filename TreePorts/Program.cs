@@ -117,8 +117,8 @@ void AddDependancyInjectionServices(IServiceCollection services)
     services.AddTransient<IOrderService, OrderService>();
     services.AddTransient<ISupportService, SupportService>();
     services.AddTransient<ISystemService, SystemService>();
-    services.AddTransient<IRMQService, RMQService>();
-    services.AddHostedService<RMQReceiverService>();
+    //services.AddTransient<IRMQService, RMQService>();
+    //services.AddHostedService<RMQReceiverService>();
 }
 
 

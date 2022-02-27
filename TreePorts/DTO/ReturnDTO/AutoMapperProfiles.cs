@@ -13,7 +13,7 @@ namespace TreePorts.DTO.ReturnDTO
 		public AutoMapperProfiles()
 		{
 			/* User Mapping*/
-			CreateMap<CaptainUser, UserResponse>()
+			/*CreateMap<CaptainUser, UserResponse>()
 
 					.ForMember(dest => dest.CountryArabicName, opt => opt.MapFrom(src => src.Country.ArabicName))
 					.ForMember(dest => dest.CountryName, opt => opt.MapFrom(src => src.Country.Name))
@@ -24,11 +24,11 @@ namespace TreePorts.DTO.ReturnDTO
 					.ForMember(dest => dest.ResidenceCountryArabicName, opt => opt.MapFrom(src => src.ResidenceCountryArabicName))
 					.ForMember(dest => dest.ResidenceCityArabicName, opt => opt.MapFrom(src => src.ResidenceCityArabicName))
 					.ForMember(dest => dest.StatusTypeId, opt => opt.MapFrom(src => src.UserAccounts.FirstOrDefault().StatusTypeId));
-
+*/
 			/* User Mapping*/
 
 			/* Admin Mapping*/
-			CreateMap<AdminUser, AdminResponse>()
+			/*CreateMap<AdminUser, AdminResponse>()
 
 					.ForMember(dest => dest.CountryArabicName, opt => opt.MapFrom(src => src.Country.ArabicName))
 					.ForMember(dest => dest.CountryName, opt => opt.MapFrom(src => src.Country.Name))
@@ -38,22 +38,22 @@ namespace TreePorts.DTO.ReturnDTO
 					.ForMember(dest => dest.ResidenceCountryName, opt => opt.MapFrom(src => src.ResidenceCountryName))
 					.ForMember(dest => dest.ResidenceCountryArabicName, opt => opt.MapFrom(src => src.ResidenceCountryArabicName))
 					.ForMember(dest => dest.ResidenceCityArabicName, opt => opt.MapFrom(src => src.ResidenceCityArabicName));
-
+*/
 			/* Admin Mapping*/
 
 			/* Agent Mapping*/
-			CreateMap<Agent, AgentResponse>()
+			/*CreateMap<Agent, AgentResponse>()
 
 					.ForMember(dest => dest.CountryArabicName, opt => opt.MapFrom(src => src.Country.ArabicName))
 					.ForMember(dest => dest.CountryName, opt => opt.MapFrom(src => src.Country.Name))
 					.ForMember(dest => dest.CityArabicName, opt => opt.MapFrom(src => src.City.ArabicName))
 					.ForMember(dest => dest.CityName, opt => opt.MapFrom(src => src.City.Name));
 
-			
+			*/
 			/* Agent Mapping*/
 
 			/*SupportUser Mapping*/
-			CreateMap<SupportUser, SupportUserResponse>()
+			/*CreateMap<SupportUser, SupportUserResponse>()
 
 					.ForMember(dest => dest.CountryArabicName, opt => opt.MapFrom(src => src.Country.ArabicName))
 					.ForMember(dest => dest.CountryName, opt => opt.MapFrom(src => src.Country.Name))
@@ -62,7 +62,7 @@ namespace TreePorts.DTO.ReturnDTO
 					.ForMember(dest => dest.ResidenceCityName, opt => opt.MapFrom(src => src.ResidenceCityName))
 					.ForMember(dest => dest.ResidenceCountryName, opt => opt.MapFrom(src => src.ResidenceCountryName))
 					.ForMember(dest => dest.ResidenceCountryArabicName, opt => opt.MapFrom(src => src.ResidenceCountryArabicName))
-					.ForMember(dest => dest.ResidenceCityArabicName, opt => opt.MapFrom(src => src.ResidenceCityArabicName));
+					.ForMember(dest => dest.ResidenceCityArabicName, opt => opt.MapFrom(src => src.ResidenceCityArabicName));*/
 			/* Agent Mapping*/
 
 			/*Order Mapping*/
@@ -73,7 +73,7 @@ namespace TreePorts.DTO.ReturnDTO
 
 			CreateMap<CaptainUserAcceptedRequest, UserAcceptedResponse>();
 					
-			CreateMap<Order, OrderResponse>()
+			/*CreateMap<Order, OrderResponse>()
 				.ForMember(dest => dest.AgnetName, opt => opt.MapFrom(src => src.Agent.Fullname))
 				.ForMember(dest => dest.Code, opt => opt.MapFrom(src => src.Qrcodes.FirstOrDefault().Code))
 				.ForMember(dest => dest.PaymentType, opt => opt.MapFrom(src => src.PaymentType.Type))
@@ -82,14 +82,14 @@ namespace TreePorts.DTO.ReturnDTO
 				.ForMember(dest => dest.ProductArabicType, opt => opt.MapFrom(src => src.ProductType.ArabicType))
 				.ForMember(dest => dest.OrderItems, opt => opt.MapFrom(src => src.OrderItems))
 				.ForMember(dest => dest.CurrentStatus, opt => opt.MapFrom(src => src.OrderCurrentStatus.FirstOrDefault().StatusTypeId)); ;
-				
+				*/
 				
 
 			//.ConvertUsing<EventLogConverter>(); ;
 			/*Order Mapping*/
 
 			/* Web Hook Types Mapping*/
-			CreateMap<WebHookType, WebHookTypeResponse>();
+			//CreateMap<WebHookType, WebHookTypeResponse>();
 			/* Web Hook Types Mapping*/
 		}
 	}

@@ -5,14 +5,13 @@ namespace TreePorts.Models
 {
     public partial class BonusType
     {
-        public BonusType()
-        {
-            UserBonus = new HashSet<CaptainUserBonus>();
-        }
-
         public long Id { get; set; }
-        public string Type { get; set; }
-
-        public virtual ICollection<CaptainUserBonus> UserBonus { get; set; }
+        public string? Type { get; set; }
+        public string? CreatedBy { get; set; }
+        public long? CreatedByType { get; set; }
+        public string? ModifiedBy { get; set; }
+        public long? ModifiedByType { get; set; }
+        public DateTime? CreationDate { get; set; }
+        public DateTime? ModificationDate { get; set; }
     }
 }

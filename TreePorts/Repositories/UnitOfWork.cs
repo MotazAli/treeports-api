@@ -19,7 +19,7 @@ namespace TreePorts.Repositories
         private ISupportRepository _SupportRepository;
         private IAgentRepository _AgentRepositor;
         private IOrderRepository _OrderRepository;
-        private IHookRepository _HookRepository;
+        private IWebhookRepository _HookRepository;
         private IPaymentRepository _PaymentRepository;
         public UnitOfWork(TreePortsDBContext context)
         {
@@ -34,7 +34,7 @@ namespace TreePorts.Repositories
         public ISupportRepository SupportRepository => _SupportRepository ??= new SupportRepository(_context);
         public IAgentRepository AgentRepository => _AgentRepositor ??= new AgentRepository(_context);
         public IOrderRepository OrderRepository => _OrderRepository ??= new OrderRepository(_context);
-		public IHookRepository HookRepository => _HookRepository ??= new HookRepository(_context);
+		public IWebhookRepository HookRepository => _HookRepository ??= new WebhookRepository(_context);
 
 
 		public IPaymentRepository PaymentRepository => _PaymentRepository ??= new PaymentRepository(_context);

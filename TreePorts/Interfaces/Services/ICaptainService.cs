@@ -1,38 +1,40 @@
 ﻿using TreePorts.DTO;
+using TreePorts.DTO.Records;
 
 namespace TreePorts.Interfaces.Services;
 public interface ICaptainService
 {
 
-    Task<IEnumerable<CaptainUser>> GetUsersAsync();
-    Task<CaptainUser> GetUserByIdAsync(long id);
+    Task<IEnumerable<CaptainUser>> GetCaptainUsersAsync();
+    Task<CaptainUserVechicleResponse> GetCaptainUserByCaptainUserIdAsync(string captainUserId);
+    Task<CaptainUserVechicleResponse> GetCaptainUserAccountByCaptainUserAccountIdAsync(string captainUserAccountId);
     Task<IEnumerable<CaptainUserAccount>> GetUsersPagingAsync(FilterParameters parameters);
     Task<IEnumerable<CaptainUserAccount>> GetNewCaptainsUsersAsync(FilterParameters parameters);
     Task<object> GetDirectionsMapAsync(string origin, string destination, string mode);
-    Task<long> AddCaptainAsync(HttpContext httpContext, CaptainUser user);
-    Task<object> LoginAsync(LoginDriver driver);
+    Task<CaptainUserResponse> AddCaptainAsync(HttpContext httpContext, CaptainUserDto captainUserDto);
+    Task<CaptainUserResponse> LoginAsync(LoginCaptainUserDto loginCaptain);
     Task<bool> ChangePasswordAsync(DriverPhone driver);
     Task<bool> UploadAsync(HttpContext httpContext);
-    Task<object> AcceptRegisterCaptainByIdAsync(long id, HttpContext httpContext);
-    Task<object> UpdateCaptainAsync(long id, CaptainUser user);
+    Task<object> AcceptRegisterCaptainByIdAsync(string captainUserAccountId, HttpContext httpContext);
+    Task<object> UpdateCaptainUserAsync(string? captainUserAccountId, CaptainUserDto captainUserDto);
     Task<bool> UpdateCaptainCurrentLocationAsync(CaptainUserCurrentLocation userCurrentLocation);
-    Task<bool> DeleteCaptainUserAccountAsync(long id);
-    Task<object> GetOrdersPaymentsByCaptainUserAccountIdAsync(long id);
-    Task<object> GetBookkeepingPagingByCaptainUserAccountIdAsync(long id, FilterParameters parameters);
-    Task<IEnumerable<Bookkeeping>> GetBookkeepingByCaptainUserAccountIdAsync(long id);
-    Task<decimal> GetUntransferredBookkeepingByCaptainUserAccountIdAsync(long id);
-    Task<IEnumerable<Order>> GetAllOrdersAssignmentsByCaptainUserAccountIdAsync(long id, FilterParameters parameters);
+    Task<bool> DeleteCaptainUserAccountAsync(string captainUserAccountId);
+    Task<object> GetOrdersPaymentsByCaptainUserAccountIdAsync(string? captainUserAccountId);
+    Task<object> GetBookkeepingPagingByCaptainUserAccountIdAsync(string? captainUserAccountId, FilterParameters parameters);
+    Task<IEnumerable<Bookkeeping>> GetBookkeepingByCaptainUserAccountIdAsync(string? captainUserAccountId);
+    Task<decimal> GetUntransferredBookkeepingByCaptainUserAccountIdAsync(string? captainUserAccountId);
+    Task<IEnumerable<Order>> GetAllOrdersAssignmentsByCaptainUserAccountIdAsync(string? captainUserAccountId, FilterParameters parameters);
     Task<CaptainUserShift> AddCaptainUserShiftAsync(CaptainUserShift userShift);
-    Task<CaptainUserShift> DeleteCaptainUserShiftAsync(long userId, long shiftId);
-    Task<CaptainUserShift> GetCaptainUsershiftAsync(long userId, long shiftId);
-    Task<object> GetShiftsAndUserShiftsByDateAsync(long id, Shift shift);
+    Task<CaptainUserShift> DeleteCaptainUserShiftAsync(string? captainUserAccountId, long shiftId);
+    Task<CaptainUserShift> GetCaptainUsershiftAsync(string? captainUserAccountId, long shiftId);
+    Task<object> GetShiftsAndUserShiftsByDateAsync(string captainUserAccountId, Shift shift);
     Task<CaptainUserActivity> CaptainUserActivitiesAsync(CaptainUserActivity userActivity);
-    Task<object> ReportsAsync(FilterParameters reportParameters, HttpContext httpContext);
-    Task<object> SearchAsync(FilterParameters parameters);
+    //Task<object> ReportsAsync(FilterParameters reportParameters, HttpContext httpContext);
+    //Task<object> SearchAsync(FilterParameters parameters);
     Task<object> ChartsAsync();
     Task<object> CheckBonusPerMonthAsync(BonusCheckDto bonusCheckDto);
     Task<object> CheckBonusPerYearAsync(BonusCheckDto bonusCheckDto);
     Task<string> SendFirebaseNotificationAsync(FBNotify fbNotify);
-    Task<IEnumerable<CaptainUser>> GetCaptainsUsersNearToLocation(Location location);
+    Task<IEnumerable<NearCaptainUser>> GetCaptainsUsersNearToLocationAsync(Location location);
 }
 

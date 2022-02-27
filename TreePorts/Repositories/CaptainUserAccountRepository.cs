@@ -20,43 +20,45 @@ namespace TreePorts.Repositories
             _context = context;
         }
 
-        public async Task<CaptainUserAccount> Delete(long ID)
+        public async Task<CaptainUserAccount?> DeleteCaptainUserAccountAsync(string id)
         {
-            var account = await _context.UserAccounts.Where(a => a.Id == ID).FirstOrDefaultAsync();
+            var account = await _context.CaptainUserAccounts.Where(a => a.Id == id).FirstOrDefaultAsync();
+            if(account == null) return null;
             account.ModificationDate = DateTime.Now;
             account.IsDeleted = true;
             _context.Entry<CaptainUserAccount>(account).State = EntityState.Modified;
             return account;
         }
 
-        public async Task<List<CaptainUserAccount>> GetAll()
+        public async Task<List<CaptainUserAccount>> GetCaptainUsesrAccountsAsync()
         {
-            return await _context.UserAccounts.Where(a => a.IsDeleted == false).ToListAsync();
+            return await _context.CaptainUserAccounts.Where(a => a.IsDeleted == false).ToListAsync();
         }
 
-        public async Task<List<CaptainUserAccount>> GetBy(Expression<Func<CaptainUserAccount, bool>> predicate)
+        public async Task<List<CaptainUserAccount>> GetCaptainUsersAccountsByAsync(Expression<Func<CaptainUserAccount, bool>> predicate)
         {
-            return  await _context.UserAccounts.Where(predicate).Include(u => u.User).ToListAsync();
+            return  await _context.CaptainUserAccounts.Where(predicate).ToListAsync();
         }
 
-        public async Task<CaptainUserAccount> GetByID(long ID)
+        public async Task<CaptainUserAccount?> GetCaptainUserAccountByIdAsync(string ID)
         {
-            return await _context.UserAccounts.Where(a => a.Id == ID).FirstOrDefaultAsync();
+            return await _context.CaptainUserAccounts.Where(a => a.Id == ID).FirstOrDefaultAsync();
         }
 
 		
-		public async Task<CaptainUserAccount> Insert(CaptainUserAccount account)
+		public async Task<CaptainUserAccount> InsertCaptainUserAccountAsync(CaptainUserAccount account)
         {
             account.CreationDate = DateTime.Now;
-            var result = await _context.UserAccounts.AddAsync(account);
+            var result = await _context.CaptainUserAccounts.AddAsync(account);
             return result.Entity;
         }
 
-        public async Task<CaptainUserAccount> Update(CaptainUserAccount account)
+        public async Task<CaptainUserAccount?> UpdateCaptainUserAccountAsync(CaptainUserAccount account)
         {
-            var oldAccount = await _context.UserAccounts.Where(a => a.Id == account.Id).FirstOrDefaultAsync();
+            var oldAccount = await _context.CaptainUserAccounts.Where(a => a.Id == account.Id).FirstOrDefaultAsync();
+            if (oldAccount == null) return null;
 
-            oldAccount.UserId = account.UserId;
+            oldAccount.CaptainUserId = account.CaptainUserId;
             oldAccount.StatusTypeId = account.StatusTypeId;
             oldAccount.Mobile = account.Mobile;
             oldAccount.PasswordHash = account.PasswordHash;
@@ -73,12 +75,12 @@ namespace TreePorts.Repositories
         
 		public IQueryable<CaptainUserAccount> GetByQuerable(Expression<Func<CaptainUserAccount, bool>> predicate)
 		{
-            return  _context.UserAccounts.Where(predicate).Include(u => u.User);
+            return  _context.CaptainUserAccounts.Where(predicate);
         }
 
         public IQueryable<CaptainUserAccount> GetByQuerable()
         {
-            return _context.UserAccounts.Include(u => u.User);
+            return _context.CaptainUserAccounts;
         }
 
         /* Filter User*/

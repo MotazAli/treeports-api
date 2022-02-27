@@ -1,12 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using TreePorts.DTO;
-using TreePorts.Interfaces.Repositories;
-using TreePorts.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using TreePorts.DTO;
 using System.Linq.Expressions;
-using System.Threading.Tasks;
 
 namespace TreePorts.Repositories
 {
@@ -20,62 +13,82 @@ namespace TreePorts.Repositories
             _context = context;
         }
 
-        public async Task<Agent> DeleteAgentAsync(long id)
+        public async Task<Agent?> DeleteAgentAsync(string id)
         {
             var agent = await _context.Agents.FirstOrDefaultAsync(u => u.Id == id);
-            if (agent == null) throw new NotFoundException("User not found");
+            if (agent == null) return null;
 
             agent.IsDeleted = true;
             _context.Entry<Agent>(agent).State = EntityState.Modified;
             return agent;
         }
 
-        public async Task<AgentCurrentStatus> DeleteAgentCurrentStatusAsync(long id)
+        public async Task<AgentCurrentStatus?> DeleteAgentCurrentStatusAsync(long id)
         {
             var agent = await _context.AgentCurrentStatuses.FirstOrDefaultAsync(u => u.Id == id);
-            if (agent == null) throw new NotFoundException("User not found");
+            if (agent == null) return null;
 
             _context.AgentCurrentStatuses.Remove(agent);
             return agent;
 
         }
 
-        public async Task<List<AgentCurrentStatus>> GetAgentsCurrentStatusByAsync(Expression<Func<AgentCurrentStatus, bool>> predicate)
+        public async Task<IEnumerable<AgentCurrentStatus>> GetAgentsCurrentStatusByAsync(Expression<Func<AgentCurrentStatus, bool>> predicate)
         {
             return await _context.AgentCurrentStatuses.Where(predicate).ToListAsync();
         }
 
-        public async Task<AgentCurrentStatus> GetAgentCurrentStatusByIdAsync(long id)
+        public async Task<AgentCurrentStatus?> GetAgentCurrentStatusByIdAsync(long id)
         {
             return await _context.AgentCurrentStatuses.FirstOrDefaultAsync(u => u.Id == id);
         }
 
-        public async Task<List<AgentType>> GetAgentTypesAsync()
+        public async Task<IEnumerable<AgentType>> GetAgentTypesAsync()
         {
             return await _context.AgentTypes.ToListAsync();
         }
 
-        public async Task<AgentType> GetAgentTypeByIdAsync(long id)
+        public async Task<AgentType?> GetAgentTypeByIdAsync(long id)
         {
             return await _context.AgentTypes.FirstOrDefaultAsync(a => a.Id == id);
         }
 
-        public async Task<List<Agent>> GetAgentsAsync()
+        public async Task<IEnumerable<Agent>> GetAgentsAsync()
         {
             return await _context.Agents.ToListAsync();
         }
 
-        public async Task<List<Agent>> GetActiveAgentsAsync()
+        public async Task<IEnumerable<Agent>> GetAgentsPagingAsync(int skip, int take) 
+        {
+            return await _context.Agents
+                .Where(a => a.StatusTypeId != (long)StatusTypes.Reviewing)
+                .OrderByDescending(a => a.CreationDate)
+                .Skip(skip)
+                .Take(take)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Agent>> GetNewRegisteredAgentsPagingAsync(int skip, int take) 
+        {
+            return await _context.Agents
+                .Where(a => a.StatusTypeId == (long)StatusTypes.Reviewing)
+                .OrderByDescending(a => a.CreationDate)
+                .Skip(skip)
+                .Take(take)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Agent>> GetActiveAgentsAsync()
         {
             return await _context.Agents.Where(a => a.IsDeleted == false).ToListAsync();
         }
 
-        public async Task<List<AgentCurrentStatus>> GetAgentsCurrentStatusesAsync()
+        public async Task<IEnumerable<AgentCurrentStatus>> GetAgentsCurrentStatusesAsync()
         {
             return await _context.AgentCurrentStatuses.ToListAsync();
         }
 
-        public async Task<List<Agent>> GetAgentsByAsync(Expression<Func<Agent, bool>> predicate)
+        public async Task<IEnumerable<Agent>> GetAgentsByAsync(Expression<Func<Agent, bool>> predicate)
         {
             return await _context.Agents.Where(predicate).ToListAsync();
         }
@@ -84,12 +97,12 @@ namespace TreePorts.Repositories
             return _context.Agents.Where(predicate);
         }
 
-        public async Task<Agent> GetAgentByIdAsync(long id)
+        public async Task<Agent?> GetAgentByIdAsync(string id)
         {
             return await _context.Agents.FirstOrDefaultAsync(a => a.Id == id);
         }
 
-        public async Task<Agent> GetAgentByEmailAsync(string email) {
+        public async Task<Agent?> GetAgentByEmailAsync(string email) {
             return await _context.Agents.FirstOrDefaultAsync(a => a.Email == email);
         }
 
@@ -97,6 +110,7 @@ namespace TreePorts.Repositories
 
         public async Task<Agent> InsertAgentAsync(Agent agent)
         {
+            agent.Id = Guid.NewGuid().ToString();
             agent.CreationDate = DateTime.Now;
             var result = await _context.Agents.AddAsync(agent);
             return result.Entity;
@@ -163,12 +177,12 @@ namespace TreePorts.Repositories
         }
 
 
-        public async Task<AgentCurrentStatus> UpdateAgentCurrentStatusAsync(AgentCurrentStatus agentCurrentStatus)
+        public async Task<AgentCurrentStatus?> UpdateAgentCurrentStatusAsync(AgentCurrentStatus agentCurrentStatus)
         {
             var oldAgentCurrentStatus = await _context.AgentCurrentStatuses.FirstOrDefaultAsync(a => a.AgentId == agentCurrentStatus.AgentId);
             if (oldAgentCurrentStatus == null) return null;
 
-            oldAgentCurrentStatus.StatusId = agentCurrentStatus.StatusId;
+            oldAgentCurrentStatus.StatusTypeId = agentCurrentStatus.StatusTypeId;
             oldAgentCurrentStatus.IsCurrent = agentCurrentStatus.IsCurrent;
             oldAgentCurrentStatus.ModifiedBy = agentCurrentStatus.ModifiedBy;
             oldAgentCurrentStatus.ModificationDate = DateTime.Now;
@@ -176,7 +190,7 @@ namespace TreePorts.Repositories
             return oldAgentCurrentStatus;
         }
 
-        public async Task<Agent> UpdateAgentLocationAsync(Agent agent)
+        public async Task<Agent?> UpdateAgentLocationAsync(Agent agent)
         {
             var oldAgent = await _context.Agents.FirstOrDefaultAsync(a => a.Id == agent.Id);
             if (oldAgent == null) return null;
@@ -190,7 +204,7 @@ namespace TreePorts.Repositories
             return oldAgent;
         }
 
-        public async Task<Agent> UpdateAgentTokenAsync(Agent agent)
+        public async Task<Agent?> UpdateAgentTokenAsync(Agent agent)
         {
             var oldAgent = await _context.Agents.FirstOrDefaultAsync(a => a.Id == agent.Id);
             if (oldAgent == null) return null;
@@ -205,10 +219,12 @@ namespace TreePorts.Repositories
 
         public IQueryable<Agent> GetByQuerable()
         {
-            var result = _context.Agents.Include(a => a.AgentType).Include(a => a.Orders).ThenInclude(o=>o.UserAcceptedRequests)
-                .ThenInclude(u=>u.User).Include(a => a.Orders).ThenInclude(o => o.OrderItems)
-                
-                                         .Include(a => a.Country).Include(a => a.City);
+            var result = _context.Agents;
+                //.Include(a => a.AgentType)
+                //.Include(a => a.Orders).ThenInclude(o => o.UserAcceptedRequests).ThenInclude(u => u.User)
+                //.Include(a => a.Orders).ThenInclude(o => o.OrderItems)
+                //.Include(a => a.Country)
+                //.Include(a => a.City);
             return result;
         }
 
@@ -219,9 +235,9 @@ namespace TreePorts.Repositories
 
         }
 
-        public async Task<bool> IsValidCouponAsync(string couponCode, long? agentId, long? countryId)
+        public async Task<bool> IsValidCouponAsync(string couponName, string? agentId, long? countryId)
         {
-            var result = await _context.Coupons.FirstOrDefaultAsync(c => String.Equals(c.Coupon1, couponCode));
+            var result = await _context.Coupons.FirstOrDefaultAsync(c => c.CouponName == couponName);
             var couponAssign = new CouponAssign();
             if(result != null)
 			{
@@ -230,14 +246,14 @@ namespace TreePorts.Repositories
             }
            
 			
-			if (couponAssign!=null && result != null && result.CouponType == (long) CouponTypes.ExpireByDate)
+			if (couponAssign!=null && result != null && result.CouponTypeId == (long) CouponTypes.ExpireByDate)
 			{
-				if(result.ExpirationDate.Value.Date >= DateTime.Now.Date)
+				if(result.ExpireDate?.Date >= DateTime.Now.Date)
 				{
                     return true;
                 }
 			}
-            if (couponAssign != null && result != null && result.CouponType == (long)CouponTypes.ExpireByUsage)
+            if (couponAssign != null && result != null && result.CouponTypeId == (long)CouponTypes.ExpireByUsage)
             {
                 var usage = _context.CouponUsages.Count(c => c.CouponId == result.Id && c.AgentId == agentId);
                 if (usage < result.NumberOfUse)
@@ -248,35 +264,38 @@ namespace TreePorts.Repositories
             return false;
         }
 
-        public List<Order> GetAgentOrders(long agentId)
+        public async Task<IEnumerable<Order>> GetAgentOrdersAsync(string agentId)
 		{
-            var orders =  _context.Agents.Where(o => o.Id == agentId).SelectMany(a => a.Orders).ToList();
+            var orders = await  _context.Orders.Where(o => o.AgentId == agentId).ToListAsync();
             return orders;
 		}
 
-		public Order GetAgentOrder(long agentId, long orderId)
+		public async Task<Order?> GetAgentOrderAsync(string agentId, long orderId)
 		{
-            var order = _context.Orders.FirstOrDefault(o => o.Id == orderId && o.AgentId == agentId);
+            var order = await _context.Orders.FirstOrDefaultAsync(o => o.Id == orderId && o.AgentId == agentId);
             return order;
         }
 
-		public async Task<Coupon> GetCouponAsync(long ID)
+		public async Task<Coupon?> GetCouponAsync(long ID)
 		{
             var coupon = await _context.Coupons.FirstOrDefaultAsync(c => c.Id == ID);
             return coupon;
 		}
-        public async Task<Coupon> GetCouponByCodeAsync(string Code)
+        public async Task<Coupon?> GetCouponByCodeAsync(string couponName)
 		{
-             var coupon = await _context.Coupons.FirstOrDefaultAsync(c => String.Equals(c.Coupon1, Code));
+             var coupon = await _context.Coupons.FirstOrDefaultAsync(c => c.CouponName == couponName);
            // var coupon = _context.CouponAssigns.Where(c => c.AgentId == agentId && c.CouponId == orderId).Select(c => c.Coupon).FirstOrDefault();
             return coupon;
         }
        
         
-        public Coupon GetAssignedCoupon(long agentId, long orderId)
+        public async Task<Coupon?> GetAssignedCoupon(string agentId, long orderId)
 		{
 
-			var coupon = _context.CouponAssigns.Where(c => c.AgentId == agentId && c.CouponId == orderId).Select(c => c.Coupon).FirstOrDefault();
+			var couponAssign = await _context.CouponAssigns.FirstOrDefaultAsync(c => c.AgentId == agentId && c.CouponId == orderId);
+            if (couponAssign == null) return null;
+
+            var coupon = await _context.Coupons.FirstOrDefaultAsync(c => c.Id == couponAssign.CouponId);
 			return coupon;
 		}
 
@@ -319,10 +338,10 @@ namespace TreePorts.Repositories
 		public async Task<CouponUsage> InsertCouponUsageAsync(CouponUsage couponUsage)
 		{
             var couponUsageResult = await _context.CouponUsages.AddAsync(couponUsage);
-            return couponUsage;
+            return couponUsageResult.Entity;
 		}
 
-        //public async Task<List<AgentDeliveryPrice>> GetAgentsDeliveryPrices()
+        //public async Task<IEnumerable<AgentDeliveryPrice>> GetAgentsDeliveryPrices()
         //{
         //    return await _context.AgentDeliveryPrices.Where(a => a.IsDeleted == false).ToListAsync();
         //}
@@ -364,7 +383,7 @@ namespace TreePorts.Repositories
         }
 
 
-        public async Task<List<AgentDeliveryPrice>> GetAgentDeliveryPriceByAsync(Expression<Func<AgentDeliveryPrice, bool>> predicate)
+        public async Task<IEnumerable<AgentDeliveryPrice>> GetAgentDeliveryPriceByAsync(Expression<Func<AgentDeliveryPrice, bool>> predicate)
         {
             return await _context.AgentDeliveryPrices.Where(predicate).ToListAsync();
         }
@@ -385,7 +404,7 @@ namespace TreePorts.Repositories
             return insertResult.Entity;
         }
 
-        public async Task<AgentDeliveryPrice> DeleteAgentDeliveryPriceAsync(long id)
+        public async Task<AgentDeliveryPrice?> DeleteAgentDeliveryPriceAsync(long id)
         {
             AgentDeliveryPrice oldAgentDeliveryPrice = await _context.AgentDeliveryPrices.FirstOrDefaultAsync(d => d.Id == id);
             if (oldAgentDeliveryPrice == null) return null;
@@ -397,17 +416,17 @@ namespace TreePorts.Repositories
             return oldAgentDeliveryPrice;
         }
 
-        public async Task<List<AgentOrderDeliveryPrice>> GetAgentsOrdersDeliveryPricesAsync()
+        public async Task<IEnumerable<AgentOrderDeliveryPrice>> GetAgentsOrdersDeliveryPricesAsync()
         {
             return await _context.AgentOrderDeliveryPrices.ToListAsync();
         }
 
-        public async Task<AgentOrderDeliveryPrice> GetAgentOrderDeliveryPriceByIdAsync(long id)
+        public async Task<AgentOrderDeliveryPrice?> GetAgentOrderDeliveryPriceByIdAsync(long id)
         {
             return await _context.AgentOrderDeliveryPrices.FirstOrDefaultAsync(o => o.Id == id);
         }
 
-        public async Task<List<AgentOrderDeliveryPrice>> GetAgentOrderDeliveryPriceByAsync(Expression<Func<AgentOrderDeliveryPrice, bool>> predicate)
+        public async Task<IEnumerable<AgentOrderDeliveryPrice>> GetAgentOrderDeliveryPriceByAsync(Expression<Func<AgentOrderDeliveryPrice, bool>> predicate)
         {
             return await _context.AgentOrderDeliveryPrices.Where(predicate).ToListAsync();
         }
@@ -419,9 +438,9 @@ namespace TreePorts.Repositories
             return insertResult.Entity;
         }
 
-        public async Task<AgentOrderDeliveryPrice> UpdateAgentOrderDeliveryPriceAsync(AgentOrderDeliveryPrice agentOrderDeliveryPrice)
+        public async Task<AgentOrderDeliveryPrice?> UpdateAgentOrderDeliveryPriceAsync(AgentOrderDeliveryPrice agentOrderDeliveryPrice)
         {
-            AgentOrderDeliveryPrice oldAgentOrderDeliveryPrice = await _context.AgentOrderDeliveryPrices
+            var oldAgentOrderDeliveryPrice = await _context.AgentOrderDeliveryPrices
                 .FirstOrDefaultAsync(o => o.Id == agentOrderDeliveryPrice.Id);
             if (oldAgentOrderDeliveryPrice == null) return null;
 
@@ -432,27 +451,26 @@ namespace TreePorts.Repositories
             return oldAgentOrderDeliveryPrice;
         }
 
-        public async Task<AgentOrderDeliveryPrice> DeleteAgentOrderDeliveryPriceAsync(long id)
+        public async Task<AgentOrderDeliveryPrice?> DeleteAgentOrderDeliveryPriceAsync(long id)
         {
-            AgentOrderDeliveryPrice oldAgentOrderDeliveryPrice = await _context.AgentOrderDeliveryPrices
-                .FirstOrDefaultAsync(o => o.Id == id);
+            var oldAgentOrderDeliveryPrice = await _context.AgentOrderDeliveryPrices.FirstOrDefaultAsync(o => o.Id == id);
             if (oldAgentOrderDeliveryPrice == null) return null;
 
             _context.AgentOrderDeliveryPrices.Remove(oldAgentOrderDeliveryPrice);
             return oldAgentOrderDeliveryPrice;
         }
 
-        public async Task<List<AgentMessageHub>> GetAllAgentsMessageHubAsync()
+        public async Task<IEnumerable<AgentMessageHub>> GetAllAgentsMessageHubAsync()
         {
             return await _context.AgentMessageHubs.ToListAsync();
         }
 
-        public async Task<AgentMessageHub> GetAgentMessageHubByIdAsync(long id)
+        public async Task<AgentMessageHub?> GetAgentMessageHubByIdAsync(long id)
         {
             return await _context.AgentMessageHubs.FirstOrDefaultAsync(a => a.Id == id);
         }
 
-        public async Task<List<AgentMessageHub>> GetAgentsMessageHubByAsync(Expression<Func<AgentMessageHub, bool>> predicate)
+        public async Task<IEnumerable<AgentMessageHub>> GetAgentsMessageHubByAsync(Expression<Func<AgentMessageHub, bool>> predicate)
         {
             return await _context.AgentMessageHubs.Where(predicate).ToListAsync();
         }
@@ -463,7 +481,6 @@ namespace TreePorts.Repositories
             if (oldUserHub != null && oldUserHub.Id > 0)
             {
                 oldUserHub.ConnectionId = agentMessageHub.ConnectionId;
-                oldUserHub.ModifiedBy = 1;
                 oldUserHub.ModificationDate = DateTime.Now;
                 _context.Entry<AgentMessageHub>(oldUserHub).State = EntityState.Modified;
                 return oldUserHub;
@@ -471,7 +488,6 @@ namespace TreePorts.Repositories
             else
             {
                 agentMessageHub.CreationDate = DateTime.Now;
-                agentMessageHub.CreatedBy = 1;
                 var insertResult = await _context.AgentMessageHubs.AddAsync(agentMessageHub);
                 return insertResult.Entity;
             }

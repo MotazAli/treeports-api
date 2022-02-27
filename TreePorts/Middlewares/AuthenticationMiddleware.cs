@@ -164,9 +164,9 @@ namespace TreePorts.Utilities
             if (userType.ToLower() == "driver")
             {
 
-                var users = await unitOfWork.CaptainRepository.GetUsersAccountsByAsync(u => u.Token == token);
+                var users = await unitOfWork.CaptainRepository.GetCaptainUsersAccountsByAsync(u => u.Token == token);
                 var user = users.FirstOrDefault();
-                if (user != null && user.Id > 0 && isValidStatus(user.StatusTypeId)) 
+                if (user != null && user.Id != "" && isValidStatus(user.StatusTypeId)) 
                 {
                     Utility.SetCacheForAuth(tokenCacheKey, token, cache);
                     Utility.SetCacheForAuth(statusCacheKey, user.StatusTypeId, cache);
@@ -177,7 +177,7 @@ namespace TreePorts.Utilities
             {
                 var users = await unitOfWork.AgentRepository.GetAgentsByAsync(u => u.Token == token);
                 var user = users.FirstOrDefault();
-                if (user != null && user.Id > 0 && isValidStatus(user.StatusTypeId))
+                if (user != null && user.Id != "" && isValidStatus(user.StatusTypeId))
                 {
                     Utility.SetCacheForAuth(tokenCacheKey, token, cache);
                     Utility.SetCacheForAuth(statusCacheKey, user.StatusTypeId, cache);
@@ -188,7 +188,7 @@ namespace TreePorts.Utilities
             {
                 var users = await unitOfWork.AdminRepository.GetAdminUserAccountByAsync(u => u.Token == token);
                 var user = users.FirstOrDefault();
-                if (user != null && user.Id > 0 && isValidStatus(user.StatusTypeId))
+                if (user != null && user.Id != "" && isValidStatus(user.StatusTypeId))
                 {
                     Utility.SetCacheForAuth(tokenCacheKey, token, cache);
                     Utility.SetCacheForAuth(statusCacheKey, user.StatusTypeId, cache);
@@ -199,7 +199,7 @@ namespace TreePorts.Utilities
             {
                 var users = await unitOfWork.SupportRepository.GetSupportUsersAccountsByAsync(u => u.Token == token);
                 var user = users.FirstOrDefault();
-                if (user != null && user.Id > 0 && isValidStatus(user.StatusTypeId))
+                if (user != null && user.Id != "" && isValidStatus(user.StatusTypeId))
                 {
                     Utility.SetCacheForAuth(tokenCacheKey, token, cache);
                     Utility.SetCacheForAuth(statusCacheKey, user.StatusTypeId, cache);

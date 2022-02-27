@@ -1,13 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
-using TreePorts.DTO;
-using TreePorts.DTO.ReturnDTO;
-using TreePorts.Interfaces.Repositories;
-using TreePorts.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using TreePorts.DTO;
 using System.Linq.Expressions;
-using System.Threading.Tasks;
+using TreePorts.DTO.Records;
 
 namespace TreePorts.Repositories
 {
@@ -21,7 +14,7 @@ namespace TreePorts.Repositories
             _context = context;
         }
 
-        public async Task<Order> DeleteOrderAsync(long id)
+        public async Task<Order?> DeleteOrderAsync(long id)
         {
             var order = await _context.Orders.FirstOrDefaultAsync(u => u.Id == id);
             if (order == null) return null;
@@ -80,11 +73,10 @@ namespace TreePorts.Repositories
         {
             return await _context.OrderAssignments
                 .Where(predicate)
-                .Include(u => u.User)
                 .ToListAsync();
         }
 
-        public async Task<OrderAssignment> GetOrderAssignmentByIdAsync(long id)
+        public async Task<OrderAssignment?> GetOrderAssignmentByIdAsync(long id)
         {
             return await _context.OrderAssignments.FirstOrDefaultAsync(a => a.Id == id);
         }
@@ -93,38 +85,37 @@ namespace TreePorts.Repositories
         {
             return await _context.Orders
                 .Where(predicate)
-                .Include(o => o.Agent)
                 .ToListAsync();
         }
 
-        public async Task<Order> GetOrderById_oldBehaviourAsync(long id)//GetOrderById
+        public async Task<Order?> GetOrderById_oldBehaviourAsync(long id)//GetOrderById
         {
             return await _context.Orders.AsNoTracking()
                 .Where(a => a.Id == id)
-                .Include(o => o.Agent)
-                .Include(o => o.OrderItems)
-                .Include(o => o.PaymentType)
-                .Include(o => o.ProductType)
-                .Include(o => o.OrderCurrentStatus)
-                .Include(o => o.OrderStatusHistories)
+                //.Include(o => o.Agent)
+                //.Include(o => o.OrderItems)
+                //.Include(o => o.PaymentType)
+                //.Include(o => o.ProductType)
+                //.Include(o => o.OrderCurrentStatus)
+                //.Include(o => o.OrderStatusHistories)
                 .FirstOrDefaultAsync();
         }
 
 
-        public async Task<Order> GetOnlyOrderByIdAsync(long id)
+        public async Task<Order?> GetOnlyOrderByIdAsync(long id)
         {
             return await _context.Orders.AsNoTracking().FirstOrDefaultAsync(a => a.Id == id);
         }
 
 
-        public async Task<Order> GetLiteOrderByIdAsync(long id)
+        public async Task<Order?> GetLiteOrderByIdAsync(long id)
         {
             return await _context.Orders.AsNoTracking()
                 .Where(a => a.Id == id)
-                .Include(o => o.Agent)
-                .Include(o => o.OrderItems)
-                .Include(o => o.PaymentType)
-                .Include(o => o.ProductType)
+                //.Include(o => o.Agent)
+                //.Include(o => o.OrderItems)
+                //.Include(o => o.PaymentType)
+                //.Include(o => o.ProductType)
                 .FirstOrDefaultAsync();
         }
 
@@ -139,9 +130,9 @@ namespace TreePorts.Repositories
                                join country in _context.Countries.AsNoTracking() on agents.CountryId equals country.Id
                                join city in _context.Cities.AsNoTracking() on agents.CityId equals city.Id
                                //where orders.Id == id
-                               from deliveryPayments in _context.UserPayments.Where(p => p.OrderId == id).AsNoTracking().DefaultIfEmpty()
-                               from userAcceptedRequests in _context.UserAcceptedRequests.Where(p => p.OrderId == id).AsNoTracking().DefaultIfEmpty()
-                               from qrCodes in _context.Qrcodes.Where(q => q.OrderId == id).AsNoTracking().DefaultIfEmpty()
+                               from deliveryPayments in _context.CaptainUserPayments.Where(p => p.OrderId == id).AsNoTracking().DefaultIfEmpty()
+                               from userAcceptedRequests in _context.CaptainUserAcceptedRequests.Where(p => p.OrderId == id).AsNoTracking().DefaultIfEmpty()
+                               from qrCodes in _context.OrderQrcodes.Where(q => q.OrderId == id).AsNoTracking().DefaultIfEmpty()
                                    //from items in _context.OrderItems.AsNoTracking().Where(i => i.OrderId == orders.Id).ToList()
                                    //join deliveryPayments in _context.UserPayments.AsNoTracking() on orders.Id equals deliveryPayments.OrderId into tempDeliveryPayments
                                    //// join orderItems in _context.OrderItems on orders.Id equals orderItems.OrderId
@@ -163,7 +154,7 @@ namespace TreePorts.Repositories
                                    OrderItems = _context.OrderItems.Where(i => i.OrderId == orders.Id).AsNoTracking().ToList(),
                                    OrderCurrentStatus = orderCurrentStatus,
                                    OrderStatusHistories = _context.OrderStatusHistories.Where(i => i.OrderId == orders.Id).AsNoTracking().ToList(),
-                                   Captain = (userAcceptedRequests != null && userAcceptedRequests.Id > 0) ? _context.Users.Where(u => u.Id == userAcceptedRequests.UserId).AsNoTracking().FirstOrDefault() : null,
+                                   Captain = (userAcceptedRequests != null && userAcceptedRequests.Id > 0) ? _context.CaptainUserAccounts.Where(u => u.Id == userAcceptedRequests.CaptainUserAccountId).AsNoTracking().FirstOrDefault() : null,
                                    DeliveryPayment = deliveryPayments,
                                    QrCode = qrCodes,
                                    Agent = agents,
@@ -183,7 +174,7 @@ namespace TreePorts.Repositories
             return await _context.OrderEndLocations.Where(predicate).ToListAsync();
         }
 
-        public async Task<OrderEndLocation> GetOrderEndLocationByIdAsync(long id)
+        public async Task<OrderEndLocation?> GetOrderEndLocationByIdAsync(long id)
         {
             return await _context.OrderEndLocations.FirstOrDefaultAsync(a => a.Id == id);
         }
@@ -193,14 +184,16 @@ namespace TreePorts.Repositories
             return await _context.OrderItems.Where(predicate).ToListAsync();
         }
 
-        public async Task<OrderItem> GetOrderItemByIdAsync(long id)
+        public async Task<OrderItem?> GetOrderItemByIdAsync(long id)
         {
             return await _context.OrderItems.FirstOrDefaultAsync(a => a.Id == id);
         }
 
         public async Task<List<Order>> GetOrdersAsync()
         {
-            return await _context.Orders.Include(o => o.Agent).ToListAsync();
+            return await _context.Orders
+                //.Include(o => o.Agent)
+                .ToListAsync();
         }
 
         public async Task<List<OrderStartLocation>> GetOrdersStartLocationByAsync(Expression<Func<OrderStartLocation, bool>> predicate)
@@ -208,7 +201,7 @@ namespace TreePorts.Repositories
             return await _context.OrderStartLocations.Where(predicate).ToListAsync();
         }
 
-        public async Task<OrderStartLocation> GetOrderStartLocationByIdAsync(long id)
+        public async Task<OrderStartLocation?> GetOrderStartLocationByIdAsync(long id)
         {
             return await _context.OrderStartLocations.FirstOrDefaultAsync(a => a.Id == id);
         }
@@ -223,22 +216,22 @@ namespace TreePorts.Repositories
             return await _context.OrderStatusHistories.Where(predicate).ToListAsync();
         }
 
-        public async Task<OrderCurrentStatus> GetOrderStatusByIdAsync(long id)
+        public async Task<OrderCurrentStatus?> GetOrderStatusByIdAsync(long id)
         {
             return await _context.OrderCurrentStatuses.FirstOrDefaultAsync(a => a.Id == id);
         }
 
-        public async Task<OrderStatusHistory> GetOrderStatusHistoryByIdAsync(long id)
+        public async Task<OrderStatusHistory?> GetOrderStatusHistoryByIdAsync(long id)
         {
             return await _context.OrderStatusHistories.FirstOrDefaultAsync(a => a.Id == id);
         }
 
-        public async Task<OrderStatusType> GetOrderStatusTypeByIdAsync(long id)
+        public async Task<OrderStatusType?> GetOrderStatusTypeByIdAsync(long id)
         {
             return await _context.OrderStatusTypes.FirstOrDefaultAsync(a => a.Id == id);
         }
 
-        public async Task<ProductType> GetProductTypeByIdAsync(long id)
+        public async Task<ProductType?> GetProductTypeByIdAsync(long id)
         {
             return await _context.ProductTypes.FirstOrDefaultAsync(a => a.Id == id);
         }
@@ -283,17 +276,17 @@ namespace TreePorts.Repositories
             var oldstatus = await _context.OrderCurrentStatuses.FirstOrDefaultAsync(s => s.OrderId == orderStatus.OrderId);
             if (oldstatus != null && oldstatus.Id > 0)
             {
-                OrderStatusHistory history = new OrderStatusHistory()
+                OrderStatusHistory history = new ()
                 {
                     OrderId = oldstatus.OrderId,
-                    OrderStatusId = oldstatus.StatusTypeId,
+                    OrderStatusTypeId = oldstatus.OrderStatusTypeId,
                     CreationDate = oldstatus.CreationDate,
 
                 };
 
                 await this.InsertOrderStatusHistoryAsync(history);
 
-                oldstatus.StatusTypeId = orderStatus.StatusTypeId;
+                oldstatus.OrderStatusTypeId = orderStatus.OrderStatusTypeId;
                 oldstatus.CreationDate = DateTime.Now;
 
                 _context.Entry<OrderCurrentStatus>(oldstatus).State = EntityState.Modified;
@@ -314,21 +307,21 @@ namespace TreePorts.Repositories
             return insertResult.Entity;
         }
 
-        public async Task<Order> UpdateOrderAsync(Order order)
+        public async Task<Order?> UpdateOrderAsync(Order order)
         {
             var oldOrder = await _context.Orders.FirstOrDefaultAsync(o => o.Id == order.Id);
             if (oldOrder == null) return null;
 
             oldOrder.AgentId = order.AgentId;
             oldOrder.Description = order.Description;
-            oldOrder.Details = order.Details;
+            oldOrder.MoreDetails = order.MoreDetails;
             oldOrder.DropLocationLat = order.DropLocationLat;
             oldOrder.DropLocationLong = order.DropLocationLong;
             oldOrder.PickupLocationLat = order.PickupLocationLat;
             oldOrder.PickupLocationLong = order.PickupLocationLong;
             oldOrder.ProductTypeId = order.ProductTypeId;
             oldOrder.CustomerAddress = order.CustomerAddress;
-            oldOrder.PaymentType = order.PaymentType;
+            oldOrder.PaymentTypeId = order.PaymentTypeId;
             oldOrder.CustomerName = order.CustomerName;
             oldOrder.CustomerPhone = order.CustomerPhone;
             oldOrder.ModifiedBy = order.ModifiedBy;
@@ -338,25 +331,25 @@ namespace TreePorts.Repositories
             oldOrder.PickupLocationLat = order.PickupLocationLat;
             oldOrder.PickupLocationLong = order.PickupLocationLong;
 
-            if (order.OrderItems != null && order.OrderItems.Count > 0)
+            /*if (order.OrderItems != null && order.OrderItems.Count > 0)
             {
                 _context.OrderItems.RemoveRange(oldOrder.OrderItems);
                 oldOrder.OrderItems = order.OrderItems;
-            }
+            }*/
 
 
             _context.Entry<Order>(oldOrder).State = EntityState.Modified;
             return oldOrder;
         }
 
-        public async Task<OrderAssignment> UpdateOrderAssignmentAsync(OrderAssignment assign)
+        public async Task<OrderAssignment?> UpdateOrderAssignmentAsync(OrderAssignment assign)
         {
             var oldOrderAssign = await _context.OrderAssignments.FirstOrDefaultAsync(a => a.Id == assign.Id);
             if (oldOrderAssign == null) return null;
 
 
             oldOrderAssign.OrderId = assign.OrderId;
-            oldOrderAssign.UserId = assign.UserId;
+            oldOrderAssign.CaptainUserAccountId = assign.CaptainUserAccountId;
             oldOrderAssign.ToAgentKilometer = assign.ToAgentKilometer;
             oldOrderAssign.ToAgentTime = assign.ToAgentTime;
             oldOrderAssign.ToCustomerKilometer = assign.ToCustomerKilometer;
@@ -368,7 +361,7 @@ namespace TreePorts.Repositories
             return oldOrderAssign;
         }
 
-        public async Task<OrderEndLocation> UpdateOrderEndLocationAsync(OrderEndLocation orderEndLocation)
+        public async Task<OrderEndLocation?> UpdateOrderEndLocationAsync(OrderEndLocation orderEndLocation)
         {
             var oldOrderEndLocaion = await _context.OrderEndLocations.FirstOrDefaultAsync(a => a.Id == orderEndLocation.Id);
             if (oldOrderEndLocaion == null) return null;
@@ -385,14 +378,14 @@ namespace TreePorts.Repositories
             return oldOrderEndLocaion;
         }
 
-        public async Task<OrderItem> UpdateOrderItemAsync(OrderItem orderItem)
+        public async Task<OrderItem?> UpdateOrderItemAsync(OrderItem orderItem)
         {
             var oldOrderItem = await _context.OrderItems.FirstOrDefaultAsync(a => a.Id == orderItem.Id);
             if (oldOrderItem == null) return null;
 
 
             oldOrderItem.OrderId = orderItem.OrderId;
-            oldOrderItem.Item = orderItem.Item;
+            oldOrderItem.Name = orderItem.Name;
             oldOrderItem.Price = orderItem.Price;
             oldOrderItem.Quantity = orderItem.Quantity;
             oldOrderItem.Description = orderItem.Description;
@@ -403,7 +396,7 @@ namespace TreePorts.Repositories
             return oldOrderItem;
         }
 
-        public async Task<OrderStartLocation> UpdateOrderStartLocationAsync(OrderStartLocation orderStartLocation)
+        public async Task<OrderStartLocation?> UpdateOrderStartLocationAsync(OrderStartLocation orderStartLocation)
         {
             var oldOrderStartLocation = await _context.OrderStartLocations.FirstOrDefaultAsync(a => a.Id == orderStartLocation.Id);
             if (oldOrderStartLocation == null) return null;
@@ -422,14 +415,14 @@ namespace TreePorts.Repositories
 
 
 
-        public async Task<OrderStatusHistory> UpdateOrderStatusHistoryAsync(OrderStatusHistory orderStatus)
+        public async Task<OrderStatusHistory?> UpdateOrderStatusHistoryAsync(OrderStatusHistory orderStatus)
         {
             var oldOrderStatusHistory = await _context.OrderStatusHistories.FirstOrDefaultAsync(a => a.Id == orderStatus.Id);
             if (oldOrderStatusHistory == null) return null;
 
 
             oldOrderStatusHistory.OrderId = orderStatus.OrderId;
-            oldOrderStatusHistory.OrderStatusId = orderStatus.OrderStatusId;
+            oldOrderStatusHistory.OrderStatusTypeId = orderStatus.OrderStatusTypeId;
             oldOrderStatusHistory.ModifiedBy = orderStatus.ModifiedBy;
             oldOrderStatusHistory.ModificationDate = DateTime.Now;
 
@@ -442,7 +435,7 @@ namespace TreePorts.Repositories
             return await _context.OrderInvoices.ToListAsync();
         }
 
-        public async Task<OrderInvoice> GetOrderInvoiceByIdAsync(long id)
+        public async Task<OrderInvoice?> GetOrderInvoiceByIdAsync(long id)
         {
             return await _context.OrderInvoices.FirstOrDefaultAsync(i => i.Id == id);
         }
@@ -459,13 +452,13 @@ namespace TreePorts.Repositories
             return insertResult.Entity;
         }
 
-        public async Task<OrderInvoice> UpdateOrderInvoiceAsync(OrderInvoice orderInvoice)
+        public async Task<OrderInvoice?> UpdateOrderInvoiceAsync(OrderInvoice orderInvoice)
         {
             var oldOrderInvoice = await _context.OrderInvoices.FirstOrDefaultAsync(i => i.Id == orderInvoice.Id);
             if (oldOrderInvoice == null) return null;
 
 
-            oldOrderInvoice.UserId = orderInvoice.UserId;
+            oldOrderInvoice.CaptainUserAccountId = orderInvoice.CaptainUserAccountId;
             oldOrderInvoice.OrderId = orderInvoice.OrderId;
             oldOrderInvoice.OrderAssignId = orderInvoice.OrderAssignId;
             oldOrderInvoice.FileName = orderInvoice.FileName;
@@ -480,7 +473,7 @@ namespace TreePorts.Repositories
 
         }
 
-        public async Task<OrderInvoice> DeleteOrderInvoiceAsync(long id)
+        public async Task<OrderInvoice?> DeleteOrderInvoiceAsync(long id)
         {
             var oldOrderInvoice = await _context.OrderInvoices.FirstOrDefaultAsync(i => i.Id == id);
             if (oldOrderInvoice == null) return null;
@@ -495,7 +488,7 @@ namespace TreePorts.Repositories
             return await _context.PaidOrders.ToListAsync();
         }
 
-        public async Task<PaidOrder> GetPaidOrderByIdAsync(long id)
+        public async Task<PaidOrder?> GetPaidOrderByIdAsync(long id)
         {
             return await _context.PaidOrders.FirstOrDefaultAsync(p => p.Id == id);
         }
@@ -512,13 +505,13 @@ namespace TreePorts.Repositories
             return insertResult.Entity;
         }
 
-        public async Task<PaidOrder> UpdatePaidOrderAsync(PaidOrder paidOrder)
+        public async Task<PaidOrder?> UpdatePaidOrderAsync(PaidOrder paidOrder)
         {
             var oldPaidOrder = await _context.PaidOrders.FirstOrDefaultAsync(p => p.Id == paidOrder.Id);
             if (oldPaidOrder == null) return null;
 
 
-            oldPaidOrder.UserId = paidOrder.UserId;
+            oldPaidOrder.CaptainUserAccountId = paidOrder.CaptainUserAccountId;
             oldPaidOrder.OrderId = paidOrder.OrderId;
             oldPaidOrder.OrderAssignId = paidOrder.OrderAssignId;
             oldPaidOrder.Type = paidOrder.Type;
@@ -530,7 +523,7 @@ namespace TreePorts.Repositories
             return oldPaidOrder;
         }
 
-        public async Task<PaidOrder> DeletePaidOrderAsync(long id)
+        public async Task<PaidOrder?> DeletePaidOrderAsync(long id)
         {
             var oldPaidOrder = await _context.PaidOrders.FirstOrDefaultAsync(p => p.Id == id);
             if (oldPaidOrder == null) return null;
@@ -541,7 +534,7 @@ namespace TreePorts.Repositories
 
         }
 
-        public async Task<OrderCurrentStatus> DeleteOrderStatusAsync(long id)
+        public async Task<OrderCurrentStatus?> DeleteOrderStatusAsync(long id)
         {
             var oldOrderCurrentStatus = await _context.OrderCurrentStatuses.FirstOrDefaultAsync(p => p.Id == id);
             if (oldOrderCurrentStatus == null) return null;
@@ -556,12 +549,12 @@ namespace TreePorts.Repositories
             return await _context.PaymentTypes.ToListAsync();
         }
 
-        public async Task<PaymentType> GetPaymentTypeByIdAsync(long id)
+        public async Task<PaymentType?> GetPaymentTypeByIdAsync(long id)
         {
             return await _context.PaymentTypes.FirstOrDefaultAsync(p => p.Id == id);
         }
 
-        public async Task<Order> DeleteOrderPermenetAsync(long id)
+        public async Task<Order?> DeleteOrderPermenetAsync(long id)
         {
             var oldOrder = await _context.Orders.FirstOrDefaultAsync(o => o.Id == id);
             if (oldOrder == null) return null;
@@ -576,7 +569,7 @@ namespace TreePorts.Repositories
             return await _context.RunningOrders.ToListAsync();
         }
 
-        public async Task<RunningOrder> GetRunningOrderByIdAsync(long id)
+        public async Task<RunningOrder?> GetRunningOrderByIdAsync(long id)
         {
             return await _context.RunningOrders.FirstOrDefaultAsync(r => r.Id == id);
         }
@@ -593,13 +586,13 @@ namespace TreePorts.Repositories
             return insertResult.Entity;
         }
 
-        public async Task<RunningOrder> UpdateRunningOrderAsync(RunningOrder runningOrder)
+        public async Task<RunningOrder?> UpdateRunningOrderAsync(RunningOrder runningOrder)
         {
             var oldRunningOrder = await _context.RunningOrders.FirstOrDefaultAsync(r => r.Id == runningOrder.Id);
             if (oldRunningOrder == null) return null;// throw new NotFoundException("Running order not found");
 
             oldRunningOrder.OrderId = runningOrder.OrderId;
-            oldRunningOrder.UserId = runningOrder.UserId;
+            oldRunningOrder.CaptainUserAccountId = runningOrder.CaptainUserAccountId;
             oldRunningOrder.ModificationDate = DateTime.Now;
             oldRunningOrder.ModifiedBy = runningOrder.ModifiedBy;
             _context.Entry<RunningOrder>(oldRunningOrder).State = EntityState.Modified;
@@ -607,7 +600,7 @@ namespace TreePorts.Repositories
         }
 
 
-        public async Task<RunningOrder> DeleteRunningOrderAsync(long id)
+        public async Task<RunningOrder?> DeleteRunningOrderAsync(long id)
         {
             var oldRunningOrder = await _context.RunningOrders.FirstOrDefaultAsync(r => r.Id == id);
             if (oldRunningOrder == null) return null;// throw new NotFoundException("Running order not found");
@@ -616,7 +609,7 @@ namespace TreePorts.Repositories
             return oldRunningOrder;
         }
 
-        public async Task<RunningOrder> DeleteRunningOrderByOrderIdAsync(long id)
+        public async Task<RunningOrder?> DeleteRunningOrderByOrderIdAsync(long id)
         {
             var oldRunningOrder = await _context.RunningOrders.FirstOrDefaultAsync(r => r.OrderId == id);
             if (oldRunningOrder == null) return null; // throw new NotFoundException("Running order not found");
@@ -627,22 +620,22 @@ namespace TreePorts.Repositories
 
         /* QRCode For Order*/
         // Get By Order
-        public async Task<Qrcode> GetQrcodeByOrderIdAsync(long id)
+        public async Task<OrderQrcode?> GetQrcodeByOrderIdAsync(long id)
         {
-            var qRCode = await _context.Qrcodes.FirstOrDefaultAsync(qr => qr.OrderId == id);
+            var qRCode = await _context.OrderQrcodes.FirstOrDefaultAsync(qr => qr.OrderId == id);
             return qRCode;
         }
         // Insert
-        public async Task<Qrcode> InsertQrCodeAsync(Qrcode qrcode)
+        public async Task<OrderQrcode> InsertQrCodeAsync(OrderQrcode qrcode)
         {
             qrcode.CreationDate = DateTime.Now;
-            var qRCode = await _context.Qrcodes.AddAsync(qrcode);
+            var qRCode = await _context.OrderQrcodes.AddAsync(qrcode);
             return qRCode.Entity;
         }
         // Delete
-        public async Task<Qrcode> DeleteQrCodeAsync(long id)
+        public async Task<OrderQrcode?> DeleteQrCodeAsync(long id)
         {
-            var olderQRCode = await _context.Qrcodes.FirstOrDefaultAsync(qr => qr.Id == id);
+            var olderQRCode = await _context.OrderQrcodes.FirstOrDefaultAsync(qr => qr.Id == id);
             if (olderQRCode == null) return null; // throw new NotFoundException("QRCode Not Found not found");
             _context.Remove(olderQRCode);
             return olderQRCode;
@@ -655,12 +648,16 @@ namespace TreePorts.Repositories
 
         public IQueryable<Order> GetByQuerable(Expression<Func<Order, bool>> predicate)
         {
-            return _context.Orders.Include(o => o.OrderCurrentStatus).Include(o => o.Agent).Include(o => o.Qrcodes).Include(o => o.PaymentType)
-                .Include(o => o.ProductType)
-                .Include(o => o.UserAcceptedRequests).ThenInclude(u => u.User).ThenInclude(c => c.City)
-                .Include(o => o.UserAcceptedRequests).ThenInclude(u => u.User).ThenInclude(c => c.Country)
-                .Include(o => o.OrderItems)
-                .Include(o => o.UserAcceptedRequests).ThenInclude(u => u.User).ThenInclude(c => c.UserAccounts)
+            return _context.Orders
+                //.Include(o => o.OrderCurrentStatus)
+                //.Include(o => o.Agent)
+                //.Include(o => o.Qrcodes)
+                //.Include(o => o.PaymentType)
+                //.Include(o => o.ProductType)
+                //.Include(o => o.UserAcceptedRequests).ThenInclude(u => u.User).ThenInclude(c => c.City)
+                //.Include(o => o.UserAcceptedRequests).ThenInclude(u => u.User).ThenInclude(c => c.Country)
+                //.Include(o => o.OrderItems)
+                //.Include(o => o.UserAcceptedRequests).ThenInclude(u => u.User).ThenInclude(c => c.UserAccounts)
                 .Where(predicate)
                 ;
         }
@@ -668,11 +665,16 @@ namespace TreePorts.Repositories
         public IQueryable<Order> GetAllOrdersQuerable()
         {
 
-            return _context.Orders.Include(o => o.OrderCurrentStatus).Include(o => o.OrderStatusHistories).Include(o => o.Agent).ThenInclude(o => o.Country).Include(o => o.Agent).ThenInclude(o => o.City).Include(o => o.PaymentType).Include(o => o.Qrcodes)
-                .Include(o => o.ProductType).Include(o => o.OrderItems)
-                .Include(o => o.UserAcceptedRequests).ThenInclude(u => u.User).ThenInclude(c => c.City).Include(c => c.UserAcceptedRequests)
-                .ThenInclude(u => u.User).ThenInclude(c => c.Country)
-                   .Include(o => o.UserAcceptedRequests).ThenInclude(u => u.User).ThenInclude(c => c.UserAccounts)
+            return _context.Orders
+                //.Include(o => o.OrderCurrentStatus)
+                //.Include(o => o.OrderStatusHistories)
+                //.Include(o => o.Agent).ThenInclude(o => o.Country)
+                //.Include(o => o.Agent).ThenInclude(o => o.City)
+                //.Include(o => o.PaymentType).Include(o => o.Qrcodes)
+                //.Include(o => o.ProductType).Include(o => o.OrderItems)
+                //.Include(o => o.UserAcceptedRequests).ThenInclude(u => u.User).ThenInclude(c => c.City)
+                //.Include(c => c.UserAcceptedRequests).ThenInclude(u => u.User).ThenInclude(c => c.Country)
+                //.Include(o => o.UserAcceptedRequests).ThenInclude(u => u.User).ThenInclude(c => c.UserAccounts)
              ;
 
         }
@@ -702,17 +704,17 @@ namespace TreePorts.Repositories
                         select new OrderDetails()
                         {
                             Order = orders,
-                            ProductType = orders.ProductType,
-                            PaymentType = orders.PaymentType,
-                            OrderItems = orders.OrderItems,
-                            OrderCurrentStatus = orders.OrderCurrentStatus.FirstOrDefault(),
-                            OrderStatusHistories = orders.OrderStatusHistories,
-                            Captain = orders.UserAcceptedRequests.FirstOrDefault().User,
-                            DeliveryPayment = orders.UserAcceptedRequests.FirstOrDefault().User.UserPayments.FirstOrDefault(),
-                            QrCode = orders.Qrcodes.FirstOrDefault(),
-                            Agent = orders.Agent,
-                            Country = orders.Agent.Country,
-                            City = orders.Agent.City
+                            //ProductType = orders.ProductType,
+                            //PaymentType = orders.PaymentType,
+                            //OrderItems = orders.OrderItems,
+                            //OrderCurrentStatus = orders.OrderCurrentStatus.FirstOrDefault(),
+                            //OrderStatusHistories = orders.OrderStatusHistories,
+                            //Captain = orders.UserAcceptedRequests.FirstOrDefault().User,
+                            //DeliveryPayment = orders.UserAcceptedRequests.FirstOrDefault().User.UserPayments.FirstOrDefault(),
+                            //QrCode = orders.Qrcodes.FirstOrDefault(),
+                            //Agent = orders.Agent,
+                            //Country = orders.Agent.Country,
+                            //City = orders.Agent.City
                         };
 
             //var reuslt = query.Where(a => a.Agent.Id == 2).ToList();
@@ -720,12 +722,12 @@ namespace TreePorts.Repositories
         }
 
 
-        public IQueryable<Order> GetAllDriverOrders(long id)
+        public IQueryable<Order> GetAllCaptainOrdersByCaptainUserAccountId(string id)
         {
-            var acceptedOrders = _context.UserAcceptedRequests.Include(o => o.Order)
-                                              .ThenInclude(o => o.UserAcceptedRequests)
-
-                                    .Where(u => u.UserId == id).Select(AcceptedOrder => AcceptedOrder.Order);
+            var acceptedOrders = _context.CaptainUserAcceptedRequests
+                //.Include(o => o.Order).ThenInclude(o => o.UserAcceptedRequests)
+                .Where(u => u.CaptainUserAccountId == id)
+                .Select(AcceptedOrder => AcceptedOrder.OrderId);
 
             //var rejectedOrders = _context.UserRejectedRequests.Include(o => o.Order)
             //                             .ThenInclude(o => o.UserRejectedRequests)
@@ -735,7 +737,7 @@ namespace TreePorts.Repositories
             //                        .Where(u => u.UserId == id).Select(IgnoredOrders => IgnoredOrders.Order);
 
             //var allOrders = acceptedOrders.Union(rejectedOrders).Union(ignoredOrders).OrderByDescending(o => o.CreationDate);
-            var allOrders = acceptedOrders.OrderByDescending(o => o.CreationDate);
+            var allOrders =  _context.Orders.Where(o => acceptedOrders.Contains(o.Id) ).OrderByDescending(o => o.CreationDate);
 
             return allOrders;
         }
@@ -745,7 +747,7 @@ namespace TreePorts.Repositories
             return new object();
         }
 
-        public async Task<Order> UpdateOrderLocationAsync(Order order)
+        public async Task<Order?> UpdateOrderLocationAsync(Order order)
         {
             var oldOrder = await _context.Orders.FirstOrDefaultAsync(o => o.Id == order.Id);
             if (oldOrder == null) return null;
@@ -756,11 +758,11 @@ namespace TreePorts.Repositories
             oldOrder.PickupLocationLong = order.PickupLocationLong;
 
 
-            if (order.OrderItems != null && order.OrderItems.Count > 0)
+            /*if (order.OrderItems != null && order.OrderItems.Count > 0)
             {
                 _context.OrderItems.RemoveRange(oldOrder.OrderItems);
                 oldOrder.OrderItems = order.OrderItems;
-            }
+            }*/
 
 
             _context.Entry<Order>(oldOrder).State = EntityState.Modified;
@@ -799,18 +801,18 @@ namespace TreePorts.Repositories
 
 
 
-        public Object OrdersReportCount()
+        public object OrdersReportCount()
         {
             var totalOrders = _context.Orders.Count();
 
-            var newOrders = _context.OrderCurrentStatuses.Where(o => o.StatusTypeId == (long)OrderStatusTypes.New).Count();
-            var assignedOrders = _context.OrderCurrentStatuses.Where(o => o.StatusTypeId == (long)OrderStatusTypes.AssignedToCaptain).Count();
-            var deliveredOrders = _context.OrderCurrentStatuses.Where(o => o.StatusTypeId == (long)OrderStatusTypes.Delivered).Count();
-            var cancelledOrders = _context.OrderCurrentStatuses.Where(o => o.StatusTypeId == (long)OrderStatusTypes.Canceled).Count();
-            var pickedUpOrders = _context.OrderCurrentStatuses.Where(o => o.StatusTypeId == (long)OrderStatusTypes.PickedUp).Count();
-            var progressOrders = _context.OrderCurrentStatuses.Where(o => o.StatusTypeId == (long)OrderStatusTypes.Progress).Count();
-            var droppedOrders = _context.OrderCurrentStatuses.Where(o => o.StatusTypeId == (long)OrderStatusTypes.Dropped).Count();
-            var endOrders = _context.OrderCurrentStatuses.Where(o => o.StatusTypeId == (long)OrderStatusTypes.End).Count();
+            var newOrders = _context.OrderCurrentStatuses.Where(o => o.OrderStatusTypeId == (long)OrderStatusTypes.New).Count();
+            var assignedOrders = _context.OrderCurrentStatuses.Where(o => o.OrderStatusTypeId == (long)OrderStatusTypes.AssignedToCaptain).Count();
+            var deliveredOrders = _context.OrderCurrentStatuses.Where(o => o.OrderStatusTypeId == (long)OrderStatusTypes.Delivered).Count();
+            var cancelledOrders = _context.OrderCurrentStatuses.Where(o => o.OrderStatusTypeId == (long)OrderStatusTypes.Canceled).Count();
+            var pickedUpOrders = _context.OrderCurrentStatuses.Where(o => o.OrderStatusTypeId == (long)OrderStatusTypes.PickedUp).Count();
+            var progressOrders = _context.OrderCurrentStatuses.Where(o => o.OrderStatusTypeId == (long)OrderStatusTypes.Progress).Count();
+            var droppedOrders = _context.OrderCurrentStatuses.Where(o => o.OrderStatusTypeId == (long)OrderStatusTypes.Dropped).Count();
+            var endOrders = _context.OrderCurrentStatuses.Where(o => o.OrderStatusTypeId == (long)OrderStatusTypes.End).Count();
             return new { OrdersCount = totalOrders, DeliveredCount = deliveredOrders, CancelldCount = cancelledOrders, NewOrders = newOrders,
 
                 AssignedToCaptainCount = assignedOrders, PickedUpCount = pickedUpOrders, InProgressCount = progressOrders,
@@ -823,7 +825,7 @@ namespace TreePorts.Repositories
         /*
          * 
          */
-        public Object GetUserOrdersGroupedByDay(Expression<Func<OrderCurrentStatus, bool>> predicate)
+        public object GetUserOrdersGroupedByDay(Expression<Func<OrderCurrentStatus, bool>> predicate)
         {
             var result = _context.OrderCurrentStatuses.Where(predicate).GroupBy(p => p.CreationDate, p => p,
                 (key, g) => new { CreationDate = key, g = g.ToList() });
@@ -831,20 +833,22 @@ namespace TreePorts.Repositories
         }
         public IQueryable<CaptainUserAcceptedRequest> GetUserAcceptedRequestByQuerable(Expression<Func<CaptainUserAcceptedRequest, bool>> predicate)
         {
-            var result = _context.UserAcceptedRequests.Include(o => o.Order).ThenInclude(o => o.OrderCurrentStatus)
-                .Include(o => o.Order).ThenInclude(o => o.OrderItems).Include(o => o.Order)
-                .ThenInclude(o => o.PaymentType).Where(predicate);
+            var result = _context.CaptainUserAcceptedRequests
+                //.Include(o => o.Order).ThenInclude(o => o.OrderCurrentStatus)
+                //.Include(o => o.Order).ThenInclude(o => o.OrderItems).Include(o => o.Order)
+                //.ThenInclude(o => o.PaymentType)
+                .Where(predicate);
 
             return result;
 
         }
 
-        public async Task<Order> UpdateOrderCurrentStatusAsync(long orderId, long CurrentStatusId)
+        public async Task<Order?> UpdateOrderCurrentStatusAsync(long orderId, long CurrentStatusId)
         {
-            Order oldOrder = await _context.Orders.FirstOrDefaultAsync(o => o.Id == orderId);
+            var oldOrder = await _context.Orders.FirstOrDefaultAsync(o => o.Id == orderId);
             if (oldOrder == null) return null;
 
-            oldOrder.CurrentStatus = CurrentStatusId;
+            oldOrder.CurrentOrderStatusTypeId = CurrentStatusId;
             oldOrder.ModificationDate = DateTime.Now;
             _context.Entry<Order>(oldOrder).State = EntityState.Modified;
             return oldOrder;
@@ -960,7 +964,7 @@ namespace TreePorts.Repositories
             string query = selectColumnsQuery + orderQuery + bodyQuery + paginationQuery;
 
 
-            List<OrderFilterResponse> result = new List<OrderFilterResponse>();
+            List<OrderFilterResponse> result = new ();
             var conn = _context.Database.GetDbConnection();
             await conn.OpenAsync();
             var command = conn.CreateCommand();
@@ -971,18 +975,18 @@ namespace TreePorts.Repositories
 
                 long? orderID = null;
                 long? orderCurrentStatusId = null;
-                string agentName = null;
+                string? agentName = null;
                 long? productTypeID = null;
                 long? paymentTypeID = null;
-                string customerName = null;
-                string customerAddress = null;
-                string customerPhone = null;
+                string? customerName = null;
+                string? customerAddress = null;
+                string? customerPhone = null;
                 decimal? deliveryAmount = null;
-                string captainName = null;
+                string? captainName = null;
                 DateTime? orderCreationDate = null;
-                string durationToCurrentStatus = null;
+                string? durationToCurrentStatus = null;
                 DateTime? orderStatusHistoryCreationDate = null;
-                string durationToStatusHistory = null;
+                string? durationToStatusHistory = null;
 
 
                 if (!reader.IsDBNull(reader.GetOrdinal("OrderID")))
@@ -1027,23 +1031,23 @@ namespace TreePorts.Repositories
                 if (!reader.IsDBNull(reader.GetOrdinal("DurationToStatusHistory")))
                     durationToStatusHistory = reader.GetString(reader.GetOrdinal("DurationToStatusHistory"));
 
-                OrderFilterResponse data = new OrderFilterResponse()
-                {
-                    OrderId = orderID,
-                    OrderCurrentStatus = orderCurrentStatusId,
-                    AgentName = agentName,
-                    ProductTypeId = productTypeID,
-                    PaymentTypeId = paymentTypeID,
-                    CustomerName = customerName,
-                    CustomerAddress = customerAddress,
-                    CustomerPhone = customerPhone,
-                    DeliveryAmount = deliveryAmount,
-                    CaptainName = captainName,
-                    OrderCreationDate = orderCreationDate,
-                    DurationToCurrentStatus = durationToCurrentStatus,
-                    OrderStatusHistoryCreationDate = orderStatusHistoryCreationDate,
-                    DurationToStatusHistory = durationToStatusHistory
-                };
+                OrderFilterResponse data = new (
+                
+                    OrderId : orderID,
+                    OrderCurrentStatus : orderCurrentStatusId,
+                    AgentName : agentName,
+                    ProductTypeId : productTypeID,
+                    PaymentTypeId : paymentTypeID,
+                    CustomerName : customerName,
+                    CustomerAddress : customerAddress,
+                    CustomerPhone : customerPhone,
+                    DeliveryAmount : deliveryAmount,
+                    CaptainName : captainName,
+                    OrderCreationDate : orderCreationDate,
+                    DurationToCurrentStatus : durationToCurrentStatus,
+                    OrderStatusHistoryCreationDate : orderStatusHistoryCreationDate,
+                    DurationToStatusHistory : durationToStatusHistory
+                );
 
                 result.Add(data);
 
@@ -1185,7 +1189,7 @@ namespace TreePorts.Repositories
             string query = selectColumnsQuery + orderQuery + bodyQuery;
 
 
-            List<OrderFilterResponse> result = new List<OrderFilterResponse>();
+            List<OrderFilterResponse> result = new();
             var conn = _context.Database.GetDbConnection();
             await conn.OpenAsync();
             var command = conn.CreateCommand();
@@ -1196,16 +1200,16 @@ namespace TreePorts.Repositories
 
                 long? orderID = null;
                 long? orderCurrentStatusId = null;
-                string agentName = null;
+                string? agentName = null;
                 long? productTypeID = null;
                 long? paymentTypeID = null;
-                string customerName = null;
-                string customerAddress = null;
-                string customerPhone = null;
+                string? customerName = null;
+                string? customerAddress = null;
+                string? customerPhone = null;
                 decimal? deliveryAmount = null;
-                string captainName = null;
+                string? captainName = null;
                 DateTime? orderCreationDate = null;
-                string durationToCurrentStatus = null;
+                string? durationToCurrentStatus = null;
                 // DateTime? orderStatusHistoryCreationDate = null;
                 // string durationToStatusHistory = null;
 
@@ -1252,23 +1256,23 @@ namespace TreePorts.Repositories
                 // if (!reader.IsDBNull(reader.GetOrdinal("DurationToStatusHistory")))
                 //     durationToStatusHistory = reader.GetString(reader.GetOrdinal("DurationToStatusHistory"));
                 //
-                OrderFilterResponse data = new OrderFilterResponse()
-                {
-                    OrderId = orderID,
-                    OrderCurrentStatus = orderCurrentStatusId,
-                    AgentName = agentName,
-                    ProductTypeId = productTypeID,
-                    PaymentTypeId = paymentTypeID,
-                    CustomerName = customerName,
-                    CustomerAddress = customerAddress,
-                    CustomerPhone = customerPhone,
-                    DeliveryAmount = deliveryAmount,
-                    CaptainName = captainName,
-                    OrderCreationDate = orderCreationDate,
-                    DurationToCurrentStatus = durationToCurrentStatus,
-                    // OrderStatusHistoryCreationDate = orderStatusHistoryCreationDate,
-                    // DurationToStatusHistory = durationToStatusHistory
-                };
+                OrderFilterResponse data = new (
+                
+                    OrderId : orderID,
+                    OrderCurrentStatus : orderCurrentStatusId,
+                    AgentName : agentName,
+                    ProductTypeId : productTypeID,
+                    PaymentTypeId : paymentTypeID,
+                    CustomerName : customerName,
+                    CustomerAddress : customerAddress,
+                    CustomerPhone : customerPhone,
+                    DeliveryAmount : deliveryAmount,
+                    CaptainName : captainName,
+                    OrderCreationDate : orderCreationDate,
+                    DurationToCurrentStatus : durationToCurrentStatus,
+                    OrderStatusHistoryCreationDate: null,
+                    DurationToStatusHistory :null
+                );
 
                 result.Add(data);
 
@@ -1291,7 +1295,7 @@ namespace TreePorts.Repositories
         }
 
 
-        public async Task<OrderAssignment> DeleteOrderAssignmentAsync(long id) 
+        public async Task<OrderAssignment?> DeleteOrderAssignmentAsync(long id) 
         {
             var oldOrderAssigne = await _context.OrderAssignments.FirstOrDefaultAsync(a => a.Id == id);
             if (oldOrderAssigne == null) return null;

@@ -26,6 +26,7 @@ using QRCodeDecoderLibrary;
 using System.Linq.Dynamic.Core;
 using Nancy.Json;
 using Microsoft.Extensions.Caching.Memory;
+using TreePorts.DTO.Records;
 
 namespace TreePorts.Utilities
 {
@@ -83,16 +84,16 @@ namespace TreePorts.Utilities
 		}
 
 
-		public static string GenerateToken(long userId, string fullname, string userType, DateTime? expireDate)
+		public static string GenerateToken(string userId, string fullname, string userType, DateTime? expireDate)
 		{
 			var claims = new[]
 			{
-				new Claim(ClaimTypes.NameIdentifier,userId.ToString()),
+				new Claim(ClaimTypes.NameIdentifier,userId),
 				new Claim(ClaimTypes.Name,fullname),
 				new Claim("UserType",userType)
 			};
 
-			var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("Sender From Aion Eternity Company"));
+			var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("Sender api From Aion eight Company"));
 			var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
 			SecurityTokenDescriptor tokenDescripter;
 			if (expireDate != null)
@@ -259,7 +260,7 @@ namespace TreePorts.Utilities
 		}
 
 
-		public static void getRequestUserIdFromToken(HttpContext context, out long userId, out string userType)
+		public static void getRequestUserIdFromToken(HttpContext context, out string userId, out string userType)
 		{
 			// Reading the AuthHeader which is signed with JWT
 			string authHeader = context.Request.Headers["Authorization"];
@@ -267,7 +268,7 @@ namespace TreePorts.Utilities
 
 			if (authHeader == null) 
 			{
-				userId = -1;
+				userId = "";
 				userType = "";
 				return;
 			}
@@ -277,9 +278,9 @@ namespace TreePorts.Utilities
 			var handler = new JwtSecurityTokenHandler();
 			var jsonToken = handler.ReadToken(token);
 			var securityToken = handler.ReadToken(token) as JwtSecurityToken;
-			var test = securityToken.Claims;
-			userId = long.Parse(securityToken.Claims.FirstOrDefault(claim => claim.Type == "nameid").Value);
-			userType = securityToken.Claims.FirstOrDefault(claim => claim.Type == "UserType").Value;
+			var test = securityToken?.Claims;
+			userId = securityToken?.Claims?.FirstOrDefault(claim => claim.Type == "userId")?.Value ?? "";
+			userType = securityToken?.Claims?.FirstOrDefault(claim => claim.Type == "UserType")?.Value ?? "";
 			//if (userId == null || userId == "") return -1;
 
 			//return long.Parse(userId);
@@ -540,22 +541,22 @@ Message : {content} ";
 		//}
 
 		// Create QR Code
-		public static Qrcode CreateQRCode(long userId, long orderId)
+		public static OrderQrcode CreateQRCode(string captainUserAccountId, long orderId)
 		{
 
 			QRCodeGenerator qrGenerator = new QRCodeGenerator();
 			StringBuilder builder = new StringBuilder();
-			builder.Append(userId).Append(":").Append(orderId);
+			builder.Append(captainUserAccountId).Append(":").Append(orderId);
 			//	string data = "{" + userId + ":" +orderId +"}";			
 			QRCodeData qrCodeData = qrGenerator.CreateQrCode(builder.ToString(),
 				QRCodeGenerator.ECCLevel.Q);
 			QRCode qrCode = new QRCode(qrCodeData);
 			Bitmap qrCodeImage = qrCode.GetGraphic(20);
 			var codeInBytes = BitmapToBytes(qrCodeImage);
-			var qRCode = new Qrcode
+			var qRCode = new OrderQrcode
 			{
 				Code = codeInBytes,
-				UserId = userId,
+				CaptainUserAccountId = captainUserAccountId,
 				OrderId = orderId
 			};
 			qRCode.QrCodeUrl = ConvertImgToString(qRCode.Code);
@@ -1557,17 +1558,17 @@ Message : {content} ";
 		}
 
 
-		public static async Task<bool> RegisterAdminToSupportServiceServer(AdminUser admin)
+		public static async Task<bool> RegisterAdminToSupportServiceServer(AdminUserResponse admin)
 		{
 			
 			string url = $"{SupportServerURL}/api/v1/admins";
 			var bodyObject = new
 			{
-				name = admin.Fullname,
-				email = admin.Email,
-				mobile = admin.Mobile,
+				name = $"{admin.User.FirstName} {admin.User.LastName}",
+				email = admin.UserAccount.Email,
+				mobile = admin.User.Mobile,
 				//password = admin.Password,
-				reference_id = admin.Id.ToString()
+				reference_id = admin.User.Id.ToString()
 			};
 
 			var body = ConvertToJson(bodyObject);
@@ -1660,8 +1661,8 @@ Message : {content} ";
 				targetOrder.AgentId = order.AgentId;
 			if (order?.CustomerName != "")
 				targetOrder.CustomerName = order.CustomerName;
-			if (order?.Details != "")
-				targetOrder.Details = order.Details;
+			if (order?.MoreDetails != "")
+				targetOrder.MoreDetails = order.MoreDetails;
 			if (order?.Description != "")
 				targetOrder.Description = order.Description;
 			if (order?.CustomerAddress != "")

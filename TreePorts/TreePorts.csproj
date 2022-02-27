@@ -4,6 +4,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+	
   </PropertyGroup>
 
   
@@ -42,16 +43,27 @@
 		<PackageReference Include="SendGrid" Version="9.22.0" />
 		<PackageReference Include="System.Linq.Dynamic.Core" Version="1.2.8" />
 	</ItemGroup>
-	
-	
+
+	<!--
+    System.Interactive.Async contains IAsyncEnumerable<T> that conflicts with .NET Core version
+    Give assembly an alias so .NET Core version can be referenced in C#
+  -->
+	<!--
+	<Target Name="ChangeAliasesOfReactiveExtensions" BeforeTargets="FindReferenceAssembliesForReferences;ResolveReferences">
+		<ItemGroup>
+			<ReferencePath Condition="'%(FileName)' == 'System.Interactive.Async'">
+				<Aliases>ix</Aliases>
+			</ReferencePath>
+		</ItemGroup>
+	</Target>
+	-->
 
   <ItemGroup>
+    <Folder Include="Assets\Images\" />
+    <Folder Include="Assets\Apps\" />
     <Folder Include="DTO\ReturnDTO\" />
-    <Folder Include="Interfaces\Repositories\" />
     <Folder Include="Middlewares\" />
     <Folder Include="Hubs\" />
-    <Folder Include="Utilities\" />
-    <Folder Include="Repositories\" />
     <Folder Include="Services\Background\" />
   </ItemGroup>
 

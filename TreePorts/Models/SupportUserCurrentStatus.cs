@@ -6,11 +6,13 @@ namespace TreePorts.Models
     public partial class SupportUserCurrentStatus
     {
         public long Id { get; set; }
-        public long? SupportUserId { get; set; }
+        public string? SupportUserAccountId { get; set; }
         public long? StatusTypeId { get; set; }
         public bool? IsCurrent { get; set; }
-        public long? CreatedBy { get; set; }
-        public long? ModifiedBy { get; set; }
+        public string? CreatedBy { get; set; }
+        public long? CreatedByType { get; set; }
+        public string? ModifiedBy { get; set; }
+        public long? ModifiedByType { get; set; }
         public DateTime? CreationDate { get; set; }
         public DateTime? ModificationDate { get; set; }
     }

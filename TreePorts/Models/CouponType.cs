@@ -5,14 +5,14 @@ namespace TreePorts.Models
 {
     public partial class CouponType
     {
-        public CouponType()
-        {
-            Coupons = new HashSet<Coupon>();
-        }
-
         public long Id { get; set; }
-        public string Type { get; set; }
-
-        public virtual ICollection<Coupon> Coupons { get; set; }
+        public string? Type { get; set; }
+        public string? ArabicType { get; set; }
+        public string? CreatedBy { get; set; }
+        public long? CreatedByType { get; set; }
+        public string? ModifiedBy { get; set; }
+        public long? ModifiedByType { get; set; }
+        public DateTime? CreationDate { get; set; }
+        public DateTime? ModificationDate { get; set; }
     }
 }

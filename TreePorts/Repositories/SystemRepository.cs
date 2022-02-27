@@ -1,12 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using TreePorts.DTO;
-using TreePorts.Interfaces.Repositories;
-using TreePorts.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using TreePorts.DTO;
 using System.Linq.Expressions;
-using System.Threading.Tasks;
 
 namespace TreePorts.Repositories
 {
@@ -19,7 +12,7 @@ namespace TreePorts.Repositories
             _context = context;
         }
 
-        public async Task<SystemSetting> DeleteSystemSettingAsync(long id)
+        public async Task<SystemSetting?> DeleteSystemSettingAsync(long id)
         {
             var settings = await _context.SystemSettings.FirstOrDefaultAsync(c => c.Id == id);
             if (settings == null) return null;
@@ -34,9 +27,9 @@ namespace TreePorts.Repositories
             return await _context.SystemSettings.ToListAsync();
         }
 
-        public async Task<List<CaptainUserIgnoredPenalty>> GetUserIgnoredPenaltiesByUserIdAsync(long userId)
+        public async Task<List<CaptainUserIgnoredPenalty>?> GetCaptainUserIgnoredPenaltiesByCaptainUserAccountIdAsync(string captainUserAccountId)
         {
-            return await _context.UserIgnoredPenalties.Where(u => u.UserId == userId).ToListAsync();
+            return await _context.CaptainUserIgnoredPenalties.Where(u => u.CaptainUserAccountId == captainUserAccountId).ToListAsync();
         }
 
         public async Task<List<SystemSetting>> GetSystemSettingsByAsync(Expression<Func<SystemSetting, bool>> predicate)
@@ -44,29 +37,29 @@ namespace TreePorts.Repositories
             return await _context.SystemSettings.Where(predicate).ToListAsync();
         }
 
-        public async Task<SystemSetting> GetSystemSettingByIdAsync(long id)
+        public async Task<SystemSetting?> GetSystemSettingByIdAsync(long id)
         {
              return await _context.SystemSettings.FirstOrDefaultAsync(c => c.Id == id);
         }
 
-        public async Task<SystemSetting> GetCurrentSystemSettingAsync()
+        public async Task<SystemSetting?> GetCurrentSystemSettingAsync()
         {
             return await _context.SystemSettings.FirstOrDefaultAsync(s => s.IsCurrent == true && s.IsDeleted == false );
         }
 
-        public async Task<CaptainUserIgnoredPenalty> GetUserIgnoredPenaltyByUserIdAsync(long userId)
+        public async Task<CaptainUserIgnoredPenalty?> GetCaptainUserIgnoredPenaltyByCaptainUserAccountIdAsync(string captainUserAccountId)
         {
-            return await _context.UserIgnoredPenalties.FirstOrDefaultAsync(u => 
-            u.UserId == userId && 
+            return await _context.CaptainUserIgnoredPenalties.FirstOrDefaultAsync(u => 
+            u.CaptainUserAccountId == captainUserAccountId && 
             (u.PenaltyStatusTypeId == (long) PenaltyStatusTypes.New ));
         }
 
-        public async Task<CaptainUserRejectPenalty> GetUserRejectedPenaltyByUserIdAsync(long userId)
+       /* public async Task<CaptainUserRejectPenalty> GetCaptainUserRejectedPenaltyByCaptainUserAccountIdAsync(long captainUserAccountId)
         {
-            return await _context.UserRejectPenalties.FirstOrDefaultAsync(u => 
-            u.UserId == userId &&
+            return await _context.CaptainUserRejectPenalties.FirstOrDefaultAsync(u => 
+            u.UserId == captainUserAccountId &&
             (u.PenaltyStatusTypeId == (long)PenaltyStatusTypes.New ));
-        }
+        }*/
 
         public async Task<List<IgnorPerType>> GetIgnorPerTypesAsync()
         {
@@ -83,15 +76,15 @@ namespace TreePorts.Repositories
             return await _context.PenaltyStatusTypes.ToListAsync();
         }
 
-        public async Task<List<RejectPerType>> GetRejectPerTypesAsync()
+        /*public async Task<List<RejectPerType>> GetRejectPerTypesAsync()
         {
             return await _context.RejectPerTypes.ToListAsync();
-        }
+        }*/
 
-        public async Task<List<CaptainUserRejectPenalty>> GetUserRejectedPenaltiesByUserIdAsync(long userId)
+        /*public async Task<List<CaptainUserRejectPenalty>> GetCaptainUserRejectedPenaltiesByCaptainUserAccountIdAsync(string captainUserAccountId)
         {
-            return await _context.UserRejectPenalties.Where(u => u.UserId == userId).ToListAsync();
-        }
+            return await _context.CaptainUserRejectPenalties.Where(u => u.CaptainUserAccountId == captainUserAccountId).ToListAsync();
+        }*/
 
         public async Task<SystemSetting> InsertSystemSettingAsync(SystemSetting systemSetting)
         {
@@ -112,41 +105,42 @@ namespace TreePorts.Repositories
 
         }
 
-        public async Task<CaptainUserIgnoredPenalty> InsertUserIgnoredPenaltyAsync(long userId)
+        public async Task<CaptainUserIgnoredPenalty?> InsertCaptainUserIgnoredPenaltyAsync(string captainUserAccountId)
         {
 
             var system = await this.GetCurrentSystemSettingAsync();
-            CaptainUserIgnoredPenalty penalty = new CaptainUserIgnoredPenalty()
+            CaptainUserIgnoredPenalty penalty = new ()
             {
-                UserId = userId,
-                SystemSettingId = system.Id,
+                CaptainUserAccountId = captainUserAccountId,
+                SystemSettingId = system?.Id,
                 PenaltyStatusTypeId =(long) PenaltyStatusTypes.New,
                 CreationDate = DateTime.Now
             };
 
-            var result = await _context.UserIgnoredPenalties.AddAsync(penalty);
+            var result = await _context.CaptainUserIgnoredPenalties.AddAsync(penalty);
             return result.Entity;
 
         }
 
-        public async Task<CaptainUserRejectPenalty> InsertUserRejectedPenaltyAsync(long userId)
+       /* public async Task<CaptainUserRejectPenalty> InsertCaptainUserRejectedPenaltyAsync(string captainUserAccountId)
         {
             var system = await this.GetCurrentSystemSettingAsync();
-            CaptainUserRejectPenalty penalty = new CaptainUserRejectPenalty()
+            CaptainUserRejectPenalty penalty = new ()
             {
-                UserId = userId,
-                SystemSettingId = system.Id,
+                CaptainUserAccountId = captainUserAccountId,
+                SystemSettingId = system?.Id,
                 PenaltyStatusTypeId = (long)PenaltyStatusTypes.New,
                 CreationDate = DateTime.Now
             };
 
-            var result = await _context.UserRejectPenalties.AddAsync(penalty);
+            var result = await _context.CaptainUserRejectPenalties.AddAsync(penalty);
             return result.Entity;
-        }
+        }*/
 
-        public async Task<CaptainUserIgnoredPenalty> UpdateUserIgnoredPenaltyAsync(long userId,long penaltyStatusType)
+        public async Task<CaptainUserIgnoredPenalty?> UpdateCaptainUserIgnoredPenaltyAsync(string captainUserAccountId, long penaltyStatusType)
         {
-            var oldPenalty = await _context.UserIgnoredPenalties.FirstOrDefaultAsync(u => u.UserId == userId && u.PenaltyStatusTypeId != (long)PenaltyStatusTypes.End );
+            var oldPenalty = await _context.CaptainUserIgnoredPenalties.FirstOrDefaultAsync(u => u.CaptainUserAccountId == captainUserAccountId && u.PenaltyStatusTypeId != (long)PenaltyStatusTypes.End );
+            if (oldPenalty == null) return null;
             oldPenalty.PenaltyStatusTypeId = penaltyStatusType;
 
             _context.Entry<CaptainUserIgnoredPenalty>(oldPenalty).State = EntityState.Modified;
@@ -154,14 +148,16 @@ namespace TreePorts.Repositories
 
         }
 
-        public async Task<CaptainUserRejectPenalty> UpdateUserRejectedPenaltyAsync(long userId, long penaltyStatusType)
+        /*public async Task<CaptainUserRejectPenalty?> UpdateCaptainUserRejectedPenaltyAsync(string captainUserAccountId, long penaltyStatusType)
         {
-            var oldPenalty = await _context.UserRejectPenalties.FirstOrDefaultAsync(u => u.UserId == userId && u.PenaltyStatusTypeId != (long)PenaltyStatusTypes.End);
+            var oldPenalty = await _context.CaptainUserRejectPenalties.FirstOrDefaultAsync(u => u.CaptainUserAccountId == captainUserAccountId && u.PenaltyStatusTypeId != (long)PenaltyStatusTypes.End);
+            if (oldPenalty == null) return null;
+
             oldPenalty.PenaltyStatusTypeId = penaltyStatusType;
 
             _context.Entry<CaptainUserRejectPenalty>(oldPenalty).State = EntityState.Modified;
             return oldPenalty;
-        }
+        }*/
 
         public async Task<List<Shift>> GetShiftsAsync()
         {
@@ -169,7 +165,7 @@ namespace TreePorts.Repositories
         
         }
 
-        public async Task<Shift> GetShiftByIdAsync(long id)
+        public async Task<Shift?> GetShiftByIdAsync(long id)
         {
             return await _context.Shifts.FirstOrDefaultAsync(s => s.Id == id);
         }
@@ -191,7 +187,7 @@ namespace TreePorts.Repositories
             return insertResult.Entity;
         }
 
-        public async Task<Shift> UpdateShiftAsync(Shift shift)
+        public async Task<Shift?> UpdateShiftAsync(Shift shift)
         {
             var oldShift = await _context.Shifts.FirstOrDefaultAsync(u => u.Id == shift.Id);
             if (oldShift == null) return null;
@@ -210,7 +206,7 @@ namespace TreePorts.Repositories
             return oldShift;
         }
 
-        public async Task<Shift> DeleteShiftAsync(long id)
+        public async Task<Shift?> DeleteShiftAsync(long id)
         {
             var shift = await _context.Shifts.FirstOrDefaultAsync(c => c.Id == id);
             if (shift == null) return null;
@@ -225,7 +221,7 @@ namespace TreePorts.Repositories
             return await _context.Vehicles.ToListAsync();
         }
 
-        public async Task<Vehicle> GetVehicleByIdAsync(long id)
+        public async Task<Vehicle?> GetVehicleByIdAsync(long id)
         {
             return await _context.Vehicles.FirstOrDefaultAsync( v => v.Id == id);
         }
@@ -240,7 +236,7 @@ namespace TreePorts.Repositories
             return await _context.BoxTypes.ToListAsync();
         }
 
-        public async Task<BoxType> GetBoxTypeByIdAsync(long id)
+        public async Task<BoxType?> GetBoxTypeByIdAsync(long id)
         {
             return await _context.BoxTypes.FirstOrDefaultAsync( b => b.Id == id);
         }
@@ -255,7 +251,7 @@ namespace TreePorts.Repositories
             return await _context.ContactMessages.ToListAsync();
         }
 
-        public async Task<ContactMessage> GetContactMessageByIdAsync(long id)
+        public async Task<ContactMessage?> GetContactMessageByIdAsync(long id)
         {
             return await _context.ContactMessages.FirstOrDefaultAsync(b => b.Id == id);
         }
@@ -273,7 +269,7 @@ namespace TreePorts.Repositories
             return insertResult.Entity;
         }
 
-        public async Task<ContactMessage> UpdateContactMessageAsync(ContactMessage contactMessage)
+        public async Task<ContactMessage?> UpdateContactMessageAsync(ContactMessage contactMessage)
         {
             var oldMessage = await _context.ContactMessages.FirstOrDefaultAsync(c => c.Id == contactMessage.Id);
             if (oldMessage == null) return null;
@@ -291,7 +287,7 @@ namespace TreePorts.Repositories
             return oldMessage;
         }
 
-        public async Task<ContactMessage> DeleteContactMessageAsync(long id)
+        public async Task<ContactMessage?> DeleteContactMessageAsync(long id)
         {
             var oldMessage = await _context.ContactMessages.FirstOrDefaultAsync(c => c.Id == id);
             if (oldMessage == null) return null;
@@ -306,7 +302,7 @@ namespace TreePorts.Repositories
             return await _context.PromotionTypes.ToListAsync();
         }
 
-        public async Task<PromotionType> GetPromotionTypeByIdAsync(long id)
+        public async Task<PromotionType?> GetPromotionTypeByIdAsync(long id)
         {
             return await _context.PromotionTypes.FirstOrDefaultAsync( p => p.Id == id);
         }
@@ -323,7 +319,7 @@ namespace TreePorts.Repositories
             return insertResult.Entity;
         }
 
-        public async Task<PromotionType> UpdatePromotionTypeAsync(PromotionType promotionType)
+        public async Task<PromotionType?> UpdatePromotionTypeAsync(PromotionType promotionType)
         {
             var oldPromotionType = await _context.PromotionTypes.FirstOrDefaultAsync(p => p.Id == promotionType.Id);
             if (oldPromotionType == null) return null;
@@ -338,7 +334,7 @@ namespace TreePorts.Repositories
 
         }
 
-        public async Task<PromotionType> DeletePromotionTypeAsync(long id)
+        public async Task<PromotionType?> DeletePromotionTypeAsync(long id)
         {
             var oldPromotionType = await _context.PromotionTypes.FirstOrDefaultAsync(p => p.Id == id);
             if (oldPromotionType == null) return null;
@@ -353,7 +349,7 @@ namespace TreePorts.Repositories
             return await _context.Promotions.ToListAsync();
         }
 
-        public async Task<Promotion> GetPromotionByIdAsync(long id)
+        public async Task<Promotion?> GetPromotionByIdAsync(long id)
         {
             return await _context.Promotions.FirstOrDefaultAsync(p => p.Id == id);
         }
@@ -375,12 +371,12 @@ namespace TreePorts.Repositories
             return insertResult.Entity;
         }
 
-        public async Task<Promotion> UpdatePromotionAsync(Promotion promotion)
+        public async Task<Promotion?> UpdatePromotionAsync(Promotion promotion)
         {
             var oldPromotion = await _context.Promotions.FirstOrDefaultAsync(p => p.Id == promotion.Id);
             if (oldPromotion == null) return null;
 
-            oldPromotion.TypeId = promotion.TypeId;
+            oldPromotion.PromotionTypeId = promotion.PromotionTypeId;
             oldPromotion.Name = promotion.Name;
             oldPromotion.Value = promotion.Value;
             oldPromotion.Image = promotion.Image;
@@ -394,7 +390,7 @@ namespace TreePorts.Repositories
             return oldPromotion;
         }
 
-        public async Task<Promotion> DeletePromotionAsync(long id)
+        public async Task<Promotion?> DeletePromotionAsync(long id)
         {
             var oldPromotion = await _context.Promotions.FirstOrDefaultAsync(p => p.Id == id);
             if (oldPromotion == null) return null;
@@ -408,7 +404,7 @@ namespace TreePorts.Repositories
             return await _context.AndroidVersions.ToListAsync();
         }
 
-        public async Task<AndroidVersion> GetAndroidVersionByIdAsync(long id)
+        public async Task<AndroidVersion?> GetAndroidVersionByIdAsync(long id)
         {
             return await _context.AndroidVersions.FirstOrDefaultAsync(a => a.Id == id);
         }
@@ -418,7 +414,7 @@ namespace TreePorts.Repositories
             return await _context.AndroidVersions.Skip(skip).Take(take).ToListAsync();
         }
 
-        public async Task<AndroidVersion> GetCurrentAndroidVersionAsync() 
+        public async Task<AndroidVersion?> GetCurrentAndroidVersionAsync() 
         {
             return await _context.AndroidVersions.FirstOrDefaultAsync(a => a.IsCurrent == true);
         }
@@ -430,7 +426,7 @@ namespace TreePorts.Repositories
 
         public async Task<AndroidVersion> InsertAndroidVersionAsync(AndroidVersion androidVersion)
         {
-            if ((bool)androidVersion?.IsCurrent) {
+            if (androidVersion?.IsCurrent?? false) {
                 var oldVersion = await _context.AndroidVersions.FirstOrDefaultAsync(a => a.IsCurrent == true);
                 if (oldVersion != null)
                 {
@@ -444,19 +440,19 @@ namespace TreePorts.Repositories
 
             
 
-            androidVersion.ModifiedBy = 0;
+            
             androidVersion.CreationDate = DateTime.Now;
             var insertResult = await _context.AndroidVersions.AddAsync(androidVersion);
             return insertResult.Entity;
         }
 
-        public async Task<AndroidVersion> UpdateAndroidVersionAsync(AndroidVersion androidVersion)
+        public async Task<AndroidVersion?> UpdateAndroidVersionAsync(AndroidVersion androidVersion)
         {
 
             var oldVersion = await _context.AndroidVersions.FirstOrDefaultAsync(a => a.Id == androidVersion.Id);
             if (oldVersion == null) return null;
 
-            if ((bool)androidVersion?.IsCurrent)
+            if (androidVersion?.IsCurrent?? false)
             {
                 var oldCurrentVersion = await _context.AndroidVersions.FirstOrDefaultAsync(a => a.IsCurrent == true);
                 if (oldCurrentVersion != null)
@@ -470,20 +466,20 @@ namespace TreePorts.Repositories
             }
 
 
-            oldVersion.Name = androidVersion.Name;
-            oldVersion.Version = androidVersion.Version;
-            oldVersion.FileName = androidVersion.FileName;
-            oldVersion.FileExtension = androidVersion.FileExtension;
-            oldVersion.FilePath = androidVersion.FilePath;
-            oldVersion.Description = androidVersion.Description;
+            oldVersion.Name = androidVersion?.Name;
+            oldVersion.Version = androidVersion?.Version;
+            oldVersion.FileName = androidVersion?.FileName;
+            oldVersion.FileExtension = androidVersion?.FileExtension;
+            oldVersion.FilePath = androidVersion?.FilePath;
+            oldVersion.Description = androidVersion?.Description;
             oldVersion.ModificationDate = DateTime.Now;
-            oldVersion.ModifiedBy = androidVersion.ModifiedBy;
-            oldVersion.IsCurrent = androidVersion.IsCurrent;
+            oldVersion.ModifiedBy = androidVersion?.ModifiedBy;
+            oldVersion.IsCurrent = androidVersion?.IsCurrent;
             _context.Entry<AndroidVersion>(oldVersion).State = EntityState.Modified;
             return oldVersion;
         }
 
-        public async Task<AndroidVersion> DeleteAndroidVersionAsync(long id)
+        public async Task<AndroidVersion?> DeleteAndroidVersionAsync(long id)
         {
             var oldVersion = await _context.AndroidVersions.FirstOrDefaultAsync(a => a.Id == id);
             if (oldVersion == null) return null;

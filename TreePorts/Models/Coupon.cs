@@ -5,6 +5,12 @@ namespace TreePorts.Models
 {
     public partial class Coupon
     {
+        public Coupon()
+        {
+            CouponAssigns = new HashSet<CouponAssign>();
+            CouponUsages = new HashSet<CouponUsage>();
+        }
+
         public long Id { get; set; }
         public string? CouponName { get; set; }
         public double? DiscountPercent { get; set; }
@@ -17,5 +23,9 @@ namespace TreePorts.Models
         public long? ModifiedByType { get; set; }
         public DateTime? CreationDate { get; set; }
         public DateTime? ModificationDate { get; set; }
+
+        public virtual CouponType? CouponType { get; set; }
+        public virtual ICollection<CouponAssign> CouponAssigns { get; set; }
+        public virtual ICollection<CouponUsage> CouponUsages { get; set; }
     }
 }

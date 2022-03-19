@@ -12,9 +12,9 @@ namespace TreePorts.Repositories
             _context = context;
         }
 
-        public async Task<SystemSetting?> DeleteSystemSettingAsync(long id)
+        public async Task<SystemSetting?> DeleteSystemSettingAsync(long id, CancellationToken cancellationToken)
         {
-            var settings = await _context.SystemSettings.FirstOrDefaultAsync(c => c.Id == id);
+            var settings = await _context.SystemSettings.FirstOrDefaultAsync(c => c.Id == id,cancellationToken);
             if (settings == null) return null;
 
             settings.IsDeleted = true;
@@ -22,36 +22,36 @@ namespace TreePorts.Repositories
             return settings;
         }
 
-        public async Task<List<SystemSetting>> GetSystemSettingsAsync()
+        public async Task<List<SystemSetting>> GetSystemSettingsAsync(CancellationToken cancellationToken)
         {
-            return await _context.SystemSettings.ToListAsync();
+            return await _context.SystemSettings.ToListAsync(cancellationToken);
         }
 
-        public async Task<List<CaptainUserIgnoredPenalty>?> GetCaptainUserIgnoredPenaltiesByCaptainUserAccountIdAsync(string captainUserAccountId)
+        public async Task<List<CaptainUserIgnoredPenalty>?> GetCaptainUserIgnoredPenaltiesByCaptainUserAccountIdAsync(string captainUserAccountId, CancellationToken cancellationToken)
         {
-            return await _context.CaptainUserIgnoredPenalties.Where(u => u.CaptainUserAccountId == captainUserAccountId).ToListAsync();
+            return await _context.CaptainUserIgnoredPenalties.Where(u => u.CaptainUserAccountId == captainUserAccountId).ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SystemSetting>> GetSystemSettingsByAsync(Expression<Func<SystemSetting, bool>> predicate)
+        public async Task<List<SystemSetting>> GetSystemSettingsByAsync(Expression<Func<SystemSetting, bool>> predicate, CancellationToken cancellationToken)
         {
-            return await _context.SystemSettings.Where(predicate).ToListAsync();
+            return await _context.SystemSettings.Where(predicate).ToListAsync(cancellationToken);
         }
 
-        public async Task<SystemSetting?> GetSystemSettingByIdAsync(long id)
+        public async Task<SystemSetting?> GetSystemSettingByIdAsync(long id, CancellationToken cancellationToken)
         {
-             return await _context.SystemSettings.FirstOrDefaultAsync(c => c.Id == id);
+             return await _context.SystemSettings.FirstOrDefaultAsync(c => c.Id == id,cancellationToken);
         }
 
-        public async Task<SystemSetting?> GetCurrentSystemSettingAsync()
+        public async Task<SystemSetting?> GetCurrentSystemSettingAsync(CancellationToken cancellationToken)
         {
-            return await _context.SystemSettings.FirstOrDefaultAsync(s => s.IsCurrent == true && s.IsDeleted == false );
+            return await _context.SystemSettings.FirstOrDefaultAsync(s => s.IsCurrent == true && s.IsDeleted == false,cancellationToken );
         }
 
-        public async Task<CaptainUserIgnoredPenalty?> GetCaptainUserIgnoredPenaltyByCaptainUserAccountIdAsync(string captainUserAccountId)
+        public async Task<CaptainUserIgnoredPenalty?> GetCaptainUserIgnoredPenaltyByCaptainUserAccountIdAsync(string captainUserAccountId, CancellationToken cancellationToken)
         {
             return await _context.CaptainUserIgnoredPenalties.FirstOrDefaultAsync(u => 
             u.CaptainUserAccountId == captainUserAccountId && 
-            (u.PenaltyStatusTypeId == (long) PenaltyStatusTypes.New ));
+            (u.PenaltyStatusTypeId == (long) PenaltyStatusTypes.New ),cancellationToken);
         }
 
        /* public async Task<CaptainUserRejectPenalty> GetCaptainUserRejectedPenaltyByCaptainUserAccountIdAsync(long captainUserAccountId)
@@ -61,34 +61,34 @@ namespace TreePorts.Repositories
             (u.PenaltyStatusTypeId == (long)PenaltyStatusTypes.New ));
         }*/
 
-        public async Task<List<IgnorPerType>> GetIgnorPerTypesAsync()
+        public async Task<List<IgnorPerType>> GetIgnorPerTypesAsync(CancellationToken cancellationToken)
         {
-            return await _context.IgnorPerTypes.ToListAsync();
+            return await _context.IgnorPerTypes.ToListAsync(cancellationToken);
         }
 
-        public async Task<List<PenaltyPerType>> GetPenaltyPerTypesAsync()
+        public async Task<List<PenaltyPerType>> GetPenaltyPerTypesAsync(CancellationToken cancellationToken)
         {
-            return await _context.PenaltyPerTypes.ToListAsync();
+            return await _context.PenaltyPerTypes.ToListAsync(cancellationToken);
         }
 
-        public async Task<List<PenaltyStatusType>> GetPeniltyStatusTypesAsync()
+        public async Task<List<PenaltyStatusType>> GetPeniltyStatusTypesAsync(CancellationToken cancellationToken)
         {
-            return await _context.PenaltyStatusTypes.ToListAsync();
+            return await _context.PenaltyStatusTypes.ToListAsync(cancellationToken);
         }
 
         /*public async Task<List<RejectPerType>> GetRejectPerTypesAsync()
         {
-            return await _context.RejectPerTypes.ToListAsync();
+            return await _context.RejectPerTypes.ToListAsync(cancellationToken);
         }*/
 
         /*public async Task<List<CaptainUserRejectPenalty>> GetCaptainUserRejectedPenaltiesByCaptainUserAccountIdAsync(string captainUserAccountId)
         {
-            return await _context.CaptainUserRejectPenalties.Where(u => u.CaptainUserAccountId == captainUserAccountId).ToListAsync();
+            return await _context.CaptainUserRejectPenalties.Where(u => u.CaptainUserAccountId == captainUserAccountId).ToListAsync(cancellationToken);
         }*/
 
-        public async Task<SystemSetting> InsertSystemSettingAsync(SystemSetting systemSetting)
+        public async Task<SystemSetting> InsertSystemSettingAsync(SystemSetting systemSetting, CancellationToken cancellationToken)
         {
-            var oldSystem = await _context.SystemSettings.FirstOrDefaultAsync(s => s.IsCurrent == true );
+            var oldSystem = await _context.SystemSettings.FirstOrDefaultAsync(s => s.IsCurrent == true ,cancellationToken);
             if (oldSystem != null) {
                 oldSystem.IsCurrent = false;
                 oldSystem.ModifiedBy = systemSetting.CreatedBy;
@@ -100,15 +100,15 @@ namespace TreePorts.Repositories
             systemSetting.IsCurrent = true;
             systemSetting.IsDeleted = false;
             systemSetting.CreationDate = DateTime.Now;
-            var result = await _context.SystemSettings.AddAsync(systemSetting);
+            var result = await _context.SystemSettings.AddAsync(systemSetting,cancellationToken);
             return result.Entity;
 
         }
 
-        public async Task<CaptainUserIgnoredPenalty?> InsertCaptainUserIgnoredPenaltyAsync(string captainUserAccountId)
+        public async Task<CaptainUserIgnoredPenalty?> InsertCaptainUserIgnoredPenaltyAsync(string captainUserAccountId, CancellationToken cancellationToken)
         {
 
-            var system = await this.GetCurrentSystemSettingAsync();
+            var system = await this.GetCurrentSystemSettingAsync(cancellationToken);
             CaptainUserIgnoredPenalty penalty = new ()
             {
                 CaptainUserAccountId = captainUserAccountId,
@@ -117,14 +117,14 @@ namespace TreePorts.Repositories
                 CreationDate = DateTime.Now
             };
 
-            var result = await _context.CaptainUserIgnoredPenalties.AddAsync(penalty);
+            var result = await _context.CaptainUserIgnoredPenalties.AddAsync(penalty,cancellationToken);
             return result.Entity;
 
         }
 
        /* public async Task<CaptainUserRejectPenalty> InsertCaptainUserRejectedPenaltyAsync(string captainUserAccountId)
         {
-            var system = await this.GetCurrentSystemSettingAsync();
+            var system = await this.GetCurrentSystemSettingAsync(cancellationToken);
             CaptainUserRejectPenalty penalty = new ()
             {
                 CaptainUserAccountId = captainUserAccountId,
@@ -137,9 +137,9 @@ namespace TreePorts.Repositories
             return result.Entity;
         }*/
 
-        public async Task<CaptainUserIgnoredPenalty?> UpdateCaptainUserIgnoredPenaltyAsync(string captainUserAccountId, long penaltyStatusType)
+        public async Task<CaptainUserIgnoredPenalty?> UpdateCaptainUserIgnoredPenaltyAsync(string captainUserAccountId, long penaltyStatusType, CancellationToken cancellationToken)
         {
-            var oldPenalty = await _context.CaptainUserIgnoredPenalties.FirstOrDefaultAsync(u => u.CaptainUserAccountId == captainUserAccountId && u.PenaltyStatusTypeId != (long)PenaltyStatusTypes.End );
+            var oldPenalty = await _context.CaptainUserIgnoredPenalties.FirstOrDefaultAsync(u => u.CaptainUserAccountId == captainUserAccountId && u.PenaltyStatusTypeId != (long)PenaltyStatusTypes.End , cancellationToken);
             if (oldPenalty == null) return null;
             oldPenalty.PenaltyStatusTypeId = penaltyStatusType;
 
@@ -159,37 +159,37 @@ namespace TreePorts.Repositories
             return oldPenalty;
         }*/
 
-        public async Task<List<Shift>> GetShiftsAsync()
+        public async Task<List<Shift>> GetShiftsAsync(CancellationToken cancellationToken)
         {
-            return await _context.Shifts.ToListAsync();
+            return await _context.Shifts.ToListAsync(cancellationToken);
         
         }
 
-        public async Task<Shift?> GetShiftByIdAsync(long id)
+        public async Task<Shift?> GetShiftByIdAsync(long id, CancellationToken cancellationToken)
         {
-            return await _context.Shifts.FirstOrDefaultAsync(s => s.Id == id);
+            return await _context.Shifts.FirstOrDefaultAsync(s => s.Id == id,cancellationToken);
         }
 
-        public async Task<List<Shift>> GetShiftsByAsync(Expression<Func<Shift, bool>> predicate)
+        public async Task<List<Shift>> GetShiftsByAsync(Expression<Func<Shift, bool>> predicate, CancellationToken cancellationToken)
         {
-            return await _context.Shifts.Where(predicate).ToListAsync();
+            return await _context.Shifts.Where(predicate).ToListAsync(cancellationToken);
         }
 
-        public async Task<List<Shift>> GetShiftsByShiftDateAsync(Shift shift)
+        public async Task<List<Shift>> GetShiftsByShiftDateAsync(Shift shift, CancellationToken cancellationToken)
         {
             return await _context.Shifts.Where(s => s.Day == shift.Day &&
-           s.Month == shift.Month && s.Year == shift.Year).ToListAsync();
+           s.Month == shift.Month && s.Year == shift.Year).ToListAsync(cancellationToken);
         }
 
-        public async Task<Shift> InsertShiftAsync(Shift shift)
+        public async Task<Shift> InsertShiftAsync(Shift shift, CancellationToken cancellationToken)
         {
-            var insertResult = await _context.Shifts.AddAsync(shift);
+            var insertResult = await _context.Shifts.AddAsync(shift,cancellationToken);
             return insertResult.Entity;
         }
 
-        public async Task<Shift?> UpdateShiftAsync(Shift shift)
+        public async Task<Shift?> UpdateShiftAsync(Shift shift, CancellationToken cancellationToken)
         {
-            var oldShift = await _context.Shifts.FirstOrDefaultAsync(u => u.Id == shift.Id);
+            var oldShift = await _context.Shifts.FirstOrDefaultAsync(u => u.Id == shift.Id,cancellationToken);
             if (oldShift == null) return null;
 
             oldShift.StartHour = shift.StartHour;
@@ -206,9 +206,9 @@ namespace TreePorts.Repositories
             return oldShift;
         }
 
-        public async Task<Shift?> DeleteShiftAsync(long id)
+        public async Task<Shift?> DeleteShiftAsync(long id, CancellationToken cancellationToken)
         {
-            var shift = await _context.Shifts.FirstOrDefaultAsync(c => c.Id == id);
+            var shift = await _context.Shifts.FirstOrDefaultAsync(c => c.Id == id,cancellationToken);
             if (shift == null) return null;
 
             shift.IsDeleted = true;
@@ -216,62 +216,62 @@ namespace TreePorts.Repositories
             return shift;
         }
 
-        public async Task<List<Vehicle>> GetVehiclesAsync()
+        public async Task<List<Vehicle>> GetVehiclesAsync(CancellationToken cancellationToken)
         {
-            return await _context.Vehicles.ToListAsync();
+            return await _context.Vehicles.ToListAsync(cancellationToken);
         }
 
-        public async Task<Vehicle?> GetVehicleByIdAsync(long id)
+        public async Task<Vehicle?> GetVehicleByIdAsync(long id, CancellationToken cancellationToken)
         {
-            return await _context.Vehicles.FirstOrDefaultAsync( v => v.Id == id);
+            return await _context.Vehicles.FirstOrDefaultAsync( v => v.Id == id,cancellationToken);
         }
 
-        public async Task<List<Vehicle>> GetVehiclesByAsync(Expression<Func<Vehicle, bool>> predicate)
+        public async Task<List<Vehicle>> GetVehiclesByAsync(Expression<Func<Vehicle, bool>> predicate, CancellationToken cancellationToken)
         {
-            return await _context.Vehicles.Where(predicate).ToListAsync();
+            return await _context.Vehicles.Where(predicate).ToListAsync(cancellationToken);
         }
 
-        public async Task<List<BoxType>> GetBoxTypesAsync()
+        public async Task<List<BoxType>> GetBoxTypesAsync(CancellationToken cancellationToken)
         {
-            return await _context.BoxTypes.ToListAsync();
+            return await _context.BoxTypes.ToListAsync(cancellationToken);
         }
 
-        public async Task<BoxType?> GetBoxTypeByIdAsync(long id)
+        public async Task<BoxType?> GetBoxTypeByIdAsync(long id, CancellationToken cancellationToken)
         {
-            return await _context.BoxTypes.FirstOrDefaultAsync( b => b.Id == id);
+            return await _context.BoxTypes.FirstOrDefaultAsync( b => b.Id == id,cancellationToken);
         }
 
-        public async Task<List<BoxType>> GetBoxTypesByAsync(Expression<Func<BoxType, bool>> predicate)
+        public async Task<List<BoxType>> GetBoxTypesByAsync(Expression<Func<BoxType, bool>> predicate, CancellationToken cancellationToken)
         {
-            return await _context.BoxTypes.Where(predicate).ToListAsync();
+            return await _context.BoxTypes.Where(predicate).ToListAsync(cancellationToken);
         }
 
-        public async Task<List<ContactMessage>> GetContactMessagesAsync()
+        public async Task<List<ContactMessage>> GetContactMessagesAsync(CancellationToken cancellationToken)
         {
-            return await _context.ContactMessages.ToListAsync();
+            return await _context.ContactMessages.ToListAsync(cancellationToken);
         }
 
-        public async Task<ContactMessage?> GetContactMessageByIdAsync(long id)
+        public async Task<ContactMessage?> GetContactMessageByIdAsync(long id, CancellationToken cancellationToken)
         {
-            return await _context.ContactMessages.FirstOrDefaultAsync(b => b.Id == id);
+            return await _context.ContactMessages.FirstOrDefaultAsync(b => b.Id == id,cancellationToken);
         }
 
-        public async Task<List<ContactMessage>> GetContactMessagesByAsync(Expression<Func<ContactMessage, bool>> predicate)
+        public async Task<List<ContactMessage>> GetContactMessagesByAsync(Expression<Func<ContactMessage, bool>> predicate, CancellationToken cancellationToken)
         {
-            return await _context.ContactMessages.Where(predicate).ToListAsync();
+            return await _context.ContactMessages.Where(predicate).ToListAsync(cancellationToken);
         }
 
-        public async Task<ContactMessage> InsertContactMessageAsync(ContactMessage contactMessage)
+        public async Task<ContactMessage> InsertContactMessageAsync(ContactMessage contactMessage, CancellationToken cancellationToken)
         {
             contactMessage.CreationDate = DateTime.Now;
             contactMessage.Status = (long)MessageStatusTypes.New;
-            var insertResult = await _context.ContactMessages.AddAsync(contactMessage);
+            var insertResult = await _context.ContactMessages.AddAsync(contactMessage,cancellationToken);
             return insertResult.Entity;
         }
 
-        public async Task<ContactMessage?> UpdateContactMessageAsync(ContactMessage contactMessage)
+        public async Task<ContactMessage?> UpdateContactMessageAsync(ContactMessage contactMessage, CancellationToken cancellationToken)
         {
-            var oldMessage = await _context.ContactMessages.FirstOrDefaultAsync(c => c.Id == contactMessage.Id);
+            var oldMessage = await _context.ContactMessages.FirstOrDefaultAsync(c => c.Id == contactMessage.Id,cancellationToken);
             if (oldMessage == null) return null;
 
             oldMessage.Name = contactMessage.Name;
@@ -287,9 +287,9 @@ namespace TreePorts.Repositories
             return oldMessage;
         }
 
-        public async Task<ContactMessage?> DeleteContactMessageAsync(long id)
+        public async Task<ContactMessage?> DeleteContactMessageAsync(long id, CancellationToken cancellationToken)
         {
-            var oldMessage = await _context.ContactMessages.FirstOrDefaultAsync(c => c.Id == id);
+            var oldMessage = await _context.ContactMessages.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
             if (oldMessage == null) return null;
 
             oldMessage.IsDeleted = true;
@@ -297,31 +297,31 @@ namespace TreePorts.Repositories
             return oldMessage;
         }
 
-        public async Task<List<PromotionType>> GetPromotionTypesAsync()
+        public async Task<List<PromotionType>> GetPromotionTypesAsync(CancellationToken cancellationToken)
         {
-            return await _context.PromotionTypes.ToListAsync();
+            return await _context.PromotionTypes.ToListAsync(cancellationToken);
         }
 
-        public async Task<PromotionType?> GetPromotionTypeByIdAsync(long id)
+        public async Task<PromotionType?> GetPromotionTypeByIdAsync(long id, CancellationToken cancellationToken)
         {
-            return await _context.PromotionTypes.FirstOrDefaultAsync( p => p.Id == id);
+            return await _context.PromotionTypes.FirstOrDefaultAsync( p => p.Id == id,cancellationToken);
         }
 
-        public async Task<List<PromotionType>> GetPromotionTypesByAsync(Expression<Func<PromotionType, bool>> predicate)
+        public async Task<List<PromotionType>> GetPromotionTypesByAsync(Expression<Func<PromotionType, bool>> predicate, CancellationToken cancellationToken)
         {
-            return await _context.PromotionTypes.Where(predicate).ToListAsync();
+            return await _context.PromotionTypes.Where(predicate).ToListAsync(cancellationToken);
         }
 
-        public async Task<PromotionType> InsertPromotionTypeAsync(PromotionType promotionType)
+        public async Task<PromotionType> InsertPromotionTypeAsync(PromotionType promotionType, CancellationToken cancellationToken)
         {
             promotionType.CreationDate = DateTime.Now;
-            var insertResult = await _context.PromotionTypes.AddAsync(promotionType);
+            var insertResult = await _context.PromotionTypes.AddAsync(promotionType,cancellationToken);
             return insertResult.Entity;
         }
 
-        public async Task<PromotionType?> UpdatePromotionTypeAsync(PromotionType promotionType)
+        public async Task<PromotionType?> UpdatePromotionTypeAsync(PromotionType promotionType, CancellationToken cancellationToken)
         {
-            var oldPromotionType = await _context.PromotionTypes.FirstOrDefaultAsync(p => p.Id == promotionType.Id);
+            var oldPromotionType = await _context.PromotionTypes.FirstOrDefaultAsync(p => p.Id == promotionType.Id,cancellationToken);
             if (oldPromotionType == null) return null;
 
             oldPromotionType.Type = promotionType.Type;
@@ -334,9 +334,9 @@ namespace TreePorts.Repositories
 
         }
 
-        public async Task<PromotionType?> DeletePromotionTypeAsync(long id)
+        public async Task<PromotionType?> DeletePromotionTypeAsync(long id, CancellationToken cancellationToken)
         {
-            var oldPromotionType = await _context.PromotionTypes.FirstOrDefaultAsync(p => p.Id == id);
+            var oldPromotionType = await _context.PromotionTypes.FirstOrDefaultAsync(p => p.Id == id,cancellationToken);
             if (oldPromotionType == null) return null;
 
             _context.PromotionTypes.Remove(oldPromotionType);
@@ -344,36 +344,36 @@ namespace TreePorts.Repositories
 
         }
 
-        public async Task<List<Promotion>> GetPromotionsAsync()
+        public async Task<List<Promotion>> GetPromotionsAsync(CancellationToken cancellationToken)
         {
-            return await _context.Promotions.ToListAsync();
+            return await _context.Promotions.ToListAsync(cancellationToken);
         }
 
-        public async Task<Promotion?> GetPromotionByIdAsync(long id)
+        public async Task<Promotion?> GetPromotionByIdAsync(long id, CancellationToken cancellationToken)
         {
-            return await _context.Promotions.FirstOrDefaultAsync(p => p.Id == id);
+            return await _context.Promotions.FirstOrDefaultAsync(p => p.Id == id,cancellationToken);
         }
 
-        public async Task<List<Promotion>> GetPromotionsPaginationAsync(int skip, int take)
+        public async Task<List<Promotion>> GetPromotionsPaginationAsync(int skip, int take, CancellationToken cancellationToken)
         {
-            return await _context.Promotions.Skip(skip).Take(take).ToListAsync();
+            return await _context.Promotions.Skip(skip).Take(take).ToListAsync(cancellationToken);
         }
 
-        public async Task<List<Promotion>> GetPromotionsByAsync(Expression<Func<Promotion, bool>> predicate)
+        public async Task<List<Promotion>> GetPromotionsByAsync(Expression<Func<Promotion, bool>> predicate, CancellationToken cancellationToken)
         {
-            return await _context.Promotions.Where(predicate).ToListAsync();
+            return await _context.Promotions.Where(predicate).ToListAsync(cancellationToken);
         }
 
-        public async Task<Promotion> InsertPromotionAsync(Promotion promotion)
+        public async Task<Promotion> InsertPromotionAsync(Promotion promotion, CancellationToken cancellationToken)
         {
             promotion.CreationDate = DateTime.Now;
-            var insertResult = await _context.Promotions.AddAsync(promotion);
+            var insertResult = await _context.Promotions.AddAsync(promotion,cancellationToken);
             return insertResult.Entity;
         }
 
-        public async Task<Promotion?> UpdatePromotionAsync(Promotion promotion)
+        public async Task<Promotion?> UpdatePromotionAsync(Promotion promotion, CancellationToken cancellationToken)
         {
-            var oldPromotion = await _context.Promotions.FirstOrDefaultAsync(p => p.Id == promotion.Id);
+            var oldPromotion = await _context.Promotions.FirstOrDefaultAsync(p => p.Id == promotion.Id,cancellationToken);
             if (oldPromotion == null) return null;
 
             oldPromotion.PromotionTypeId = promotion.PromotionTypeId;
@@ -390,44 +390,44 @@ namespace TreePorts.Repositories
             return oldPromotion;
         }
 
-        public async Task<Promotion?> DeletePromotionAsync(long id)
+        public async Task<Promotion?> DeletePromotionAsync(long id, CancellationToken cancellationToken)
         {
-            var oldPromotion = await _context.Promotions.FirstOrDefaultAsync(p => p.Id == id);
+            var oldPromotion = await _context.Promotions.FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
             if (oldPromotion == null) return null;
 
             _context.Promotions.Remove(oldPromotion);
             return oldPromotion;
         }
 
-        public async Task<List<AndroidVersion>> GetAndroidVersionsAsync()
+        public async Task<List<AndroidVersion>> GetAndroidVersionsAsync(CancellationToken cancellationToken)
         {
-            return await _context.AndroidVersions.ToListAsync();
+            return await _context.AndroidVersions.ToListAsync(cancellationToken);
         }
 
-        public async Task<AndroidVersion?> GetAndroidVersionByIdAsync(long id)
+        public async Task<AndroidVersion?> GetAndroidVersionByIdAsync(long id, CancellationToken cancellationToken)
         {
-            return await _context.AndroidVersions.FirstOrDefaultAsync(a => a.Id == id);
+            return await _context.AndroidVersions.FirstOrDefaultAsync(a => a.Id == id,cancellationToken);
         }
 
-        public async Task<List<AndroidVersion>> GetAndroidVersionsPaginationAsync(int skip, int take)
+        public async Task<List<AndroidVersion>> GetAndroidVersionsPaginationAsync(int skip, int take, CancellationToken cancellationToken)
         {
-            return await _context.AndroidVersions.Skip(skip).Take(take).ToListAsync();
+            return await _context.AndroidVersions.Skip(skip).Take(take).ToListAsync(cancellationToken);
         }
 
-        public async Task<AndroidVersion?> GetCurrentAndroidVersionAsync() 
+        public async Task<AndroidVersion?> GetCurrentAndroidVersionAsync(CancellationToken cancellationToken) 
         {
-            return await _context.AndroidVersions.FirstOrDefaultAsync(a => a.IsCurrent == true);
+            return await _context.AndroidVersions.FirstOrDefaultAsync(a => a.IsCurrent == true,cancellationToken);
         }
 
-        public async Task<List<AndroidVersion>> GetAndroidVersionsByAsync(Expression<Func<AndroidVersion, bool>> predicate)
+        public async Task<List<AndroidVersion>> GetAndroidVersionsByAsync(Expression<Func<AndroidVersion, bool>> predicate, CancellationToken cancellationToken)
         {
-            return await _context.AndroidVersions.Where(predicate).ToListAsync();
+            return await _context.AndroidVersions.Where(predicate).ToListAsync(cancellationToken);
         }
 
-        public async Task<AndroidVersion> InsertAndroidVersionAsync(AndroidVersion androidVersion)
+        public async Task<AndroidVersion> InsertAndroidVersionAsync(AndroidVersion androidVersion, CancellationToken cancellationToken)
         {
             if (androidVersion?.IsCurrent?? false) {
-                var oldVersion = await _context.AndroidVersions.FirstOrDefaultAsync(a => a.IsCurrent == true);
+                var oldVersion = await _context.AndroidVersions.FirstOrDefaultAsync(a => a.IsCurrent == true,cancellationToken);
                 if (oldVersion != null)
                 {
                     oldVersion.ModificationDate = DateTime.Now;
@@ -442,19 +442,19 @@ namespace TreePorts.Repositories
 
             
             androidVersion.CreationDate = DateTime.Now;
-            var insertResult = await _context.AndroidVersions.AddAsync(androidVersion);
+            var insertResult = await _context.AndroidVersions.AddAsync(androidVersion,cancellationToken);
             return insertResult.Entity;
         }
 
-        public async Task<AndroidVersion?> UpdateAndroidVersionAsync(AndroidVersion androidVersion)
+        public async Task<AndroidVersion?> UpdateAndroidVersionAsync(AndroidVersion androidVersion, CancellationToken cancellationToken)
         {
 
-            var oldVersion = await _context.AndroidVersions.FirstOrDefaultAsync(a => a.Id == androidVersion.Id);
+            var oldVersion = await _context.AndroidVersions.FirstOrDefaultAsync(a => a.Id == androidVersion.Id,cancellationToken);
             if (oldVersion == null) return null;
 
             if (androidVersion?.IsCurrent?? false)
             {
-                var oldCurrentVersion = await _context.AndroidVersions.FirstOrDefaultAsync(a => a.IsCurrent == true);
+                var oldCurrentVersion = await _context.AndroidVersions.FirstOrDefaultAsync(a => a.IsCurrent == true, cancellationToken);
                 if (oldCurrentVersion != null)
                 {
                     oldCurrentVersion.ModificationDate = DateTime.Now;
@@ -479,9 +479,9 @@ namespace TreePorts.Repositories
             return oldVersion;
         }
 
-        public async Task<AndroidVersion?> DeleteAndroidVersionAsync(long id)
+        public async Task<AndroidVersion?> DeleteAndroidVersionAsync(long id, CancellationToken cancellationToken)
         {
-            var oldVersion = await _context.AndroidVersions.FirstOrDefaultAsync(a => a.Id == id);
+            var oldVersion = await _context.AndroidVersions.FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
             if (oldVersion == null) return null;
 
             _context.AndroidVersions.Remove(oldVersion);

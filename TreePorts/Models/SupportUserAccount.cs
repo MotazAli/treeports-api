@@ -7,6 +7,9 @@ namespace TreePorts.Models
     {
         public SupportUserAccount()
         {
+            SupportUserCurrentStatus = new HashSet<SupportUserCurrentStatus>();
+            SupportUserMessageHubs = new HashSet<SupportUserMessageHub>();
+            SupportUserWorkingStates = new HashSet<SupportUserWorkingState>();
             TicketAssignments = new HashSet<TicketAssignment>();
         }
 
@@ -27,8 +30,12 @@ namespace TreePorts.Models
         public DateTime? CreationDate { get; set; }
         public DateTime? ModificationDate { get; set; }
 
+        public virtual StatusType? StatusType { get; set; }
         public virtual SupportType? SupportType { get; set; }
         public virtual SupportUser? SupportUser { get; set; }
+        public virtual ICollection<SupportUserCurrentStatus> SupportUserCurrentStatus { get; set; }
+        public virtual ICollection<SupportUserMessageHub> SupportUserMessageHubs { get; set; }
+        public virtual ICollection<SupportUserWorkingState> SupportUserWorkingStates { get; set; }
         public virtual ICollection<TicketAssignment> TicketAssignments { get; set; }
     }
 }

@@ -5,6 +5,21 @@ namespace TreePorts.Models
 {
     public partial class Agent
     {
+        public Agent()
+        {
+            AgentBranches = new HashSet<AgentBranch>();
+            AgentCurrentStatus = new HashSet<AgentCurrentStatus>();
+            AgentDeliveryPrices = new HashSet<AgentDeliveryPrice>();
+            AgentLocationHistories = new HashSet<AgentLocationHistory>();
+            AgentMessageHubs = new HashSet<AgentMessageHub>();
+            CaptainUserIgnoredRequests = new HashSet<CaptainUserIgnoredRequest>();
+            CaptainUserNewRequests = new HashSet<CaptainUserNewRequest>();
+            CouponAssigns = new HashSet<CouponAssign>();
+            CouponUsages = new HashSet<CouponUsage>();
+            Orders = new HashSet<Order>();
+            Webhooks = new HashSet<Webhook>();
+        }
+
         public string Id { get; set; } = null!;
         public string? Fullname { get; set; }
         public string? Email { get; set; }
@@ -33,5 +48,19 @@ namespace TreePorts.Models
         public DateTime? ModificationDate { get; set; }
 
         public virtual AgentType? AgentType { get; set; }
+        public virtual City? City { get; set; }
+        public virtual Country? Country { get; set; }
+        public virtual StatusType? StatusType { get; set; }
+        public virtual ICollection<AgentBranch> AgentBranches { get; set; }
+        public virtual ICollection<AgentCurrentStatus> AgentCurrentStatus { get; set; }
+        public virtual ICollection<AgentDeliveryPrice> AgentDeliveryPrices { get; set; }
+        public virtual ICollection<AgentLocationHistory> AgentLocationHistories { get; set; }
+        public virtual ICollection<AgentMessageHub> AgentMessageHubs { get; set; }
+        public virtual ICollection<CaptainUserIgnoredRequest> CaptainUserIgnoredRequests { get; set; }
+        public virtual ICollection<CaptainUserNewRequest> CaptainUserNewRequests { get; set; }
+        public virtual ICollection<CouponAssign> CouponAssigns { get; set; }
+        public virtual ICollection<CouponUsage> CouponUsages { get; set; }
+        public virtual ICollection<Order> Orders { get; set; }
+        public virtual ICollection<Webhook> Webhooks { get; set; }
     }
 }

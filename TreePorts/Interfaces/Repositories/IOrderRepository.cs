@@ -8,104 +8,104 @@ namespace TreePorts.Interfaces.Repositories
 {
     public interface IOrderRepository
     {
-        Task<List<Order>> GetOrdersAsync();
-        //Task<Order> GetOrderByID(long ID);
-        Task<Order?> GetOrderById_oldBehaviourAsync(long id);
-        Task<Order?> GetOnlyOrderByIdAsync(long id);
-        Task<Order?> GetLiteOrderByIdAsync(long id);
-        Task<OrderDetails?> GetOrderDetailsByIdAsync(long id);
-        Task<Order> InsertOrderAsync(Order order);
-        Task<Order?> UpdateOrderAsync(Order order);
-        Task<Order?> UpdateOrderCurrentStatusAsync(long orderId, long CurrentStatusId);
-        Task<Order?> DeleteOrderAsync(long id);
-        Task<Order?> DeleteOrderPermenetAsync(long id);
-        Task<List<Order>> GetOrdersByAsync(Expression<Func<Order, bool>> predicate);
-        Task<List<ProductType>> GetProductTypesAsync();
-        Task<ProductType?> GetProductTypeByIdAsync(long id);
+        Task<List<Order>> GetOrdersAsync(CancellationToken cancellationToken);
+        //Task<Order> GetOrderByID(long ID,CancellationToken cancellationToken);
+        Task<Order?> GetOrderById_oldBehaviourAsync(long id,CancellationToken cancellationToken);
+        Task<Order?> GetOnlyOrderByIdAsync(long id,CancellationToken cancellationToken);
+        Task<Order?> GetLiteOrderByIdAsync(long id,CancellationToken cancellationToken);
+        Task<OrderDetails?> GetOrderDetailsByIdAsync(long id,CancellationToken cancellationToken);
+        Task<Order> InsertOrderAsync(Order order,CancellationToken cancellationToken);
+        Task<Order?> UpdateOrderAsync(Order order,CancellationToken cancellationToken);
+        Task<Order?> UpdateOrderCurrentStatusAsync(long orderId, long CurrentStatusId,CancellationToken cancellationToken);
+        Task<Order?> DeleteOrderAsync(long id,CancellationToken cancellationToken);
+        Task<Order?> DeleteOrderPermenetAsync(long id,CancellationToken cancellationToken);
+        Task<List<Order>> GetOrdersByAsync(Expression<Func<Order, bool>> predicate,CancellationToken cancellationToken);
+        Task<List<ProductType>> GetProductTypesAsync(CancellationToken cancellationToken);
+        Task<ProductType?> GetProductTypeByIdAsync(long id,CancellationToken cancellationToken);
 
-        Task<List<OrderItem>> GetOrdersItemsAsync();
-        Task<OrderItem?> GetOrderItemByIdAsync(long id);
-        Task<List<OrderItem>> GetOrdersItemsByAsync(Expression<Func<OrderItem, bool>> predicate);
-        Task<OrderItem> InsertOrderItemAsync(OrderItem orderItem);
-        Task<OrderItem?> UpdateOrderItemAsync(OrderItem orderItem);
+        Task<List<OrderItem>> GetOrdersItemsAsync(CancellationToken cancellationToken);
+        Task<OrderItem?> GetOrderItemByIdAsync(long id,CancellationToken cancellationToken);
+        Task<List<OrderItem>> GetOrdersItemsByAsync(Expression<Func<OrderItem, bool>> predicate,CancellationToken cancellationToken);
+        Task<OrderItem> InsertOrderItemAsync(OrderItem orderItem,CancellationToken cancellationToken);
+        Task<OrderItem?> UpdateOrderItemAsync(OrderItem orderItem,CancellationToken cancellationToken);
 
-        Task<Order?> UpdateOrderLocationAsync(Order order);
-        Task<List<OrderStatusType>> GetOrderStatusTypesAsync();
-        Task<OrderStatusType?> GetOrderStatusTypeByIdAsync(long id);
+        Task<Order?> UpdateOrderLocationAsync(Order order,CancellationToken cancellationToken);
+        Task<List<OrderStatusType>> GetOrderStatusTypesAsync(CancellationToken cancellationToken);
+        Task<OrderStatusType?> GetOrderStatusTypeByIdAsync(long id,CancellationToken cancellationToken);
 
-        Task<List<OrderCurrentStatus>> GetOrdersStatusesAsync();
-        Task<List<OrderCurrentStatus>> GetCurrentOrdersStatusesAsync();
-        Task<OrderCurrentStatus?> GetOrderStatusByIdAsync(long id);
-        Task<List<OrderCurrentStatus>> GetOrderCurrentStatusesByAsync(Expression<Func<OrderCurrentStatus, bool>> predicate);
-        Task<OrderCurrentStatus> InsertOrderStatusAsync(OrderCurrentStatus orderStatus);
-        Task<OrderCurrentStatus?> DeleteOrderStatusAsync(long id);
-
-
-        Task<List<OrderStatusHistory>> GetOrdersStatusHistoriesAsync();
-        Task<OrderStatusHistory?> GetOrderStatusHistoryByIdAsync(long id);
-        Task<List<OrderStatusHistory>> GetOrdersStatusHistoriesByAsync(Expression<Func<OrderStatusHistory, bool>> predicate);
-        Task<OrderStatusHistory> InsertOrderStatusHistoryAsync(OrderStatusHistory orderStatus);
-        Task<OrderStatusHistory?> UpdateOrderStatusHistoryAsync(OrderStatusHistory orderStatus);
-
-        Task<List<OrderAssignment>> GetOrdersAssignmentsAsync();
-        Task<OrderAssignment?> GetOrderAssignmentByIdAsync(long id);
-        Task<List<OrderAssignment>> GetOrdersAssignmentsByAsync(Expression<Func<OrderAssignment, bool>> predicate);
-
-        Task<OrderAssignment> InsertOrderAssignmentAsync(OrderAssignment assign);
-        Task<OrderAssignment?> UpdateOrderAssignmentAsync(OrderAssignment assign);
-        Task<OrderAssignment?> DeleteOrderAssignmentAsync(long id);
+        Task<List<OrderCurrentStatus>> GetOrdersStatusesAsync(CancellationToken cancellationToken);
+        Task<List<OrderCurrentStatus>> GetCurrentOrdersStatusesAsync(CancellationToken cancellationToken);
+        Task<OrderCurrentStatus?> GetOrderStatusByIdAsync(long id,CancellationToken cancellationToken);
+        Task<List<OrderCurrentStatus>> GetOrderCurrentStatusesByAsync(Expression<Func<OrderCurrentStatus, bool>> predicate,CancellationToken cancellationToken);
+        Task<OrderCurrentStatus> InsertOrderStatusAsync(OrderCurrentStatus orderStatus,CancellationToken cancellationToken);
+        Task<OrderCurrentStatus?> DeleteOrderStatusAsync(long id,CancellationToken cancellationToken);
 
 
-        Task<List<OrderStartLocation>> GetOrdersStartLocationsAsync();
-        Task<OrderStartLocation?> GetOrderStartLocationByIdAsync(long id);
-        Task<List<OrderStartLocation>> GetOrdersStartLocationByAsync(Expression<Func<OrderStartLocation, bool>> predicate);
+        Task<List<OrderStatusHistory>> GetOrdersStatusHistoriesAsync(CancellationToken cancellationToken);
+        Task<OrderStatusHistory?> GetOrderStatusHistoryByIdAsync(long id,CancellationToken cancellationToken);
+        Task<List<OrderStatusHistory>> GetOrdersStatusHistoriesByAsync(Expression<Func<OrderStatusHistory, bool>> predicate,CancellationToken cancellationToken);
+        Task<OrderStatusHistory> InsertOrderStatusHistoryAsync(OrderStatusHistory orderStatus,CancellationToken cancellationToken);
+        Task<OrderStatusHistory?> UpdateOrderStatusHistoryAsync(OrderStatusHistory orderStatus,CancellationToken cancellationToken);
 
-        Task<OrderStartLocation> InsertOrderStartLocationAsync(OrderStartLocation orderStartLocation);
-        Task<OrderStartLocation?> UpdateOrderStartLocationAsync(OrderStartLocation orderStartLocation);
+        Task<List<OrderAssignment>> GetOrdersAssignmentsAsync(CancellationToken cancellationToken);
+        Task<OrderAssignment?> GetOrderAssignmentByIdAsync(long id,CancellationToken cancellationToken);
+        Task<List<OrderAssignment>> GetOrdersAssignmentsByAsync(Expression<Func<OrderAssignment, bool>> predicate,CancellationToken cancellationToken);
 
-
-        Task<List<OrderEndLocation>> GetOrdersEndLocationsAsync();
-        Task<OrderEndLocation?> GetOrderEndLocationByIdAsync(long id);
-        Task<List<OrderEndLocation>> GetOrdersEndLocationByAsync(Expression<Func<OrderEndLocation, bool>> predicate);
-
-        Task<OrderEndLocation> InsertOrderEndLocationAsync(OrderEndLocation orderEndLocation);
-        Task<OrderEndLocation?> UpdateOrderEndLocationAsync(OrderEndLocation orderEndLocation);
-
-
-        Task<List<OrderInvoice>> GetOrdersInvoicesAsync();
-        Task<OrderInvoice?> GetOrderInvoiceByIdAsync(long id);
-        Task<List<OrderInvoice>> GetOrdersInvoicesByAsync(Expression<Func<OrderInvoice, bool>> predicate);
-        Task<OrderInvoice> InsertOrderInvoiceAsync(OrderInvoice orderInvoice);
-        Task<OrderInvoice?> UpdateOrderInvoiceAsync(OrderInvoice orderInvoice);
-        Task<OrderInvoice?> DeleteOrderInvoiceAsync(long id);
-
-        Task<List<PaidOrder>> GetPaidOrdersAsync();
-        Task<PaidOrder?> GetPaidOrderByIdAsync(long id);
-        Task<List<PaidOrder>> GetPaidOrdersByAsync(Expression<Func<PaidOrder, bool>> predicate);
-        Task<PaidOrder> InsertPaidOrderAsync(PaidOrder paidOrder);
-        Task<PaidOrder?> UpdatePaidOrderAsync(PaidOrder paidOrder);
-        Task<PaidOrder?> DeletePaidOrderAsync(long id);
-
-        Task<List<PaymentType>> GetPaymentTypesAsync();
-        Task<PaymentType?> GetPaymentTypeByIdAsync(long id);
+        Task<OrderAssignment> InsertOrderAssignmentAsync(OrderAssignment assign,CancellationToken cancellationToken);
+        Task<OrderAssignment?> UpdateOrderAssignmentAsync(OrderAssignment assign,CancellationToken cancellationToken);
+        Task<OrderAssignment?> DeleteOrderAssignmentAsync(long id,CancellationToken cancellationToken);
 
 
+        Task<List<OrderStartLocation>> GetOrdersStartLocationsAsync(CancellationToken cancellationToken);
+        Task<OrderStartLocation?> GetOrderStartLocationByIdAsync(long id,CancellationToken cancellationToken);
+        Task<List<OrderStartLocation>> GetOrdersStartLocationByAsync(Expression<Func<OrderStartLocation, bool>> predicate,CancellationToken cancellationToken);
 
-        Task<List<RunningOrder>> GetRunningOrdersAsync();
-        Task<RunningOrder?> GetRunningOrderByIdAsync(long id);
-        Task<List<RunningOrder>> GetRunningOrdersByAsync(Expression<Func<RunningOrder, bool>> predicate);
-        Task<RunningOrder> InsertRunningOrderAsync(RunningOrder runningOrder);
-        Task<RunningOrder?> UpdateRunningOrderAsync(RunningOrder runningOrder);
-        Task<RunningOrder?> DeleteRunningOrderAsync(long id);
-        Task<RunningOrder?> DeleteRunningOrderByOrderIdAsync(long id);
+        Task<OrderStartLocation> InsertOrderStartLocationAsync(OrderStartLocation orderStartLocation,CancellationToken cancellationToken);
+        Task<OrderStartLocation?> UpdateOrderStartLocationAsync(OrderStartLocation orderStartLocation,CancellationToken cancellationToken);
+
+
+        Task<List<OrderEndLocation>> GetOrdersEndLocationsAsync(CancellationToken cancellationToken);
+        Task<OrderEndLocation?> GetOrderEndLocationByIdAsync(long id,CancellationToken cancellationToken);
+        Task<List<OrderEndLocation>> GetOrdersEndLocationByAsync(Expression<Func<OrderEndLocation, bool>> predicate,CancellationToken cancellationToken);
+
+        Task<OrderEndLocation> InsertOrderEndLocationAsync(OrderEndLocation orderEndLocation,CancellationToken cancellationToken);
+        Task<OrderEndLocation?> UpdateOrderEndLocationAsync(OrderEndLocation orderEndLocation,CancellationToken cancellationToken);
+
+
+        Task<List<OrderInvoice>> GetOrdersInvoicesAsync(CancellationToken cancellationToken);
+        Task<OrderInvoice?> GetOrderInvoiceByIdAsync(long id,CancellationToken cancellationToken);
+        Task<List<OrderInvoice>> GetOrdersInvoicesByAsync(Expression<Func<OrderInvoice, bool>> predicate,CancellationToken cancellationToken);
+        Task<OrderInvoice> InsertOrderInvoiceAsync(OrderInvoice orderInvoice,CancellationToken cancellationToken);
+        Task<OrderInvoice?> UpdateOrderInvoiceAsync(OrderInvoice orderInvoice,CancellationToken cancellationToken);
+        Task<OrderInvoice?> DeleteOrderInvoiceAsync(long id,CancellationToken cancellationToken);
+
+        Task<List<PaidOrder>> GetPaidOrdersAsync(CancellationToken cancellationToken);
+        Task<PaidOrder?> GetPaidOrderByIdAsync(long id,CancellationToken cancellationToken);
+        Task<List<PaidOrder>> GetPaidOrdersByAsync(Expression<Func<PaidOrder, bool>> predicate,CancellationToken cancellationToken);
+        Task<PaidOrder> InsertPaidOrderAsync(PaidOrder paidOrder,CancellationToken cancellationToken);
+        Task<PaidOrder?> UpdatePaidOrderAsync(PaidOrder paidOrder,CancellationToken cancellationToken);
+        Task<PaidOrder?> DeletePaidOrderAsync(long id,CancellationToken cancellationToken);
+
+        Task<List<PaymentType>> GetPaymentTypesAsync(CancellationToken cancellationToken);
+        Task<PaymentType?> GetPaymentTypeByIdAsync(long id,CancellationToken cancellationToken);
+
+
+
+        Task<List<RunningOrder>> GetRunningOrdersAsync(CancellationToken cancellationToken);
+        Task<RunningOrder?> GetRunningOrderByIdAsync(long id,CancellationToken cancellationToken);
+        Task<List<RunningOrder>> GetRunningOrdersByAsync(Expression<Func<RunningOrder, bool>> predicate,CancellationToken cancellationToken);
+        Task<RunningOrder> InsertRunningOrderAsync(RunningOrder runningOrder,CancellationToken cancellationToken);
+        Task<RunningOrder?> UpdateRunningOrderAsync(RunningOrder runningOrder,CancellationToken cancellationToken);
+        Task<RunningOrder?> DeleteRunningOrderAsync(long id,CancellationToken cancellationToken);
+        Task<RunningOrder?> DeleteRunningOrderByOrderIdAsync(long id,CancellationToken cancellationToken);
         /* QRCode For Order*/
         // Get By Order
-        Task<OrderQrcode?> GetQrcodeByOrderIdAsync(long id);
+        Task<OrderQrcode?> GetQrcodeByOrderIdAsync(long id,CancellationToken cancellationToken);
         // Insert QrCode
-        Task<OrderQrcode> InsertQrCodeAsync(OrderQrcode qrcode);
+        Task<OrderQrcode> InsertQrCodeAsync(OrderQrcode qrcode,CancellationToken cancellationToken);
 
         // Delete
-        Task<OrderQrcode?> DeleteQrCodeAsync(long id);
+        Task<OrderQrcode?> DeleteQrCodeAsync(long id,CancellationToken cancellationToken);
         /* QRCode For Order*/
         /* Order Filter*/
         IQueryable<OrderDetails> GetAllOrdersDetailsQuerable();
@@ -114,16 +114,16 @@ namespace TreePorts.Interfaces.Repositories
         IQueryable<Order?> GetAllCaptainOrdersByCaptainUserAccountId(string id);
         IQueryable<CaptainUserAcceptedRequest> GetUserAcceptedRequestByQuerable(Expression<Func<CaptainUserAcceptedRequest, bool>> predicate);
 
-        Task<List<OrderFilterResponse>> FilterAsync(OrderFilter orderFilter);
-        Task<List<OrderFilterResponse>> ReportAsync(OrderFilter orderFilter);
+        Task<List<OrderFilterResponse>> FilterAsync(OrderFilter orderFilter,CancellationToken cancellationToken);
+        Task<List<OrderFilterResponse>> ReportAsync(OrderFilter orderFilter,CancellationToken cancellationToken);
 
-        Task<List<Order>> GetOrdersPaginationAsync(int skip, int take);
+        Task<List<Order>> GetOrdersPaginationAsync(int skip, int take,CancellationToken cancellationToken);
 
         /* Order Filter*/
 
         /*Order Reports*/
         // Daily Order between two Dates
-        Object OrdersReportCount();
+        object OrdersReportCount();
         /*Order Reports*/
     }
 }

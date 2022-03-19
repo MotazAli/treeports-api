@@ -61,7 +61,6 @@
   <ItemGroup>
     <Folder Include="Assets\Images\" />
     <Folder Include="Assets\Apps\" />
-    <Folder Include="DTO\ReturnDTO\" />
     <Folder Include="Middlewares\" />
     <Folder Include="Hubs\" />
     <Folder Include="Services\Background\" />

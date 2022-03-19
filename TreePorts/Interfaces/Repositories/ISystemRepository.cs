@@ -9,85 +9,85 @@ namespace TreePorts.Interfaces.Repositories
 {
     public interface ISystemRepository
     {
-        Task<List<SystemSetting>> GetSystemSettingsAsync();
-        //Task<List<RejectPerType>> GetRejectPerTypesAsync();
-        Task<List<IgnorPerType>> GetIgnorPerTypesAsync();
-        Task<List<PenaltyPerType>> GetPenaltyPerTypesAsync();
+        Task<List<SystemSetting>> GetSystemSettingsAsync(CancellationToken cancellationToken);
+        //Task<List<RejectPerType>> GetRejectPerTypesAsync(,CancellationToken cancellationToken);
+        Task<List<IgnorPerType>> GetIgnorPerTypesAsync(CancellationToken cancellationToken);
+        Task<List<PenaltyPerType>> GetPenaltyPerTypesAsync(CancellationToken cancellationToken);
 
-        Task<List<PenaltyStatusType>> GetPeniltyStatusTypesAsync();
+        Task<List<PenaltyStatusType>> GetPeniltyStatusTypesAsync(CancellationToken cancellationToken);
 
-        Task<SystemSetting?> GetSystemSettingByIdAsync(long id);
+        Task<SystemSetting?> GetSystemSettingByIdAsync(long id,CancellationToken cancellationToken);
 
-        Task<SystemSetting?> GetCurrentSystemSettingAsync();
-        Task<List<SystemSetting>> GetSystemSettingsByAsync(Expression<Func<SystemSetting, bool>> predicate);
-        Task<SystemSetting> InsertSystemSettingAsync(SystemSetting systemSetting);
+        Task<SystemSetting?> GetCurrentSystemSettingAsync(CancellationToken cancellationToken);
+        Task<List<SystemSetting>> GetSystemSettingsByAsync(Expression<Func<SystemSetting, bool>> predicate,CancellationToken cancellationToken);
+        Task<SystemSetting> InsertSystemSettingAsync(SystemSetting systemSetting,CancellationToken cancellationToken);
 
-        Task<SystemSetting?> DeleteSystemSettingAsync(long id);
+        Task<SystemSetting?> DeleteSystemSettingAsync(long id,CancellationToken cancellationToken);
 
-        Task<CaptainUserIgnoredPenalty?> GetCaptainUserIgnoredPenaltyByCaptainUserAccountIdAsync(string captainUserAccountId);
-        //Task<CaptainUserRejectPenalty?> GetCaptainUserRejectedPenaltyByCaptainUserAccountIdAsync(long captainUserAccountId);
+        Task<CaptainUserIgnoredPenalty?> GetCaptainUserIgnoredPenaltyByCaptainUserAccountIdAsync(string captainUserAccountId,CancellationToken cancellationToken);
+        //Task<CaptainUserRejectPenalty?> GetCaptainUserRejectedPenaltyByCaptainUserAccountIdAsync(long captainUserAccountId,CancellationToken cancellationToken);
 
-        Task<List<CaptainUserIgnoredPenalty>?> GetCaptainUserIgnoredPenaltiesByCaptainUserAccountIdAsync(string captainUserAccountId);
-        //Task<List<CaptainUserRejectPenalty>?> GetCaptainUserRejectedPenaltiesByCaptainUserAccountIdAsync(long captainUserAccountId);
-
-
-        Task<CaptainUserIgnoredPenalty?> InsertCaptainUserIgnoredPenaltyAsync(string captainUserAccountId);
-        //Task<CaptainUserRejectPenalty?> InsertCaptainUserRejectedPenaltyAsync(string captainUserAccountId);
-
-        Task<CaptainUserIgnoredPenalty?> UpdateCaptainUserIgnoredPenaltyAsync(string captainUserAccountId, long penaltyStatusType);
-        //Task<CaptainUserRejectPenalty?> UpdateCaptainUserRejectedPenaltyAsync(string captainUserAccountId, long penaltyStatusType);
+        Task<List<CaptainUserIgnoredPenalty>?> GetCaptainUserIgnoredPenaltiesByCaptainUserAccountIdAsync(string captainUserAccountId,CancellationToken cancellationToken);
+        //Task<List<CaptainUserRejectPenalty>?> GetCaptainUserRejectedPenaltiesByCaptainUserAccountIdAsync(long captainUserAccountId,CancellationToken cancellationToken);
 
 
-        Task<List<Shift>> GetShiftsAsync();
-        Task<Shift?> GetShiftByIdAsync(long id);
-        Task<List<Shift>> GetShiftsByAsync(Expression<Func<Shift, bool>> predicate);
-        Task<List<Shift>> GetShiftsByShiftDateAsync(Shift shift);
-        Task<Shift> InsertShiftAsync(Shift shift);
-        Task<Shift?> UpdateShiftAsync(Shift shift);
-        Task<Shift?> DeleteShiftAsync(long id);
+        Task<CaptainUserIgnoredPenalty?> InsertCaptainUserIgnoredPenaltyAsync(string captainUserAccountId,CancellationToken cancellationToken);
+        //Task<CaptainUserRejectPenalty?> InsertCaptainUserRejectedPenaltyAsync(string captainUserAccountId,CancellationToken cancellationToken);
 
-        Task<List<Vehicle>> GetVehiclesAsync();
-        Task<Vehicle?> GetVehicleByIdAsync(long id);
-        Task<List<Vehicle>> GetVehiclesByAsync(Expression<Func<Vehicle, bool>> predicate);
-
-        Task<List<BoxType>> GetBoxTypesAsync();
-        Task<BoxType?> GetBoxTypeByIdAsync(long id);
-        Task<List<BoxType>> GetBoxTypesByAsync(Expression<Func<BoxType, bool>> predicate);
+        Task<CaptainUserIgnoredPenalty?> UpdateCaptainUserIgnoredPenaltyAsync(string captainUserAccountId, long penaltyStatusType,CancellationToken cancellationToken);
+        //Task<CaptainUserRejectPenalty?> UpdateCaptainUserRejectedPenaltyAsync(string captainUserAccountId, long penaltyStatusType,CancellationToken cancellationToken);
 
 
-        Task<List<ContactMessage>> GetContactMessagesAsync();
-        Task<ContactMessage?> GetContactMessageByIdAsync(long id);
-        Task<List<ContactMessage>> GetContactMessagesByAsync(Expression<Func<ContactMessage, bool>> predicate);
-        Task<ContactMessage> InsertContactMessageAsync(ContactMessage contactMessage);
-        Task<ContactMessage?> UpdateContactMessageAsync(ContactMessage contactMessage);
-        Task<ContactMessage?> DeleteContactMessageAsync(long id);
+        Task<List<Shift>> GetShiftsAsync(CancellationToken cancellationToken);
+        Task<Shift?> GetShiftByIdAsync(long id,CancellationToken cancellationToken);
+        Task<List<Shift>> GetShiftsByAsync(Expression<Func<Shift, bool>> predicate,CancellationToken cancellationToken);
+        Task<List<Shift>> GetShiftsByShiftDateAsync(Shift shift,CancellationToken cancellationToken);
+        Task<Shift> InsertShiftAsync(Shift shift,CancellationToken cancellationToken);
+        Task<Shift?> UpdateShiftAsync(Shift shift,CancellationToken cancellationToken);
+        Task<Shift?> DeleteShiftAsync(long id,CancellationToken cancellationToken);
 
-        Task<List<PromotionType>> GetPromotionTypesAsync();
-        Task<PromotionType?> GetPromotionTypeByIdAsync(long id);
-        Task<List<PromotionType>> GetPromotionTypesByAsync(Expression<Func<PromotionType, bool>> predicate);
-        Task<PromotionType> InsertPromotionTypeAsync(PromotionType promotionType);
-        Task<PromotionType?> UpdatePromotionTypeAsync(PromotionType promotionType);
-        Task<PromotionType?> DeletePromotionTypeAsync(long id);
+        Task<List<Vehicle>> GetVehiclesAsync(CancellationToken cancellationToken);
+        Task<Vehicle?> GetVehicleByIdAsync(long id,CancellationToken cancellationToken);
+        Task<List<Vehicle>> GetVehiclesByAsync(Expression<Func<Vehicle, bool>> predicate,CancellationToken cancellationToken);
 
-
-        Task<List<Promotion>> GetPromotionsAsync();
-        Task<Promotion?> GetPromotionByIdAsync(long id);
-        Task<List<Promotion>> GetPromotionsPaginationAsync(int skip, int take);
-        Task<List<Promotion>> GetPromotionsByAsync(Expression<Func<Promotion, bool>> predicate);
-        Task<Promotion> InsertPromotionAsync(Promotion promotion);
-        Task<Promotion?> UpdatePromotionAsync(Promotion promotion);
-        Task<Promotion?> DeletePromotionAsync(long id);
+        Task<List<BoxType>> GetBoxTypesAsync(CancellationToken cancellationToken);
+        Task<BoxType?> GetBoxTypeByIdAsync(long id,CancellationToken cancellationToken);
+        Task<List<BoxType>> GetBoxTypesByAsync(Expression<Func<BoxType, bool>> predicate,CancellationToken cancellationToken);
 
 
-        Task<List<AndroidVersion>> GetAndroidVersionsAsync();
-        Task<AndroidVersion?> GetAndroidVersionByIdAsync(long id);
-        Task<List<AndroidVersion>> GetAndroidVersionsPaginationAsync(int skip,int take);
-        Task<AndroidVersion?> GetCurrentAndroidVersionAsync();
+        Task<List<ContactMessage>> GetContactMessagesAsync(CancellationToken cancellationToken);
+        Task<ContactMessage?> GetContactMessageByIdAsync(long id,CancellationToken cancellationToken);
+        Task<List<ContactMessage>> GetContactMessagesByAsync(Expression<Func<ContactMessage, bool>> predicate,CancellationToken cancellationToken);
+        Task<ContactMessage> InsertContactMessageAsync(ContactMessage contactMessage,CancellationToken cancellationToken);
+        Task<ContactMessage?> UpdateContactMessageAsync(ContactMessage contactMessage,CancellationToken cancellationToken);
+        Task<ContactMessage?> DeleteContactMessageAsync(long id,CancellationToken cancellationToken);
 
-        Task<List<AndroidVersion>> GetAndroidVersionsByAsync(Expression<Func<AndroidVersion, bool>> predicate);
-        Task<AndroidVersion> InsertAndroidVersionAsync(AndroidVersion androidVersion);
-        Task<AndroidVersion?> UpdateAndroidVersionAsync(AndroidVersion androidVersion);
-        Task<AndroidVersion?> DeleteAndroidVersionAsync(long id);
+        Task<List<PromotionType>> GetPromotionTypesAsync(CancellationToken cancellationToken);
+        Task<PromotionType?> GetPromotionTypeByIdAsync(long id,CancellationToken cancellationToken);
+        Task<List<PromotionType>> GetPromotionTypesByAsync(Expression<Func<PromotionType, bool>> predicate,CancellationToken cancellationToken);
+        Task<PromotionType> InsertPromotionTypeAsync(PromotionType promotionType,CancellationToken cancellationToken);
+        Task<PromotionType?> UpdatePromotionTypeAsync(PromotionType promotionType,CancellationToken cancellationToken);
+        Task<PromotionType?> DeletePromotionTypeAsync(long id,CancellationToken cancellationToken);
+
+
+        Task<List<Promotion>> GetPromotionsAsync(CancellationToken cancellationToken);
+        Task<Promotion?> GetPromotionByIdAsync(long id,CancellationToken cancellationToken);
+        Task<List<Promotion>> GetPromotionsPaginationAsync(int skip, int take,CancellationToken cancellationToken);
+        Task<List<Promotion>> GetPromotionsByAsync(Expression<Func<Promotion, bool>> predicate,CancellationToken cancellationToken);
+        Task<Promotion> InsertPromotionAsync(Promotion promotion,CancellationToken cancellationToken);
+        Task<Promotion?> UpdatePromotionAsync(Promotion promotion,CancellationToken cancellationToken);
+        Task<Promotion?> DeletePromotionAsync(long id,CancellationToken cancellationToken);
+
+
+        Task<List<AndroidVersion>> GetAndroidVersionsAsync(CancellationToken cancellationToken);
+        Task<AndroidVersion?> GetAndroidVersionByIdAsync(long id,CancellationToken cancellationToken);
+        Task<List<AndroidVersion>> GetAndroidVersionsPaginationAsync(int skip,int take,CancellationToken cancellationToken);
+        Task<AndroidVersion?> GetCurrentAndroidVersionAsync(CancellationToken cancellationToken);
+
+        Task<List<AndroidVersion>> GetAndroidVersionsByAsync(Expression<Func<AndroidVersion, bool>> predicate,CancellationToken cancellationToken);
+        Task<AndroidVersion> InsertAndroidVersionAsync(AndroidVersion androidVersion,CancellationToken cancellationToken);
+        Task<AndroidVersion?> UpdateAndroidVersionAsync(AndroidVersion androidVersion,CancellationToken cancellationToken);
+        Task<AndroidVersion?> DeleteAndroidVersionAsync(long id,CancellationToken cancellationToken);
 
     }
 }

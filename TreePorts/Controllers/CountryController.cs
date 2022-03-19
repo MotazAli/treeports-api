@@ -19,15 +19,15 @@ namespace TreePorts.Controllers
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK,Type = typeof(IEnumerable<Country>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetCountries()
+        public async Task<IActionResult> GetCountries(CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _countryService.GetCountriesAsync());
+                return Ok(await _countryService.GetCountriesAsync(cancellationToken));
 
             }catch(Exception ex)
             {
-                return NoContent();
+                return Ok(Enumerable.Empty<Country>());
             }
         }
 
@@ -35,11 +35,11 @@ namespace TreePorts.Controllers
         [HttpGet("{id}/Cities")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<City>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetCitiesByCountryId(long id)
+        public async Task<IActionResult> GetCitiesByCountryId(long id, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _countryService.GetCitiesByCountryIdAsync(id));
+                return Ok(await _countryService.GetCitiesByCountryIdAsync(id,cancellationToken));
 
             }
             catch (Exception ex)
@@ -52,11 +52,11 @@ namespace TreePorts.Controllers
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetCountryById(long id)
+        public async Task<IActionResult> GetCountryById(long id , CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _countryService.GetCountryByIdAsync(id));
+                return Ok(await _countryService.GetCountryByIdAsync(id, cancellationToken));
             }
             catch (Exception e) {
                 return NoContent();// new ObjectResult(e.Message) { StatusCode = 666 };
@@ -69,11 +69,11 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Country))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> PutCountry(int id, [FromBody] Country country)
+        public async Task<IActionResult> PutCountry(int id, [FromBody] Country country, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _countryService.UpdateCountryAsync(id, country));
+                return Ok(await _countryService.UpdateCountryAsync(id, country,cancellationToken));
             }
             catch (Exception e)
             {
@@ -86,11 +86,11 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> DeleteCountryById(long id)
+        public async Task<IActionResult> DeleteCountryById(long id, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _countryService.DeleteCountryAsync(id));
+                return Ok(await _countryService.DeleteCountryAsync(id,cancellationToken));
             }
             catch (Exception e)
             {
@@ -104,10 +104,10 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CountryPrice))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> AddPrice([FromBody] CountryPrice countryPrice)
+        public async Task<IActionResult> AddPrice([FromBody] CountryPrice countryPrice, CancellationToken cancellationToken)
         {
             try {
-                  return Ok(await _countryService.AddCountryPriceAsync(countryPrice));
+                  return Ok(await _countryService.AddCountryPriceAsync(countryPrice,cancellationToken));
             } catch (Exception e) {
                 return NoContent(); // new ObjectResult(e.Message) { StatusCode = 666 };
             }
@@ -119,11 +119,11 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CountryProductPrice))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> AddProductPrice([FromBody] CountryProductPrice countryProductPrice)
+        public async Task<IActionResult> AddProductPrice([FromBody] CountryProductPrice countryProductPrice, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _countryService.AddCountryProductPriceAsync(countryProductPrice));
+                return Ok(await _countryService.AddCountryProductPriceAsync(countryProductPrice,cancellationToken));
             }
             catch (Exception e)
             {
@@ -138,11 +138,11 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> DeleteCountryPriceById(long id)
+        public async Task<IActionResult> DeleteCountryPriceById(long id, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _countryService.DeleteCountryPriceAsync(id));
+                return Ok(await _countryService.DeleteCountryPriceAsync(id, cancellationToken));
             }
             catch (Exception e)
             {
@@ -155,11 +155,11 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> DeleteCountryProductPriceById(long id)
+        public async Task<IActionResult> DeleteCountryProductPriceById(long id, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _countryService.DeleteCountryProductPriceAsync(id));
+                return Ok(await _countryService.DeleteCountryProductPriceAsync(id, cancellationToken));
             }
             catch (Exception e)
             {
@@ -173,12 +173,12 @@ namespace TreePorts.Controllers
         [HttpGet("Cities")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<object>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetCountriesCities()
+        public async Task<IActionResult> GetCountriesCities(CancellationToken cancellationToken)
         
         {
             try 
             {
-                return Ok( await _countryService.GetCountriesCitiesAsync());
+                return Ok( await _countryService.GetCountriesCitiesAsync(cancellationToken));
             }
             catch (Exception ex)
             {
@@ -192,10 +192,10 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(City))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> AddCity([FromBody] City city) {
+        public async Task<IActionResult> AddCity([FromBody] City city, CancellationToken cancellationToken) {
             try
             {
-                return Ok(await _countryService.AddCityAsync(city));
+                return Ok(await _countryService.AddCityAsync(city,cancellationToken));
             }
             catch (Exception e)
             {
@@ -208,11 +208,11 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(City))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> UpdateCityById(long id,[FromBody] City city)
+        public async Task<IActionResult> UpdateCityById(long id,[FromBody] City city, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _countryService.UpdateCityAsync(id,city));
+                return Ok(await _countryService.UpdateCityAsync(id,city,cancellationToken));
             }
             catch (Exception e)
             {
@@ -226,11 +226,11 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> DeleteCityById(long id)
+        public async Task<IActionResult> DeleteCityById(long id, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _countryService.DeleteCityAsync(id));
+                return Ok(await _countryService.DeleteCityAsync(id,cancellationToken));
             }
             catch (Exception e)
             {

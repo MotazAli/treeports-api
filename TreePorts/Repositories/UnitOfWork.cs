@@ -1,9 +1,4 @@
-﻿using TreePorts.Interfaces.Repositories;
-using TreePorts.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿
 
 namespace TreePorts.Repositories
 {
@@ -35,13 +30,11 @@ namespace TreePorts.Repositories
         public IAgentRepository AgentRepository => _AgentRepositor ??= new AgentRepository(_context);
         public IOrderRepository OrderRepository => _OrderRepository ??= new OrderRepository(_context);
 		public IWebhookRepository HookRepository => _HookRepository ??= new WebhookRepository(_context);
-
-
 		public IPaymentRepository PaymentRepository => _PaymentRepository ??= new PaymentRepository(_context);
 
-		public async Task<int> Save()
+		public async Task<int> Save(CancellationToken cancellationToken = default)
         {
-            return await _context.SaveChangesAsync();
+            return await _context.SaveChangesAsync(cancellationToken);
         }
 
 

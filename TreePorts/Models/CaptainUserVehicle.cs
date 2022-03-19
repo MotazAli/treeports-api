@@ -5,6 +5,11 @@ namespace TreePorts.Models
 {
     public partial class CaptainUserVehicle
     {
+        public CaptainUserVehicle()
+        {
+            CaptainUserBoxes = new HashSet<CaptainUserBox>();
+        }
+
         public long Id { get; set; }
         public string? CaptainUserAccountId { get; set; }
         public long? VehicleId { get; set; }
@@ -21,5 +26,9 @@ namespace TreePorts.Models
         public long? ModifiedByType { get; set; }
         public DateTime? CreationDate { get; set; }
         public DateTime? ModificationDate { get; set; }
+
+        public virtual CaptainUserAccount? CaptainUserAccount { get; set; }
+        public virtual Vehicle? Vehicle { get; set; }
+        public virtual ICollection<CaptainUserBox> CaptainUserBoxes { get; set; }
     }
 }

@@ -1,20 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using System.Timers;
-using AutoMapper;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using TreePorts.DTO;
-using TreePorts.DTO.ReturnDTO;
-using TreePorts.Hubs;
-using TreePorts.Models;
-using TreePorts.Presentation;
 using TreePorts.Utilities;
 
 namespace TreePorts.Controllers
@@ -60,7 +46,7 @@ namespace TreePorts.Controllers
 		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 		[ProducesResponseType(StatusCodes.Status404NotFound)]
 		[ProducesResponseType(StatusCodes.Status204NoContent)]
-		public async Task<IActionResult> GetCaptainCurrentLocationByOrderId(long id)
+		public async Task<IActionResult> GetCaptainCurrentLocationByOrderId(long id, CancellationToken cancellationToken)
 		{
 			try
 			{
@@ -68,22 +54,22 @@ namespace TreePorts.Controllers
 				//var userId = long.Parse("0");
 				Utility.getRequestUserIdFromToken(HttpContext, out string userId, out string userType);
 
-				var agentOrder = _unitOfWork.AgentRepository.GetAgentOrderAsync(userId, id);
+				var agentOrder = _unitOfWork.AgentRepository.GetAgentOrderAsync(userId, id,cancellationToken);
 				if (userType.ToString() != "Agent" || agentOrder == null) return Unauthorized();
 				
 				var orderStatues = await _unitOfWork.OrderRepository.GetOrderCurrentStatusesByAsync(o => o.OrderId == id &&
 					o.IsCurrent == true &&
-					(o.OrderStatusTypeId == (long)OrderStatusTypes.AssignedToCaptain || o.OrderStatusTypeId == (long)OrderStatusTypes.Progress));
+					(o.OrderStatusTypeId == (long)OrderStatusTypes.AssignedToCaptain || o.OrderStatusTypeId == (long)OrderStatusTypes.Progress),cancellationToken);
 
 				var orderCurrentState = orderStatues.FirstOrDefault();
 				if (orderCurrentState == null) NotFound("Driver not available, please try again");
 
 
-				var orderAssigns = await _unitOfWork.OrderRepository.GetOrdersAssignmentsByAsync(a => a.OrderId == id);
+				var orderAssigns = await _unitOfWork.OrderRepository.GetOrdersAssignmentsByAsync(a => a.OrderId == id,cancellationToken);
 				var orderAssign = orderAssigns.FirstOrDefault();
 				if (orderAssign == null) NotFound("Driver not available, Please try again");
 
-				var driverLocations = await _unitOfWork.CaptainRepository.GetCaptainUsersCurrentLocationsByAsync(u => u.CaptainUserAccountId == orderAssign.CaptainUserAccountId);
+				var driverLocations = await _unitOfWork.CaptainRepository.GetCaptainUsersCurrentLocationsByAsync(u => u.CaptainUserAccountId == orderAssign.CaptainUserAccountId,cancellationToken);
 				var driverCurrentLoation = driverLocations.FirstOrDefault();
 				if (driverCurrentLoation == null) NotFound("Driver not available, Please try again");
 
@@ -107,7 +93,7 @@ namespace TreePorts.Controllers
 		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 		[ProducesResponseType(StatusCodes.Status404NotFound)]
 		[ProducesResponseType(StatusCodes.Status204NoContent)]
-		public async Task<IActionResult> UpdateOrderLocationsByOrderId(long id,[FromBody] Order order)
+		public async Task<IActionResult> UpdateOrderLocationsByOrderId(long id,[FromBody] Order order, CancellationToken cancellationToken)
 		{
 			try
 			{
@@ -120,26 +106,26 @@ namespace TreePorts.Controllers
 
 				if (order.Id <= 0 && id > 0) order.Id = id;
 
-				var agentOrder = _unitOfWork.AgentRepository.GetAgentOrderAsync(userId, order.Id);
+				var agentOrder = _unitOfWork.AgentRepository.GetAgentOrderAsync(userId, order.Id,cancellationToken);
 				if (agentOrder == null) return Unauthorized();
 				
 
-				var targetOrder = await _unitOfWork.OrderRepository.GetOrderDetailsByIdAsync(order.Id);
+				var targetOrder = await _unitOfWork.OrderRepository.GetOrderDetailsByIdAsync(order.Id,cancellationToken);
 				if (targetOrder == null) return NotFound("Order Not Found");
 
 				if (order?.PickupLocationLat?.ToString() != "")
-					targetOrder.Order.PickupLocationLat = order.PickupLocationLat;
+					targetOrder.Order.PickupLocationLat = order?.PickupLocationLat;
 
 				if (order?.PickupLocationLong?.ToString() != "")
-					targetOrder.Order.PickupLocationLong = order.PickupLocationLong;
+					targetOrder.Order.PickupLocationLong = order?.PickupLocationLong;
 
 				if (order?.DropLocationLat?.ToString() != "")
-					targetOrder.Order.DropLocationLat = order.DropLocationLat;
+					targetOrder.Order.DropLocationLat = order?.DropLocationLat;
 
 				if (order?.DropLocationLong?.ToString() != "")
-					targetOrder.Order.DropLocationLong = order.DropLocationLong;
+					targetOrder.Order.DropLocationLong = order?.DropLocationLong;
 
-				var insertResullt = await _unitOfWork.OrderRepository.UpdateOrderLocationAsync(targetOrder.Order);
+				var insertResullt = await _unitOfWork.OrderRepository.UpdateOrderLocationAsync(targetOrder.Order, cancellationToken);
 				var result = await _unitOfWork.Save();
 				if (result == 0) return new ObjectResult("Service Unavailable") {StatusCode = 503};
 
@@ -159,11 +145,11 @@ namespace TreePorts.Controllers
 		[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
 		[ProducesResponseType(StatusCodes.Status404NotFound)]
 		[ProducesResponseType(StatusCodes.Status204NoContent)]
-		public async Task<IActionResult> AddAgent([FromBody] Agent agent)
+		public async Task<IActionResult> AddAgent([FromBody] Agent agent, CancellationToken cancellationToken)
 		{
 			try
 			{
-				var oldAgent = await _unitOfWork.AgentRepository.GetAgentByEmailAsync(agent.Email.ToLower());
+				var oldAgent = await _unitOfWork.AgentRepository.GetAgentByEmailAsync(agent.Email.ToLower(),cancellationToken);
 				//var oldAgent = agents.FirstOrDefault();
 				if (oldAgent != null)
 					return Ok("User already registered");
@@ -191,7 +177,7 @@ namespace TreePorts.Controllers
 
 				agent.StatusTypeId = (long)StatusTypes.Reviewing;
 				agent.Email = agent.Email.ToLower();
-				var insertResult = await _unitOfWork.AgentRepository.InsertAgentAsync(agent);
+				var insertResult = await _unitOfWork.AgentRepository.InsertAgentAsync(agent,cancellationToken);
 				var result = await _unitOfWork.Save();
 
 				if (result == 0)
@@ -217,11 +203,11 @@ namespace TreePorts.Controllers
 				if (tempImage != "")
 				{
 					insertResult = convertAndSaveAgentImages(insertResult);
-					var updateAgentImageResult = await _unitOfWork.AgentRepository.UpdateAgentImageAsync(insertResult);
+					var updateAgentImageResult = await _unitOfWork.AgentRepository.UpdateAgentImageAsync(insertResult,cancellationToken);
 				}
 
-				var newAgentStatusInsertedResult = await _unitOfWork.AgentRepository.InsertAgentCurrentStatusAsync(newAgentCurrentStatus);
-				var incompleteAgentStatusInsertedResult = await _unitOfWork.AgentRepository.InsertAgentCurrentStatusAsync(incompleteAgentCurrentStatus);
+				var newAgentStatusInsertedResult = await _unitOfWork.AgentRepository.InsertAgentCurrentStatusAsync(newAgentCurrentStatus, cancellationToken);
+				var incompleteAgentStatusInsertedResult = await _unitOfWork.AgentRepository.InsertAgentCurrentStatusAsync(incompleteAgentCurrentStatus, cancellationToken);
 
 				result = await _unitOfWork.Save();
 				if (result == 0)
@@ -276,7 +262,7 @@ namespace TreePorts.Controllers
 		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 		[ProducesResponseType(StatusCodes.Status404NotFound)]
 		[ProducesResponseType(StatusCodes.Status204NoContent)]
-		public async Task<IActionResult> UpdateAgent(string? id ,[FromBody] Agent agent)
+		public async Task<IActionResult> UpdateAgent(string? id ,[FromBody] Agent agent, CancellationToken cancellationToken)
 		{
 			try
 			{
@@ -302,7 +288,7 @@ namespace TreePorts.Controllers
 				}
 
 
-				var updateResult = await _unitOfWork.AgentRepository.UpdateAgentAsync(agent);
+				var updateResult = await _unitOfWork.AgentRepository.UpdateAgentAsync(agent, cancellationToken);
 				var result = await _unitOfWork.Save();
 				if (result == 0) return new ObjectResult("Service Unavailable") { StatusCode = 503 };
 
@@ -322,7 +308,7 @@ namespace TreePorts.Controllers
 		[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<AgentType>))]
 		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 		[ProducesResponseType(StatusCodes.Status204NoContent)]
-		public async Task<IActionResult> AgentTypes()
+		public async Task<IActionResult> AgentTypes(CancellationToken cancellationToken)
 		{
 			try
 			{
@@ -333,7 +319,7 @@ namespace TreePorts.Controllers
 				if (userId == "" || userType.ToLower() != "agent" ) return Unauthorized();
 
 
-				var types = await _unitOfWork.AgentRepository.GetAgentTypesAsync();
+				var types = await _unitOfWork.AgentRepository.GetAgentTypesAsync(cancellationToken);
 
 				return Ok(types);
 
@@ -349,7 +335,7 @@ namespace TreePorts.Controllers
 		[HttpGet("Agents/Types/{id}")]
 		[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AgentType))]
 		[ProducesResponseType(StatusCodes.Status204NoContent)]
-		public async Task<IActionResult> GetAgentTypes(long id)
+		public async Task<IActionResult> GetAgentTypes(long id, CancellationToken cancellationToken)
 		{
 			try
 			{
@@ -360,7 +346,7 @@ namespace TreePorts.Controllers
 				if (userType.ToString() != "Agent") return Unauthorized();
 
 
-				var types = await _unitOfWork.AgentRepository.GetAgentTypeByIdAsync(id);
+				var types = await _unitOfWork.AgentRepository.GetAgentTypeByIdAsync(id, cancellationToken);
 				return Ok(types);
 
 			}
@@ -378,7 +364,7 @@ namespace TreePorts.Controllers
 		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 		[ProducesResponseType(StatusCodes.Status404NotFound)]
 		[ProducesResponseType(StatusCodes.Status204NoContent)]
-		public async Task<IActionResult> Order(long id)
+		public async Task<IActionResult> Order(long id, CancellationToken cancellationToken)
 		{
 			try
 			{
@@ -388,7 +374,7 @@ namespace TreePorts.Controllers
 				
 				if(userType.ToLower() != "agent" || userId == "") return Unauthorized();
 				
-				var result = await _unitOfWork.OrderRepository.GetOrderDetailsByIdAsync(id);
+				var result = await _unitOfWork.OrderRepository.GetOrderDetailsByIdAsync(id,cancellationToken);
 
 				if (result == null) return NotFound("No Order Found");
 				if (result == null || result.Order.AgentId != userId) return Unauthorized();
@@ -419,7 +405,7 @@ namespace TreePorts.Controllers
 		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 		[ProducesResponseType(StatusCodes.Status404NotFound)]
 		[ProducesResponseType(StatusCodes.Status204NoContent)]
-		public async Task<IActionResult> Orders() // its using the agent id from the token
+		public async Task<IActionResult> Orders(CancellationToken cancellationToken) // its using the agent id from the token
 		{
 			try
 			{
@@ -428,7 +414,7 @@ namespace TreePorts.Controllers
 				Utility.getRequestUserIdFromToken(HttpContext, out string userId, out string userType);
 				if (userType.ToString() != "Agent" || userId =="") return Unauthorized();
 				
-				var result = await _unitOfWork.OrderRepository.GetOrdersByAsync(o => o.AgentId == userId);
+				var result = await _unitOfWork.OrderRepository.GetOrdersByAsync(o => o.AgentId == userId,cancellationToken);
 				if (result == null ) return NotFound("No Orders Found");
 				return Ok(result);
 			}
@@ -446,7 +432,7 @@ namespace TreePorts.Controllers
 		[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
 		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 		[ProducesResponseType(StatusCodes.Status204NoContent)]
-		public async Task<IActionResult> AddOrder([FromBody] Order order, [FromQuery] string CouponCode)
+		public async Task<IActionResult> AddOrder([FromBody] Order order, [FromQuery] string CouponCode, CancellationToken cancellationToken)
 		{
 			try
 			{
@@ -465,14 +451,14 @@ namespace TreePorts.Controllers
 				if (order.AgentId == null || order.AgentId =="")
 					order.AgentId = agentId;
 
-				var orderInsertResult = await _unitOfWork.OrderRepository.InsertOrderAsync(order);
+				var orderInsertResult = await _unitOfWork.OrderRepository.InsertOrderAsync(order,cancellationToken);
 				var result = await _unitOfWork.Save();
 				if (result <= 0) return new ObjectResult("Service Unavailable") { StatusCode = 503 };
 
 				_ = _notify.ChangeOrderStatusAndNotify(OrderStatusTypes.New, orderInsertResult.Id,
-					orderInsertResult.AgentId);
+					orderInsertResult.AgentId,cancellationToken);
 
-				_ = _orderService.SearchForCaptainAndNotifyOrder(orderInsertResult);
+				_ = _orderService.SearchForCaptainAndNotifyOrder(orderInsertResult,cancellationToken);
 
 				return Ok(new
 				{
@@ -895,12 +881,12 @@ namespace TreePorts.Controllers
 		[HttpGet("TestWebHooks/{id}")]
 		[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
 		[ProducesResponseType(StatusCodes.Status204NoContent)]
-		public async Task<IActionResult> TestWebHooks(string id)
+		public async Task<IActionResult> TestWebHooks(string id, CancellationToken cancellationToken)
         {
             try
             {
                 //Notify notify = new Notify(_unitOfWork, _HubContext);
-                var result = await _notify.NotifyNewOrder(30, id);
+                var result = await _notify.NotifyNewOrder(30, id,cancellationToken);
                 if (result == false) return Ok("Test WebHook Failed");
 
                 return Ok("Test WebHook Succeeded");
@@ -921,7 +907,7 @@ namespace TreePorts.Controllers
 		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 		[ProducesResponseType(StatusCodes.Status404NotFound)]
 		[ProducesResponseType(StatusCodes.Status204NoContent)]
-		public async Task<IActionResult> UpdateOrder(long? id,[FromBody] Order order)
+		public async Task<IActionResult> UpdateOrder(long? id,[FromBody] Order order, CancellationToken cancellationToken)
 		{
 			try
 			{
@@ -942,24 +928,24 @@ namespace TreePorts.Controllers
 					id = order.Id;
 
 
-				var targetOrder = await _unitOfWork.OrderRepository.GetOrderDetailsByIdAsync((long)id);
+				var targetOrder = await _unitOfWork.OrderRepository.GetOrderDetailsByIdAsync((long)id,cancellationToken);
 				if (targetOrder == null) return NotFound("No Order Found");
 
 
 				targetOrder.Order = Utility.UpdateOrder(targetOrder.Order, order);
-				var insertResullt = await _unitOfWork.OrderRepository.UpdateOrderAsync(targetOrder.Order);
+				var insertResullt = await _unitOfWork.OrderRepository.UpdateOrderAsync(targetOrder.Order,cancellationToken);
 				var result = await _unitOfWork.Save();
 				if (result == 0) return new ObjectResult("Service Unavailable") { StatusCode = 503 };
 
-				var orderAssigns = await _unitOfWork.OrderRepository.GetOrdersAssignmentsByAsync(r => r.OrderId == id);
+				var orderAssigns = await _unitOfWork.OrderRepository.GetOrdersAssignmentsByAsync(r => r.OrderId == id,cancellationToken);
 				var orderAssign = orderAssigns.FirstOrDefault();
 
-				var usersMessageHub = await _unitOfWork.CaptainRepository.GetCaptainUsersMessageHubsByAsync(u => u.CaptainUserAccountId == orderAssign.CaptainUserAccountId);
+				var usersMessageHub = await _unitOfWork.CaptainRepository.GetCaptainUsersMessageHubsByAsync(u => u.CaptainUserAccountId == orderAssign.CaptainUserAccountId,cancellationToken);
 				var userMessageHub = usersMessageHub.FirstOrDefault();
 				if (userMessageHub != null && userMessageHub.Id > 0)
 				{
 
-					var notificationReuslt = Utility.SendFirebaseNotification(_hostingEnvironment, "OrderUpdated", insertResullt.Id.ToString(), userMessageHub.ConnectionId);
+					var notificationReuslt = await Utility.SendFirebaseNotification(_hostingEnvironment, "OrderUpdated", insertResullt.Id.ToString(), userMessageHub.ConnectionId,cancellationToken);
 
 					if (notificationReuslt == "") return NotFound("Captain not available, please try again");
 
@@ -983,7 +969,7 @@ namespace TreePorts.Controllers
 		[ProducesResponseType(StatusCodes.Status200OK,Type = typeof(IEnumerable<Country>))]
 		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 		[ProducesResponseType(StatusCodes.Status204NoContent)]
-		public async Task<IActionResult> Countries()
+		public async Task<IActionResult> Countries(CancellationToken cancellationToken)
 		{
 			try
 			{
@@ -993,7 +979,7 @@ namespace TreePorts.Controllers
 				Utility.getRequestUserIdFromToken(HttpContext, out string userId, out string userType);
 				if (userType != "Agent" || userId =="" ) return Unauthorized();
 
-				var result = await _unitOfWork.CountryRepository.GetCountriesAsync();
+				var result = await _unitOfWork.CountryRepository.GetCountriesAsync(cancellationToken);
 				return Ok(result);
 			}
 			catch (Exception e)
@@ -1010,7 +996,7 @@ namespace TreePorts.Controllers
 		[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Country))]
 		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 		[ProducesResponseType(StatusCodes.Status204NoContent)]
-		public async Task<IActionResult> Countries(long id)
+		public async Task<IActionResult> Countries(long id, CancellationToken cancellationToken)
 		{
 			try
 			{
@@ -1019,7 +1005,7 @@ namespace TreePorts.Controllers
 				Utility.getRequestUserIdFromToken(HttpContext, out string userId, out string userType);
 				if (userType != "Agent" || userId == "") return Unauthorized();
 
-				var result = await _unitOfWork.CountryRepository.GetCountryByIdAsync(id);
+				var result = await _unitOfWork.CountryRepository.GetCountryByIdAsync(id,cancellationToken);
 				return Ok(result);
 			}
 			catch (Exception e)
@@ -1036,7 +1022,7 @@ namespace TreePorts.Controllers
 		[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<City>))]
 		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 		[ProducesResponseType(StatusCodes.Status204NoContent)]
-		public async Task<IActionResult> Cities()
+		public async Task<IActionResult> Cities(CancellationToken cancellationToken)
 		{
 			try
 			{
@@ -1046,7 +1032,7 @@ namespace TreePorts.Controllers
 				if (userType != "Agent" || userId == "") return Unauthorized();
 
 
-				var result = await _unitOfWork.CountryRepository.GetCitiesAsync();
+				var result = await _unitOfWork.CountryRepository.GetCitiesAsync(cancellationToken);
 				return Ok(result);
 			}
 			catch (Exception e)
@@ -1063,7 +1049,7 @@ namespace TreePorts.Controllers
 		[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<City>))]
 		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 		[ProducesResponseType(StatusCodes.Status204NoContent)]
-		public async Task<IActionResult> GetCityById(long id)
+		public async Task<IActionResult> GetCityById(long id, CancellationToken cancellationToken)
 		{
 			try
 			{
@@ -1073,7 +1059,7 @@ namespace TreePorts.Controllers
 				Utility.getRequestUserIdFromToken(HttpContext, out string userId, out string userType);
 				if (userType != "Agent" || userId == "") return Unauthorized();
 
-				var result = await _unitOfWork.CountryRepository.GetCityByIdAsync(id);
+				var result = await _unitOfWork.CountryRepository.GetCityByIdAsync(id,cancellationToken);
 				return Ok(result);
 			}
 			catch (Exception e)
@@ -1089,7 +1075,7 @@ namespace TreePorts.Controllers
 		[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<City>))]
 		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 		[ProducesResponseType(StatusCodes.Status204NoContent)]
-		public async Task<IActionResult> GetCitiesByCountryId(long id)
+		public async Task<IActionResult> GetCitiesByCountryId(long id, CancellationToken cancellationToken)
 		{
 			try
 			{
@@ -1099,7 +1085,7 @@ namespace TreePorts.Controllers
 				Utility.getRequestUserIdFromToken(HttpContext, out string userId, out string userType);
 				if (userType != "Agent" || userId == "") return Unauthorized();
 
-				var result = await _unitOfWork.CountryRepository.GetCitiesByAsync(c => c.CountryId == id);
+				var result = await _unitOfWork.CountryRepository.GetCitiesByAsync(c => c.CountryId == id,cancellationToken);
 				return Ok(result);
 			}
 			catch (Exception e)
@@ -1114,7 +1100,7 @@ namespace TreePorts.Controllers
 		[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<ProductType>))]
 		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 		[ProducesResponseType(StatusCodes.Status204NoContent)]
-		public async Task<IActionResult> GetProductsTypes()
+		public async Task<IActionResult> GetProductsTypes(CancellationToken cancellationToken)
 		{
 			try
 			{
@@ -1123,7 +1109,7 @@ namespace TreePorts.Controllers
 				Utility.getRequestUserIdFromToken(HttpContext, out string userId, out string userType);
 				if (userType != "Agent" || userId == "") return Unauthorized();
 
-				var result = await _unitOfWork.OrderRepository.GetProductTypesAsync();
+				var result = await _unitOfWork.OrderRepository.GetProductTypesAsync(cancellationToken);
 				return Ok(result);
 			}
 			catch (Exception e)
@@ -1140,7 +1126,7 @@ namespace TreePorts.Controllers
 		[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ProductType))]
 		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 		[ProducesResponseType(StatusCodes.Status204NoContent)]
-		public async Task<IActionResult> ProductsTypeById(long id)
+		public async Task<IActionResult> ProductsTypeById(long id, CancellationToken cancellationToken)
 		{
 			try
 			{
@@ -1150,7 +1136,7 @@ namespace TreePorts.Controllers
 				Utility.getRequestUserIdFromToken(HttpContext, out string userId, out string userType);
 				if (userType != "Agent" || userId == "") return Unauthorized();
 
-				var result = await _unitOfWork.OrderRepository.GetProductTypeByIdAsync(id);
+				var result = await _unitOfWork.OrderRepository.GetProductTypeByIdAsync(id,cancellationToken);
 				return Ok(result);
 			}
 			catch (Exception e)
@@ -1167,7 +1153,7 @@ namespace TreePorts.Controllers
 		[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<PaymentType>))]
 		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 		[ProducesResponseType(StatusCodes.Status204NoContent)]
-		public async Task<IActionResult> PaymentTypes()
+		public async Task<IActionResult> PaymentTypes(CancellationToken cancellationToken)
 		{
 			try
 			{
@@ -1177,7 +1163,7 @@ namespace TreePorts.Controllers
 				Utility.getRequestUserIdFromToken(HttpContext, out string userId, out string userType);
 				if (userType != "Agent" || userId == "") return Unauthorized();
 
-				var result = await _unitOfWork.OrderRepository.GetPaymentTypesAsync();
+				var result = await _unitOfWork.OrderRepository.GetPaymentTypesAsync(cancellationToken);
 				return Ok(result);
 			}
 			catch (Exception e)
@@ -1194,7 +1180,7 @@ namespace TreePorts.Controllers
 		[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PaymentType))]
 		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 		[ProducesResponseType(StatusCodes.Status204NoContent)]
-		public async Task<IActionResult> PaymentTypes(long id)
+		public async Task<IActionResult> PaymentTypes(long id, CancellationToken cancellationToken)
 		{
 			try
 			{
@@ -1204,7 +1190,7 @@ namespace TreePorts.Controllers
 				Utility.getRequestUserIdFromToken(HttpContext, out string userId, out string userType);
 				if (userType != "Agent" || userId == "") return Unauthorized();
 
-				var result = await _unitOfWork.OrderRepository.GetPaymentTypeByIdAsync(id);
+				var result = await _unitOfWork.OrderRepository.GetPaymentTypeByIdAsync(id,cancellationToken);
 				return Ok(result);
 			}
 			catch (Exception e)
@@ -1319,7 +1305,7 @@ namespace TreePorts.Controllers
 		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 		[ProducesResponseType(StatusCodes.Status204NoContent)]
 		/*Register Hook*/
-		public async Task<IActionResult> GetWebhooksByAgentId(string id)
+		public async Task<IActionResult> GetWebhooksByAgentId(string id, CancellationToken cancellationToken)
 		{
 			try
 			{
@@ -1331,7 +1317,7 @@ namespace TreePorts.Controllers
 				if (id == "")
 					return NoContent();
 
-				var result = await _unitOfWork.HookRepository.GetWebhooksByAgentIdAsync(id);
+				var result = await _unitOfWork.HookRepository.GetWebhooksByAgentIdAsync(id,cancellationToken);
 				return Ok(result);
 
 			}
@@ -1348,7 +1334,7 @@ namespace TreePorts.Controllers
 		[ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
 		[ProducesResponseType(StatusCodes.Status204NoContent)]
 		/*Register Hook*/
-		public async Task<IActionResult> AddWebhook(Webhook webHook)
+		public async Task<IActionResult> AddWebhook(Webhook webHook, CancellationToken cancellationToken)
 		{
 			try
 			{
@@ -1362,7 +1348,7 @@ namespace TreePorts.Controllers
 					return NoContent();
 
 				
-				var addedResult = await _unitOfWork.HookRepository.InsertOrUpdateAgentWebhookAsync(webHook);
+				var addedResult = await _unitOfWork.HookRepository.InsertOrUpdateAgentWebhookAsync(webHook,cancellationToken);
 				var result = await _unitOfWork.Save();
 				if (result == 0) return new ObjectResult("Service Unavailable") { StatusCode = 503};
 
@@ -1382,11 +1368,11 @@ namespace TreePorts.Controllers
 		//[ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
 		[ProducesResponseType(StatusCodes.Status204NoContent)]
 		/*Retrieve Hook Types*/
-		public async Task<IActionResult> WebhookTypes()
+		public async Task<IActionResult> WebhookTypes(CancellationToken cancellationToken)
 		{
 			try
 			{
-				var webHooksResult = await _unitOfWork.HookRepository.GetWebhooksTypesAsync();
+				var webHooksResult = await _unitOfWork.HookRepository.GetWebhooksTypesAsync(cancellationToken);
 				//var webHooks = this.mapper.Map<List<WebHookTypeResponse>>(webHooksResult);
 				return Ok(webHooksResult);
 

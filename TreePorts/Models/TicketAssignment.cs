@@ -5,6 +5,11 @@ namespace TreePorts.Models
 {
     public partial class TicketAssignment
     {
+        public TicketAssignment()
+        {
+            TicketMessages = new HashSet<TicketMessage>();
+        }
+
         public long Id { get; set; }
         public long? TicketId { get; set; }
         public string? SupportUserAccountId { get; set; }
@@ -21,5 +26,6 @@ namespace TreePorts.Models
         public virtual SupportUserAccount? SupportUserAccount { get; set; }
         public virtual Ticket? Ticket { get; set; }
         public virtual TicketStatusType? TicketStatusType { get; set; }
+        public virtual ICollection<TicketMessage> TicketMessages { get; set; }
     }
 }

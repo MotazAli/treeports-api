@@ -44,18 +44,18 @@ namespace TreePorts.Presentation
 		}
 
 
-		public NotifyService( IServiceProvider sp)//, IMapper mapper, IWebHostEnvironment hostingEnvironment, IHubContext<MessageHub> hubcontext)
+		/*public NotifyService( IServiceProvider sp)//, IMapper mapper, IWebHostEnvironment hostingEnvironment, IHubContext<MessageHub> hubcontext)
 		{
 			_sp = sp;
 			
-		}
+		}*/
 
 
 		/*public Notify()
         {
         }*/
 
-		public async Task<bool> NotifyNewOrder(long orderId, string agentId)
+		public async Task<bool> NotifyNewOrder(long orderId, string agentId, CancellationToken cancellationToken)
 		{
 
 			try
@@ -65,18 +65,18 @@ namespace TreePorts.Presentation
 					//var services = scope.ServiceProvider;
 					//var _unitOfWork = services.GetRequiredService<IUnitOfWork>();
 					var message = orderId.ToString();
-					await _hubContext.Clients.All.SendAsync("NewOrderNotify", message);
+					await _hubContext.Clients.All.SendAsync("NewOrderNotify", message,cancellationToken);
 
-					var statusType = await _unitOfWork.OrderRepository.GetOrderStatusTypeByIdAsync((long)OrderStatusTypes.New);
+					var statusType = await _unitOfWork.OrderRepository.GetOrderStatusTypeByIdAsync((long)OrderStatusTypes.New,cancellationToken);
 					var notifyStatus = new
 					{
-						order_status = new { Status = statusType.Type, ArabicStatus = statusType.ArabicType },
+						order_status = new { Status = statusType?.Type, ArabicStatus = statusType?.ArabicType },
 						order_id = orderId
 					};
-					var isRegistered = await _unitOfWork.HookRepository.GetWebhookByTypeIdAndAgentIdAsync(agentId, (long)WebHookTypes.OrderStatus);
-					if (isRegistered is null) return false;
+					var webhook = await _unitOfWork.HookRepository.GetWebhookByTypeIdAndAgentIdAsync(agentId, (long)WebHookTypes.OrderStatus,cancellationToken);
+					if (webhook is null) return false;
 
-					Utility.ExecuteWebHook(isRegistered.Url, Utility.ConvertToJson(notifyStatus));
+					_ = Utility.ExecuteWebHook(webhook.Url, Utility.ConvertToJson(notifyStatus), cancellationToken);
 					return true;
 				//}
 				
@@ -94,7 +94,7 @@ namespace TreePorts.Presentation
 
 
 
-        public async Task<bool> ChangeOrderStatusAndNotify(OrderStatusTypes status, long orderId, string agentId)
+        public async Task<bool> ChangeOrderStatusAndNotify(OrderStatusTypes status, long orderId, string agentId, CancellationToken cancellationToken)
         {
 
             try
@@ -115,11 +115,11 @@ namespace TreePorts.Presentation
                         OrderStatusTypeId = (long)status,
                         IsCurrent = true
                     };
-                    var insertResult = await _unitOfWork.OrderRepository.InsertOrderStatusAsync(orderCurrentStatus);
+                    var insertResult = await _unitOfWork.OrderRepository.InsertOrderStatusAsync(orderCurrentStatus,cancellationToken);
                     var updateOrderResult =
-                        await _unitOfWork.OrderRepository.UpdateOrderCurrentStatusAsync(orderId, (long)status);
+                        await _unitOfWork.OrderRepository.UpdateOrderCurrentStatusAsync(orderId, (long)status,cancellationToken);
 
-                    var result = await _unitOfWork.Save();
+                    var result = await _unitOfWork.Save(cancellationToken);
                     if (result <= 0) return false;
 
                     var message = orderId.ToString();
@@ -129,24 +129,24 @@ namespace TreePorts.Presentation
 						_hubContext = services.GetRequiredService<IHubContext<MessageHub>>(); 
 
 
-				   await _hubContext.Clients.All.SendAsync(messageHubMethod, message);
+				   await _hubContext.Clients.All.SendAsync(messageHubMethod, message,cancellationToken);
 
                     var agentMessageHubs =
-                        await _unitOfWork.AgentRepository.GetAgentsMessageHubByAsync(a => a.AgentId == agentId);
-                    AgentMessageHub agentMessageHub = agentMessageHubs.FirstOrDefault();
+                        await _unitOfWork.AgentRepository.GetAgentsMessageHubByAsync(a => a.AgentId == agentId,cancellationToken);
+                    var agentMessageHub = agentMessageHubs.FirstOrDefault();
                     if (agentMessageHub != null && agentMessageHub.Id > 0)
-                        await _hubContext.Clients.Client(agentMessageHub.ConnectionId).SendAsync($"{messageHubMethod}_Agent", message);
+                        await _hubContext.Clients.Client(agentMessageHub.ConnectionId).SendAsync($"{messageHubMethod}_Agent", message, cancellationToken);
 
 
-                    var statusType = await _unitOfWork.OrderRepository.GetOrderStatusTypeByIdAsync((long)status);
+                    var statusType = await _unitOfWork.OrderRepository.GetOrderStatusTypeByIdAsync((long)status,cancellationToken);
                     var notifyStatus = new
                     {
                         order_status = new { Status = statusType.Type, ArabicStatus = statusType.ArabicType },
                         order_id = orderId
                     };
-                    var isRegistered = await _unitOfWork.HookRepository.GetWebhookByTypeIdAndAgentIdAsync(agentId, (long)WebHookTypes.OrderStatus);
-                    if (isRegistered != null)
-                        Utility.ExecuteWebHook(isRegistered.Url, Utility.ConvertToJson(notifyStatus));
+                    var webhook = await _unitOfWork.HookRepository.GetWebhookByTypeIdAndAgentIdAsync(agentId, (long)WebHookTypes.OrderStatus,cancellationToken);
+                    if (webhook is null)
+                        _ = Utility.ExecuteWebHook(webhook?.Url, Utility.ConvertToJson(notifyStatus), cancellationToken);
 
 
                     return true;
@@ -165,7 +165,7 @@ namespace TreePorts.Presentation
 
 
 
-        public async Task<bool> NotifyOrderStatusChanged(OrderStatusTypes status, long orderId, string agentId)
+        public async Task<bool> NotifyOrderStatusChanged(OrderStatusTypes status, long orderId, string agentId, CancellationToken cancellationToken)
 		{
 
 			try
@@ -184,21 +184,21 @@ namespace TreePorts.Presentation
 					await _hubContext.Clients.All.SendAsync(messageHubMethod, message);
 
 					var agentMessageHubs =
-						await _unitOfWork.AgentRepository.GetAgentsMessageHubByAsync(a => a.AgentId == agentId);
-					AgentMessageHub agentMessageHub = agentMessageHubs.FirstOrDefault();
+						await _unitOfWork.AgentRepository.GetAgentsMessageHubByAsync(a => a.AgentId == agentId,cancellationToken);
+					var agentMessageHub = agentMessageHubs.FirstOrDefault();
 					if (agentMessageHub != null && agentMessageHub.Id > 0)
-						await _hubContext.Clients.Client(agentMessageHub.ConnectionId).SendAsync($"{messageHubMethod}_Agent", message);
+						await _hubContext.Clients.Client(agentMessageHub.ConnectionId).SendAsync($"{messageHubMethod}_Agent", message,cancellationToken);
 
 
-					var statusType = await _unitOfWork.OrderRepository.GetOrderStatusTypeByIdAsync((long)status);
+					var statusType = await _unitOfWork.OrderRepository.GetOrderStatusTypeByIdAsync((long)status,cancellationToken);
 					var notifyStatus = new
 					{
-						order_status = new { Status = statusType.Type, ArabicStatus = statusType.ArabicType },
+						order_status = new { Status = statusType?.Type, ArabicStatus = statusType?.ArabicType },
 						order_id = orderId
 					};
-					var isRegistered = await _unitOfWork.HookRepository.GetWebhookByTypeIdAndAgentIdAsync(agentId, (long)WebHookTypes.OrderStatus);
-					if (isRegistered != null)
-						Utility.ExecuteWebHook(isRegistered.Url, Utility.ConvertToJson(notifyStatus));
+					var webhook = await _unitOfWork.HookRepository.GetWebhookByTypeIdAndAgentIdAsync(agentId, (long)WebHookTypes.OrderStatus, cancellationToken);
+					if (webhook != null)
+						_ = Utility.ExecuteWebHook(webhook?.Url, Utility.ConvertToJson(notifyStatus), cancellationToken);
 
 
 					return true;
@@ -216,7 +216,7 @@ namespace TreePorts.Presentation
 		}
 
 
-		public async Task<bool> SendGoogleCloudMessageToCaptain(string captainUserAccountId, string title,string message) 
+		public async Task<bool> SendGoogleCloudMessageToCaptain(string captainUserAccountId, string title,string message, CancellationToken cancellationToken) 
 		{
 
 			try
@@ -228,13 +228,13 @@ namespace TreePorts.Presentation
 					var _unitOfWork = services.GetRequiredService<IUnitOfWork>();
 					if (_unitOfWork == null) return false;
 
-					var usersMessageHub = await _unitOfWork.CaptainRepository.GetCaptainUsersMessageHubsByAsync(u => u.CaptainUserAccountId == captainUserAccountId);
+					var usersMessageHub = await _unitOfWork.CaptainRepository.GetCaptainUsersMessageHubsByAsync(u => u.CaptainUserAccountId == captainUserAccountId,cancellationToken);
 					var userMessageHub = usersMessageHub.FirstOrDefault();
 					if (userMessageHub != null && userMessageHub.Id > 0)
 					{
 
-						FirebaseNotificationResponse responseResult = null;
-						var sendresult = FirebaseNotification.SendNotification(userMessageHub.ConnectionId, title, message);
+						FirebaseNotificationResponse? responseResult = null;
+						var sendresult = await FirebaseNotification.SendNotification(userMessageHub.ConnectionId, title, message,cancellationToken);
 
 						if (sendresult != "")
 							responseResult = JsonConvert.DeserializeObject<FirebaseNotificationResponse>(sendresult);

@@ -22,6 +22,9 @@ namespace TreePorts.Models
         public DateTime? CreationDate { get; set; }
         public DateTime? ModificationDate { get; set; }
 
+        public virtual CaptainUserAccount? CaptainUserAccount { get; set; }
+        public virtual TicketStatusType? TicketStatusType { get; set; }
+        public virtual TicketType? TicketType { get; set; }
         public virtual ICollection<TicketAssignment> TicketAssignments { get; set; }
     }
 }

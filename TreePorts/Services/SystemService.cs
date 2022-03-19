@@ -22,11 +22,11 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<SystemSetting?> GetSystemSettingAsync()
+    public async Task<SystemSetting?> GetSystemSettingAsync(CancellationToken cancellationToken)
     {
         try
         {
-            return await _unitOfWork.SystemRepository.GetCurrentSystemSettingAsync();
+            return await _unitOfWork.SystemRepository.GetCurrentSystemSettingAsync(cancellationToken);
         }
         catch (Exception e)
         {
@@ -37,11 +37,11 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<IEnumerable<Vehicle>> GetVehiclesAsync()
+    public async Task<IEnumerable<Vehicle>> GetVehiclesAsync(CancellationToken cancellationToken)
     {
         try
         {
-            return await _unitOfWork.SystemRepository.GetVehiclesAsync();
+            return await _unitOfWork.SystemRepository.GetVehiclesAsync(cancellationToken);
         }
         catch (Exception e)
         {
@@ -51,11 +51,11 @@ public class SystemService  : ISystemService
     }
 
    
-    public async Task<IEnumerable<BoxType>> GetBoxTypesAsync()
+    public async Task<IEnumerable<BoxType>> GetBoxTypesAsync(CancellationToken cancellationToken)
     {
         try
         {
-            return await _unitOfWork.SystemRepository.GetBoxTypesAsync();
+            return await _unitOfWork.SystemRepository.GetBoxTypesAsync(cancellationToken);
         }
         catch (Exception e)
         {
@@ -65,11 +65,11 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<IEnumerable<Shift>> GetShiftsAsync()
+    public async Task<IEnumerable<Shift>> GetShiftsAsync(CancellationToken cancellationToken)
     {
         try
         {
-            return await _unitOfWork.SystemRepository.GetShiftsAsync();
+            return await _unitOfWork.SystemRepository.GetShiftsAsync(cancellationToken);
         }
         catch (Exception e)
         {
@@ -80,7 +80,7 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<IEnumerable<AndroidVersion>> GetAndroidVersionsPagingAsync( FilterParameters parameters) // [FromQuery(Name ="page")] int? page , [FromQuery(Name = "objects")] int? objects)//[FromBody] Pagination pagination)
+    public async Task<IEnumerable<AndroidVersion>> GetAndroidVersionsPagingAsync( FilterParameters parameters, CancellationToken cancellationToken) // [FromQuery(Name ="page")] int? page , [FromQuery(Name = "objects")] int? objects)//[FromBody] Pagination pagination)
     {
         try
         {
@@ -93,12 +93,12 @@ public class SystemService  : ISystemService
 
             var skip = (parameters.NumberOfObjectsPerPage * (parameters.Page - 1));
             var take = parameters.NumberOfObjectsPerPage;
-            var result = await _unitOfWork.SystemRepository.GetAndroidVersionsPaginationAsync(skip, take);
+            var result = await _unitOfWork.SystemRepository.GetAndroidVersionsPaginationAsync(skip, take,cancellationToken);
             return result;
             //var AgentIDs = users.Select(s => s.AgentId);
             //var newAgents = await _unitOfWork.AgentRepository.GetBy(a => AgentIDs.Contains(a.Id));
 
-            //var versions = await _unitOfWork.SystemRepository.GetAndroidVersionsAsync();
+            //var versions = await _unitOfWork.SystemRepository.GetAndroidVersionsAsync(cancellationToken);
             /*var total = versions.Count;
             var skip = (pagination.NumberOfObjectsPerPage * (pagination.Page - 1));
             var take = pagination.NumberOfObjectsPerPage;
@@ -120,11 +120,11 @@ public class SystemService  : ISystemService
     }
 
     
-    public async Task<AndroidVersion?> GetCurrentAndroidVersionAsync()
+    public async Task<AndroidVersion?> GetCurrentAndroidVersionAsync(CancellationToken cancellationToken)
     {
         try
         {
-            return await _unitOfWork.SystemRepository.GetCurrentAndroidVersionAsync();
+            return await _unitOfWork.SystemRepository.GetCurrentAndroidVersionAsync(cancellationToken);
             //var current = result.FirstOrDefault();
             //if (current == null) return NotFound("No current android version available");
 
@@ -137,11 +137,11 @@ public class SystemService  : ISystemService
     }
 
     
-    public async Task<IEnumerable<AndroidVersion>> GetAndroidVersionsAsync()
+    public async Task<IEnumerable<AndroidVersion>> GetAndroidVersionsAsync(CancellationToken cancellationToken)
     {
         try
         {
-            return await _unitOfWork.SystemRepository.GetAndroidVersionsAsync();
+            return await _unitOfWork.SystemRepository.GetAndroidVersionsAsync(cancellationToken);
         }
         catch (Exception e)
         {
@@ -151,11 +151,11 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<AndroidVersion?> GetAndroidVersionByIdAsync(long id)
+    public async Task<AndroidVersion?> GetAndroidVersionByIdAsync(long id, CancellationToken cancellationToken)
     {
         try
         {
-            return await _unitOfWork.SystemRepository.GetAndroidVersionByIdAsync(id);
+            return await _unitOfWork.SystemRepository.GetAndroidVersionByIdAsync(id,cancellationToken);
             //if (result == null) return NotFound();
 
             
@@ -170,11 +170,11 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<AndroidVersion> AddAndroidVersionAsync( AndroidVersion androidVersion)
+    public async Task<AndroidVersion> AddAndroidVersionAsync( AndroidVersion androidVersion, CancellationToken cancellationToken)
     {
        
-            var insertResult = await _unitOfWork.SystemRepository.InsertAndroidVersionAsync(androidVersion);
-            var result = await _unitOfWork.Save();
+            var insertResult = await _unitOfWork.SystemRepository.InsertAndroidVersionAsync(androidVersion,cancellationToken);
+            var result = await _unitOfWork.Save(cancellationToken);
             if (result == 0)
                 throw new ServiceUnavailableException("Service Unavailable");
 
@@ -184,15 +184,15 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<AndroidVersion?> UpdateAndroidVersionsAsync(long id, AndroidVersion androidVersion)
+    public async Task<AndroidVersion?> UpdateAndroidVersionsAsync(long id, AndroidVersion androidVersion, CancellationToken cancellationToken)
     {
         
             if (id <= 0 || androidVersion == null || androidVersion.Id <= 0) throw new Exception("NoContent");
 
 
 
-            var updateResult = await _unitOfWork.SystemRepository.UpdateAndroidVersionAsync(androidVersion);
-            var result = await _unitOfWork.Save();
+            var updateResult = await _unitOfWork.SystemRepository.UpdateAndroidVersionAsync(androidVersion,cancellationToken);
+            var result = await _unitOfWork.Save(cancellationToken);
             if (result == 0)
                 throw new ServiceUnavailableException("Service Unavailable");
 
@@ -203,7 +203,7 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<bool> UploadAndroidFileAsync(HttpContext httpContext)
+    public async Task<bool> UploadAndroidFileAsync(HttpContext httpContext, CancellationToken cancellationToken)
     {
         try
         {
@@ -241,7 +241,7 @@ public class SystemService  : ISystemService
                     string filePath = _hostingEnvironment.ContentRootPath + "/Assets/Apps/" + file.Name + "/" + file.FileName;
                     using (var fileStream = new FileStream(filePath, FileMode.Create))
                     {
-                        await file.CopyToAsync(fileStream);
+                        await file.CopyToAsync(fileStream,cancellationToken);
                     }
                 }
             }
@@ -260,7 +260,7 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<bool> UploadPromotionFileAsync(HttpContext httpContext)
+    public async Task<bool> UploadPromotionFileAsync(HttpContext httpContext, CancellationToken cancellationToken)
     {
         try
         {
@@ -298,7 +298,7 @@ public class SystemService  : ISystemService
                     string filePath = _hostingEnvironment.ContentRootPath + "/Assets/Images/" + file.Name + "/" + file.FileName;
                     using (var fileStream = new FileStream(filePath, FileMode.Create))
                     {
-                        await file.CopyToAsync(fileStream);
+                        await file.CopyToAsync(fileStream,cancellationToken);
                     }
                 }
             }
@@ -319,11 +319,11 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<object> GetCountriesPricesAsync()
+    public async Task<object> GetCountriesPricesAsync(CancellationToken cancellationToken)
     {
         try
         {
-            return await _unitOfWork.CountryRepository.GetCountriesPricesAsync();
+            return await _unitOfWork.CountryRepository.GetCountriesPricesAsync(cancellationToken);
 
             
         }
@@ -334,11 +334,11 @@ public class SystemService  : ISystemService
     }
 
     
-    public async Task<object> GetCountryPriceByIdAsync(long id)
+    public async Task<object> GetCountryPriceByIdAsync(long id, CancellationToken cancellationToken)
     {
         try
         {
-            return await _unitOfWork.CountryRepository.GetCountryPriceByIdAsync(id);
+            return await _unitOfWork.CountryRepository.GetCountryPriceByIdAsync(id,cancellationToken);
 
             
         }
@@ -350,11 +350,11 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<IEnumerable<CountryPrice>> GetCountryPricesByCountryIdAsync(long id)
+    public async Task<IEnumerable<CountryPrice>> GetCountryPricesByCountryIdAsync(long id, CancellationToken cancellationToken)
     {
         try
         {
-            return await _unitOfWork.CountryRepository.GetCountriesPricesByAsync(cp => cp.CountryId == id);
+            return await _unitOfWork.CountryRepository.GetCountriesPricesByAsync(cp => cp.CountryId == id,cancellationToken);
 
         }
         catch (Exception e)
@@ -365,15 +365,15 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<CountryPrice> AddCountryPriceAsync(HttpContext httpContext  , CountryPrice countryPrice)
+    public async Task<CountryPrice> AddCountryPriceAsync(HttpContext httpContext  , CountryPrice countryPrice, CancellationToken cancellationToken)
     {
         
             //long modifierID = -1;
             //string modifierType = "";
             Utility.getRequestUserIdFromToken(httpContext, out string modifierID, out string modifierType);
             countryPrice.CreatedBy = modifierID;
-            var insertResult = await _unitOfWork.CountryRepository.InsertCountryPriceAsync(countryPrice);
-            var result = await _unitOfWork.Save();
+            var insertResult = await _unitOfWork.CountryRepository.InsertCountryPriceAsync(countryPrice,cancellationToken);
+            var result = await _unitOfWork.Save(cancellationToken);
             if (result == 0)
                 throw new ServiceUnavailableException("Service Unavailable");
 
@@ -383,11 +383,11 @@ public class SystemService  : ISystemService
     }
 
     
-    public async Task<bool> DeleteCountriesPricesAsync(long id)
+    public async Task<bool> DeleteCountriesPricesAsync(long id, CancellationToken cancellationToken)
     {
         try
         {
-            var result = await _unitOfWork.CountryRepository.DeleteCountryPriceAsync(id);
+            var result = await _unitOfWork.CountryRepository.DeleteCountryPriceAsync(id,cancellationToken);
      
             return true;
         }
@@ -400,11 +400,11 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<IEnumerable<Shift>> GetShiftsByShiftDateAsync( Shift shift)
+    public async Task<IEnumerable<Shift>> GetShiftsByShiftDateAsync( Shift shift, CancellationToken cancellationToken)
     {
         try
         {
-            return await _unitOfWork.SystemRepository.GetShiftsByShiftDateAsync(shift);
+            return await _unitOfWork.SystemRepository.GetShiftsByShiftDateAsync(shift,cancellationToken);
 
         }
         catch (Exception e)
@@ -414,11 +414,11 @@ public class SystemService  : ISystemService
     }
 
     
-    public async Task<SystemSetting?> GetSystemSettingByIdAsync(long id)
+    public async Task<SystemSetting?> GetSystemSettingByIdAsync(long id, CancellationToken cancellationToken)
     {
         try
         {
-            return await _unitOfWork.SystemRepository.GetSystemSettingByIdAsync(id);
+            return await _unitOfWork.SystemRepository.GetSystemSettingByIdAsync(id,cancellationToken);
             
         }
         catch (Exception e)
@@ -429,7 +429,7 @@ public class SystemService  : ISystemService
 
     
     
-    public async Task<SystemSetting> AddSystemSettingAsync( SystemSetting setting, HttpContext httpContext)
+    public async Task<SystemSetting> AddSystemSettingAsync( SystemSetting setting, HttpContext httpContext, CancellationToken cancellationToken)
     {
         
             //long modifierID = -1;
@@ -437,8 +437,8 @@ public class SystemService  : ISystemService
             Utility.getRequestUserIdFromToken(httpContext, out string modifierID, out string modifierType);
 
             setting.CreatedBy = modifierID;
-            var insertResult = await _unitOfWork.SystemRepository.InsertSystemSettingAsync(setting);
-            var result = await _unitOfWork.Save();
+            var insertResult = await _unitOfWork.SystemRepository.InsertSystemSettingAsync(setting,cancellationToken);
+            var result = await _unitOfWork.Save(cancellationToken);
             if (result == 0)
                 throw new ServiceUnavailableException("Service Unavailable");
 
@@ -454,7 +454,7 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<CityPrice> AddCityPriceAsync( CityPrice cityPrice, HttpContext httpContext)
+    public async Task<CityPrice> AddCityPriceAsync( CityPrice cityPrice, HttpContext httpContext, CancellationToken cancellationToken)
     {
        
             //long modifierID = -1;
@@ -462,8 +462,8 @@ public class SystemService  : ISystemService
             Utility.getRequestUserIdFromToken(httpContext, out string modifierID, out string modifierType);
 
             cityPrice.CreatedBy = modifierID;
-            var insertResult = await _unitOfWork.CountryRepository.InsertCityPriceAsync(cityPrice);
-            var result = await _unitOfWork.Save();
+            var insertResult = await _unitOfWork.CountryRepository.InsertCityPriceAsync(cityPrice,cancellationToken);
+            var result = await _unitOfWork.Save(cancellationToken);
             if (result <= 0)
                 throw new ServiceUnavailableException("Service Unavailable");
 
@@ -474,12 +474,12 @@ public class SystemService  : ISystemService
 
 
 
-    public async Task<object> GetCitiesPricesAsync()
+    public async Task<object> GetCitiesPricesAsync(CancellationToken cancellationToken)
     {
         try
         {
 
-            return await _unitOfWork.CountryRepository.GetCitiesPricesAsync();
+            return await _unitOfWork.CountryRepository.GetCitiesPricesAsync(cancellationToken);
             
         }
         catch (Exception e)
@@ -490,12 +490,12 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<object?> GetCityPriceByIdAsync(long id)
+    public async Task<object?> GetCityPriceByIdAsync(long id, CancellationToken cancellationToken)
     {
         try
         {
 
-            return await _unitOfWork.CountryRepository.GetCityPriceByIdAsync(id);
+            return await _unitOfWork.CountryRepository.GetCityPriceByIdAsync(id,cancellationToken);
             
         }
         catch (Exception e)
@@ -506,11 +506,11 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<IEnumerable<CityPrice>> GetCitiesPricesByCityIdAsync(long id)
+    public async Task<IEnumerable<CityPrice>> GetCitiesPricesByCityIdAsync(long id, CancellationToken cancellationToken)
     {
         try
         {
-            return await _unitOfWork.CountryRepository.GetCitiesPricesByAsync(cp => cp.CityId == id && cp.IsDeleted == false);
+            return await _unitOfWork.CountryRepository.GetCitiesPricesByAsync(cp => cp.CityId == id && cp.IsDeleted == false,cancellationToken);
             
         }
         catch (Exception e)
@@ -520,10 +520,10 @@ public class SystemService  : ISystemService
     }
 
     
-    public async Task<bool> DeleteCityPriceByIdAsync(long id)
+    public async Task<bool> DeleteCityPriceByIdAsync(long id, CancellationToken cancellationToken)
     {
         
-            var result = await _unitOfWork.CountryRepository.DeleteCityPriceAsync(id);
+            var result = await _unitOfWork.CountryRepository.DeleteCityPriceAsync(id,cancellationToken);
             if (result == null) throw new NoContentException("NoContent");
 
             return true;
@@ -535,7 +535,7 @@ public class SystemService  : ISystemService
     {
         try
         {
-            return await _unitOfWork.SystemRepository.GetRejectPerTypesAsync();
+            return await _unitOfWork.SystemRepository.GetRejectPerTypesAsync(cancellationToken);
             
         }
         catch (Exception e)
@@ -546,11 +546,11 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<IEnumerable<IgnorPerType>> IgnorePerTypesAsync()
+    public async Task<IEnumerable<IgnorPerType>> IgnorePerTypesAsync(CancellationToken cancellationToken)
     {
         try
         {
-            return await _unitOfWork.SystemRepository.GetIgnorPerTypesAsync();
+            return await _unitOfWork.SystemRepository.GetIgnorPerTypesAsync(cancellationToken);
             
         }
         catch (Exception e)
@@ -561,11 +561,11 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<IEnumerable<PenaltyPerType>> PenaltyPerTypesAsync()
+    public async Task<IEnumerable<PenaltyPerType>> PenaltyPerTypesAsync(CancellationToken cancellationToken)
     {
         try
         {
-            return await _unitOfWork.SystemRepository.GetPenaltyPerTypesAsync();
+            return await _unitOfWork.SystemRepository.GetPenaltyPerTypesAsync(cancellationToken);
             
         }
         catch (Exception e)
@@ -576,11 +576,11 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<IEnumerable<Promotion>> GetPromotionsAsync()
+    public async Task<IEnumerable<Promotion>> GetPromotionsAsync(CancellationToken cancellationToken)
     {
         try
         {
-            return await _unitOfWork.SystemRepository.GetPromotionsAsync();
+            return await _unitOfWork.SystemRepository.GetPromotionsAsync(cancellationToken);
             
         }
         catch (Exception e)
@@ -591,14 +591,14 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<Promotion?> GetCurrentPromotionAsync()
+    public async Task<Promotion?> GetCurrentPromotionAsync(CancellationToken cancellationToken)
     {
         try
         {
             var result = await _unitOfWork.SystemRepository.GetPromotionsByAsync(p =>
             p.ExpireDate.Value.Day >= DateTime.Now.Day &&
             p.ExpireDate.Value.Month == DateTime.Now.Month &&
-            p.ExpireDate.Value.Year == DateTime.Now.Year);
+            p.ExpireDate.Value.Year == DateTime.Now.Year,cancellationToken);
 
             var currentPromotion = result.FirstOrDefault();
             return currentPromotion;
@@ -611,11 +611,11 @@ public class SystemService  : ISystemService
 
 
    
-    public async Task<Promotion?> GetPromotionByIdAsync(long id)
+    public async Task<Promotion?> GetPromotionByIdAsync(long id, CancellationToken cancellationToken)
     {
         try
         {
-            return await _unitOfWork.SystemRepository.GetPromotionByIdAsync(id);
+            return await _unitOfWork.SystemRepository.GetPromotionByIdAsync(id,cancellationToken);
             
         }
         catch (Exception e)
@@ -627,7 +627,7 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<IEnumerable<Promotion>> GetPromotionsPaginationAsync(FilterParameters parameters)//[FromQuery(Name ="page")] int? page, [FromQuery(Name = "objects")] int? objects)//[FromBody] Pagination pagination)
+    public async Task<IEnumerable<Promotion>> GetPromotionsPaginationAsync(FilterParameters parameters, CancellationToken cancellationToken)//[FromQuery(Name ="page")] int? page, [FromQuery(Name = "objects")] int? objects)//[FromBody] Pagination pagination)
     {
         try
         {
@@ -641,7 +641,7 @@ public class SystemService  : ISystemService
             var skip = (parameters.NumberOfObjectsPerPage * (parameters.Page - 1));
             var take = parameters.NumberOfObjectsPerPage;
 
-            var result = await _unitOfWork.SystemRepository.GetPromotionsPaginationAsync(skip, take);
+            var result = await _unitOfWork.SystemRepository.GetPromotionsPaginationAsync(skip, take,cancellationToken);
             return result;
             //var promotions = await _unitOfWork.SystemRepository.GetAllPromotions();
             //var AgentIDs = users.Select(s => s.AgentId);
@@ -671,11 +671,11 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<Promotion> AddPromotionAsync(Promotion promotion)
+    public async Task<Promotion> AddPromotionAsync(Promotion promotion, CancellationToken cancellationToken)
     {
        
-            var insertResult = await _unitOfWork.SystemRepository.InsertPromotionAsync(promotion);
-            var result = await _unitOfWork.Save();
+            var insertResult = await _unitOfWork.SystemRepository.InsertPromotionAsync(promotion,cancellationToken);
+            var result = await _unitOfWork.Save(cancellationToken);
             if (result == 0)
                 throw new ServiceUnavailableException("Service Unavailable");
 
@@ -685,14 +685,14 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<Promotion?> UpdatePromotionAsync(long id, Promotion promotion)
+    public async Task<Promotion?> UpdatePromotionAsync(long id, Promotion promotion, CancellationToken cancellationToken)
     {
         
 
             if (id <= 0 || promotion == null || promotion.Id <= 0) throw new Exception( "NoContent");
 
-            var insertResult = await _unitOfWork.SystemRepository.UpdatePromotionAsync(promotion);
-            var result = await _unitOfWork.Save();
+            var insertResult = await _unitOfWork.SystemRepository.UpdatePromotionAsync(promotion,cancellationToken);
+            var result = await _unitOfWork.Save(cancellationToken);
             if (result == 0)
                 throw new ServiceUnavailableException("Service Unavailable");
 
@@ -702,11 +702,11 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<bool> DeletePromotionById(long id)
+    public async Task<bool> DeletePromotionById(long id, CancellationToken cancellationToken)
     {
         
-            var insertResult = await _unitOfWork.SystemRepository.DeletePromotionAsync(id);
-            var result = await _unitOfWork.Save();
+            var insertResult = await _unitOfWork.SystemRepository.DeletePromotionAsync(id,cancellationToken);
+            var result = await _unitOfWork.Save(cancellationToken);
             if (result == 0)
                 throw new ServiceUnavailableException("Server not available");
 
@@ -715,13 +715,13 @@ public class SystemService  : ISystemService
     }
 
     
-    public async Task<object> PublishPromotionByIdAsync(long id)
+    public async Task<object> PublishPromotionByIdAsync(long id, CancellationToken cancellationToken)
     {
        
             string result = "";
-            FirebaseNotificationResponse responseResult = null;
+            FirebaseNotificationResponse? responseResult = null;
 
-            result = FirebaseNotification.SendNotificationToTopic(FirebaseTopics.Captains, "newPromotion", id.ToString());
+            result = await FirebaseNotification.SendNotificationToTopic(FirebaseTopics.Captains, "newPromotion", id.ToString());
 
             if (result != "")
                 responseResult = JsonConvert.DeserializeObject<FirebaseNotificationResponse>(result);
@@ -739,11 +739,11 @@ public class SystemService  : ISystemService
 
 
 
-    public async Task<IEnumerable<PromotionType>> PromotionTypesAsync()
+    public async Task<IEnumerable<PromotionType>> PromotionTypesAsync(CancellationToken cancellationToken)
     {
         try
         {
-            return await _unitOfWork.SystemRepository.GetPromotionTypesAsync();
+            return await _unitOfWork.SystemRepository.GetPromotionTypesAsync(cancellationToken);
             
         }
         catch (Exception e)
@@ -754,11 +754,11 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<PromotionType?> GetPromotionTypeByIdAsync(long id)
+    public async Task<PromotionType?> GetPromotionTypeByIdAsync(long id, CancellationToken cancellationToken)
     {
         try
         {
-            return await _unitOfWork.SystemRepository.GetPromotionTypeByIdAsync(id);
+            return await _unitOfWork.SystemRepository.GetPromotionTypeByIdAsync(id,cancellationToken);
             
         }
         catch (Exception e)
@@ -769,11 +769,11 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<PromotionType> AddPromotionTypeAsync( PromotionType promotionType)
+    public async Task<PromotionType> AddPromotionTypeAsync( PromotionType promotionType, CancellationToken cancellationToken)
     {
        
-            var insertResult = await _unitOfWork.SystemRepository.InsertPromotionTypeAsync(promotionType);
-            var result = await _unitOfWork.Save();
+            var insertResult = await _unitOfWork.SystemRepository.InsertPromotionTypeAsync(promotionType,cancellationToken);
+            var result = await _unitOfWork.Save(cancellationToken);
             if (result == 0)
                 throw new ServiceUnavailableException("Service Unavailable");
 
@@ -783,13 +783,13 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<PromotionType?> UpdatePromotionTypeAsync(long id,  PromotionType promotionType)
+    public async Task<PromotionType?> UpdatePromotionTypeAsync(long id,  PromotionType promotionType, CancellationToken cancellationToken)
     {
         
             if (id <= 0 || promotionType == null || promotionType.Id <= 0) throw new NoContentException("NoContent");//
 
-            var insertResult = await _unitOfWork.SystemRepository.UpdatePromotionTypeAsync(promotionType);
-            var result = await _unitOfWork.Save();
+            var insertResult = await _unitOfWork.SystemRepository.UpdatePromotionTypeAsync(promotionType,cancellationToken);
+            var result = await _unitOfWork.Save(cancellationToken);
             if (result == 0)
                 throw new ServiceUnavailableException("Service Unavailable");
 
@@ -799,11 +799,11 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<bool> DeletePromotionTypeAsync(long id)
+    public async Task<bool> DeletePromotionTypeAsync(long id, CancellationToken cancellationToken)
     {
         
-            var deletedResult = await _unitOfWork.SystemRepository.DeletePromotionTypeAsync(id);
-            var result = await _unitOfWork.Save();
+            var deletedResult = await _unitOfWork.SystemRepository.DeletePromotionTypeAsync(id,cancellationToken);
+            var result = await _unitOfWork.Save(cancellationToken);
             if (result == 0)
                 throw new ServiceUnavailableException("Service Unavailable") ;
 
@@ -812,7 +812,7 @@ public class SystemService  : ISystemService
     }
 
     
-    public async Task<bool> UploadAsync(HttpContext httpContext)
+    public async Task<bool> UploadAsync(HttpContext httpContext, CancellationToken cancellationToken)
     {
         try
         {
@@ -854,7 +854,7 @@ public class SystemService  : ISystemService
                     string filePath = _hostingEnvironment.ContentRootPath + "/Assets/Images/" + file.Name + "/" + file.FileName;
                     using (var fileStream = new FileStream(filePath, FileMode.Create))
                     {
-                        await file.CopyToAsync(fileStream);
+                        await file.CopyToAsync(fileStream,cancellationToken);
                     }
                 }
             }
@@ -874,11 +874,11 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<CaptainUserIgnoredPenalty?> GetCurrentUserIgnoredRequestsPenaltyByCaptainUserAccountIdAsync(string captainUserAccountId)
+    public async Task<CaptainUserIgnoredPenalty?> GetCurrentUserIgnoredRequestsPenaltyByCaptainUserAccountIdAsync(string captainUserAccountId, CancellationToken cancellationToken)
     {
         try
         {
-            return await _unitOfWork.SystemRepository.GetCaptainUserIgnoredPenaltyByCaptainUserAccountIdAsync(captainUserAccountId);
+            return await _unitOfWork.SystemRepository.GetCaptainUserIgnoredPenaltyByCaptainUserAccountIdAsync(captainUserAccountId,cancellationToken);
 
         }
         catch (Exception e)
@@ -905,12 +905,12 @@ public class SystemService  : ISystemService
     }*/
 
     
-    public async Task<IEnumerable<CaptainUserIgnoredPenalty>> GetUserIgnoredRequestsPenaltiesByCaptainUserAccountIdAsync(string captainUserAccountId)
+    public async Task<IEnumerable<CaptainUserIgnoredPenalty>> GetUserIgnoredRequestsPenaltiesByCaptainUserAccountIdAsync(string captainUserAccountId, CancellationToken cancellationToken)
     {
 
         try
         {
-            return await _unitOfWork.SystemRepository.GetCaptainUserIgnoredPenaltiesByCaptainUserAccountIdAsync(captainUserAccountId);
+            return await _unitOfWork.SystemRepository.GetCaptainUserIgnoredPenaltiesByCaptainUserAccountIdAsync(captainUserAccountId,cancellationToken);
 
             
         }
@@ -966,11 +966,11 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<IEnumerable<PenaltyStatusType>> GetPeniltyStatusTypesAsync()
+    public async Task<IEnumerable<PenaltyStatusType>> GetPeniltyStatusTypesAsync(CancellationToken cancellationToken)
     {
         try
         {
-            return await _unitOfWork.SystemRepository.GetPeniltyStatusTypesAsync();
+            return await _unitOfWork.SystemRepository.GetPeniltyStatusTypesAsync(cancellationToken);
             
         }
         catch (Exception e)
@@ -987,11 +987,11 @@ public class SystemService  : ISystemService
     }*/
 
     
-    public async Task<bool> DeleteSystemSettingAsync(long id)
+    public async Task<bool> DeleteSystemSettingAsync(long id, CancellationToken cancellationToken)
     {
        
-            var deleteResult = await _unitOfWork.SystemRepository.DeleteSystemSettingAsync(id);
-            var result = await _unitOfWork.Save();
+            var deleteResult = await _unitOfWork.SystemRepository.DeleteSystemSettingAsync(id,cancellationToken);
+            var result = await _unitOfWork.Save(cancellationToken);
             if (result == 0)
                 throw new ServiceUnavailableException("Service Unavailable");
 
@@ -1001,20 +1001,21 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<bool> AddContactMessageAsync( ContactMessage contactMessage)
+    public async Task<bool> AddContactMessageAsync( ContactMessage contactMessage, CancellationToken cancellationToken)
     {
         
 
-            string mailResult = await Utility.sendGridMail(
-                contactMessage.Email,
-                contactMessage.Name,
-                contactMessage.Subject,
-                contactMessage.Message,
-                false
+            var mailResult = await Utility.sendGridMail(
+                contactMessage?.Email,
+                contactMessage?.Name,
+                contactMessage?.Subject,
+                contactMessage?.Message,
+                false,
+                cancellationToken
                 );
 
-            var insertResult = await _unitOfWork.SystemRepository.InsertContactMessageAsync(contactMessage);
-            var result = await _unitOfWork.Save();
+            var insertResult = await _unitOfWork.SystemRepository.InsertContactMessageAsync(contactMessage,cancellationToken);
+            var result = await _unitOfWork.Save(cancellationToken);
 
             if (result == 0)
                 throw new ServiceUnavailableException("Service Unavailable");
@@ -1026,7 +1027,7 @@ public class SystemService  : ISystemService
 
 
    
-    public async Task<bool> ChangeUserStatusAsync( StatusAction statusAction, HttpContext httpContext)
+    public async Task<bool> ChangeUserStatusAsync( StatusAction statusAction, HttpContext httpContext, CancellationToken cancellationToken)
     {
 
        
@@ -1038,7 +1039,7 @@ public class SystemService  : ISystemService
             {
                 case "driver":
                     {
-                        var users = await _unitOfWork.CaptainRepository.GetCaptainUsersAccountsByAsync(u => u.Id == statusAction.UserAccountId);
+                        var users = await _unitOfWork.CaptainRepository.GetCaptainUsersAccountsByAsync(u => u.Id == statusAction.UserAccountId,cancellationToken);
                         var user = users.FirstOrDefault();
                         if (user == null) throw new NotFoundException("NotFound");
 
@@ -1065,12 +1066,12 @@ public class SystemService  : ISystemService
                                 IsCurrent = true,
                                 CreationDate = DateTime.Now
                             };
-                            var insertedUserActivity = await _unitOfWork.CaptainRepository.InsertCaptainUserActivityAsync(userActivity);
+                            var insertedUserActivity = await _unitOfWork.CaptainRepository.InsertCaptainUserActivityAsync(userActivity,cancellationToken);
                         }
 
-                        var insertResult = await _unitOfWork.CaptainRepository.InsertCaptainUserCurrentStatusAsync(userCurrentStatus);
-                        var updateResult = await _unitOfWork.CaptainRepository.UpdateCaptainUserAccountAsync(user);
-                        var result = await _unitOfWork.Save();
+                        var insertResult = await _unitOfWork.CaptainRepository.InsertCaptainUserCurrentStatusAsync(userCurrentStatus,cancellationToken);
+                        var updateResult = await _unitOfWork.CaptainRepository.UpdateCaptainUserAccountAsync(user,cancellationToken);
+                        var result = await _unitOfWork.Save(cancellationToken);
 
                         if (result == 0)
                             throw new ServiceUnavailableException("Service Unavailable");
@@ -1082,7 +1083,7 @@ public class SystemService  : ISystemService
                     }
                 case "support":
                     {
-                        var users = await _unitOfWork.SupportRepository.GetSupportUsersAccountsByAsync(u => u.SupportUserId == statusAction.UserAccountId);
+                        var users = await _unitOfWork.SupportRepository.GetSupportUsersAccountsByAsync(u => u.SupportUserId == statusAction.UserAccountId,cancellationToken);
                         var user = users.FirstOrDefault();
                         if (user == null) throw new NotFoundException("NotFound");
 
@@ -1099,9 +1100,9 @@ public class SystemService  : ISystemService
 
                         };
 
-                        var insertResult = await _unitOfWork.SupportRepository.InsertSupportUserCurrentStatusAsync(userCurrentStatus);
-                        var updateResult = await _unitOfWork.SupportRepository.UpdateSupportUserAccountAsync(user);
-                        var result = await _unitOfWork.Save();
+                        var insertResult = await _unitOfWork.SupportRepository.InsertSupportUserCurrentStatusAsync(userCurrentStatus,cancellationToken);
+                        var updateResult = await _unitOfWork.SupportRepository.UpdateSupportUserAccountAsync(user,cancellationToken);
+                        var result = await _unitOfWork.Save(cancellationToken);
 
                         if (result == 0)
                             throw new ServiceUnavailableException("Service Unavailable");
@@ -1113,7 +1114,7 @@ public class SystemService  : ISystemService
                     }
                 case "admin":
                     {
-                        var user = await _unitOfWork.AdminRepository.GetAdminUserAccountByAdminUserIdAsync(statusAction.UserAccountId);
+                        var user = await _unitOfWork.AdminRepository.GetAdminUserAccountByAdminUserIdAsync(statusAction.UserAccountId,cancellationToken);
                         //var user = users.FirstOrDefault();
                         if (user == null) throw new Exception("NotFound");
 
@@ -1130,9 +1131,9 @@ public class SystemService  : ISystemService
 
                         };
 
-                        var insertResult = await _unitOfWork.AdminRepository.InsertAdminCurrentStatusAsync(userCurrentStatus);
-                        var updateResult = await _unitOfWork.AdminRepository.UpdateAdminUserAccountAsync(user);
-                        var result = await _unitOfWork.Save();
+                        var insertResult = await _unitOfWork.AdminRepository.InsertAdminCurrentStatusAsync(userCurrentStatus,cancellationToken);
+                        var updateResult = await _unitOfWork.AdminRepository.UpdateAdminUserAccountAsync(user,cancellationToken);
+                        var result = await _unitOfWork.Save(cancellationToken);
 
                         if (result == 0)
                             throw new ServiceUnavailableException("Service Unavailable");
@@ -1145,7 +1146,7 @@ public class SystemService  : ISystemService
                     }
                 case "agent":
                     {
-                        var user = await _unitOfWork.AgentRepository.GetAgentByIdAsync(statusAction.UserAccountId);
+                        var user = await _unitOfWork.AgentRepository.GetAgentByIdAsync(statusAction.UserAccountId,cancellationToken);
                         if (user == null) throw new NotFoundException("NotFound");
 
                         user.StatusTypeId = statusAction.StatusTypeId;
@@ -1161,9 +1162,9 @@ public class SystemService  : ISystemService
 
                         };
 
-                        var insertResult = await _unitOfWork.AgentRepository.InsertAgentCurrentStatusAsync(userCurrentStatus);
-                        var updateResult = await _unitOfWork.AgentRepository.UpdateAgentAsync(user);
-                        var result = await _unitOfWork.Save();
+                        var insertResult = await _unitOfWork.AgentRepository.InsertAgentCurrentStatusAsync(userCurrentStatus,cancellationToken);
+                        var updateResult = await _unitOfWork.AgentRepository.UpdateAgentAsync(user,cancellationToken);
+                        var result = await _unitOfWork.Save(cancellationToken);
 
                         if (result == 0)
                             throw new ServiceUnavailableException("Service Unavailable");
@@ -1183,7 +1184,7 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<bool> AddUserMessageHubTokenAsync( UserHubToken userHubToken)
+    public async Task<bool> AddUserMessageHubTokenAsync( UserHubToken userHubToken, CancellationToken cancellationToken)
     {
 
         
@@ -1191,8 +1192,8 @@ public class SystemService  : ISystemService
             {
                 case "captain":
                     {
-                        var insertedUser = await _unitOfWork.CaptainRepository.InsertCaptainUserMessageHubByCaptainUserAccountIdAsync(userHubToken.UserAccountId, userHubToken.Token);
-                        var result = await _unitOfWork.Save();
+                        var insertedUser = await _unitOfWork.CaptainRepository.InsertCaptainUserMessageHubByCaptainUserAccountIdAsync(userHubToken.UserAccountId, userHubToken.Token,cancellationToken);
+                        var result = await _unitOfWork.Save(cancellationToken);
                         if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
                         return true;
@@ -1207,24 +1208,24 @@ public class SystemService  : ISystemService
                             ConnectionId = userHubToken.Token
                         };
 
-                        var insertedUser = await _unitOfWork.SupportRepository.InsertSupportUserMessageHubAsync(supportUserMessageHub);
-                        var result = await _unitOfWork.Save();
+                        var insertedUser = await _unitOfWork.SupportRepository.InsertSupportUserMessageHubAsync(supportUserMessageHub,cancellationToken);
+                        var result = await _unitOfWork.Save(cancellationToken);
                         if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
                         return true;
                     }
                 case "agent":
                     {
-                        var insertedUser = await _unitOfWork.CaptainRepository.InsertCaptainUserMessageHubByCaptainUserAccountIdAsync(userHubToken.UserAccountId, userHubToken.Token);
-                        var result = await _unitOfWork.Save();
+                        var insertedUser = await _unitOfWork.CaptainRepository.InsertCaptainUserMessageHubByCaptainUserAccountIdAsync(userHubToken.UserAccountId, userHubToken.Token,cancellationToken);
+                        var result = await _unitOfWork.Save(cancellationToken);
                         if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
                         return true;
                     }
                 case "admin":
                     {
-                        var insertedUser = await _unitOfWork.CaptainRepository.InsertCaptainUserMessageHubByCaptainUserAccountIdAsync(userHubToken.UserAccountId, userHubToken.Token);
-                        var result = await _unitOfWork.Save();
+                        var insertedUser = await _unitOfWork.CaptainRepository.InsertCaptainUserMessageHubByCaptainUserAccountIdAsync(userHubToken.UserAccountId, userHubToken.Token,cancellationToken);
+                        var result = await _unitOfWork.Save(cancellationToken);
                         if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
                         return true;
@@ -1241,14 +1242,14 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<bool> ForgotPasswordAsync( ResetPassword resetPassword)
+    public async Task<bool> ForgotPasswordAsync( ResetPassword resetPassword, CancellationToken cancellationToken)
     {
       
             switch (resetPassword.UserType.ToLower())
             {
                 case "captain":
                     {
-                        var accounts = await _unitOfWork.CaptainRepository.GetCaptainUsersAccountsByAsync(d => d.Mobile == resetPassword.Username);
+                        var accounts = await _unitOfWork.CaptainRepository.GetCaptainUsersAccountsByAsync(d => d.Mobile == resetPassword.Username,cancellationToken);
                         if (accounts == null || accounts?.Count() <= 0)
                             throw new UnauthorizedException("Unauthorized");
 
@@ -1256,8 +1257,8 @@ public class SystemService  : ISystemService
                         if (account?.StatusTypeId == (long)StatusTypes.Stopped || account?.StatusTypeId == (long)StatusTypes.Suspended)
                             throw new Exception("Unauthorized");
 
-                        var user = await _unitOfWork.CaptainRepository.GetCaptainUserByIdAsync(account.CaptainUserId);
-                        var country = await _unitOfWork.CountryRepository.GetCountryByIdAsync(user.ResidenceCountryId ?? 0);
+                        var user = await _unitOfWork.CaptainRepository.GetCaptainUserByIdAsync(account.CaptainUserId,cancellationToken);
+                        var country = await _unitOfWork.CountryRepository.GetCountryByIdAsync(user.ResidenceCountryId ?? 0, cancellationToken);
 
                         byte[] passwordHash, passwordSalt;
                         var password = Utility.GeneratePassword();
@@ -1269,15 +1270,15 @@ public class SystemService  : ISystemService
 
 
 
-                        var updatedUser = await _unitOfWork.CaptainRepository.UpdateCaptainUserAccountAsync(account);
-                        var result = await _unitOfWork.Save();
+                        var updatedUser = await _unitOfWork.CaptainRepository.UpdateCaptainUserAccountAsync(account,cancellationToken);
+                        var result = await _unitOfWork.Save(cancellationToken);
 
                         if (result == 0)
                             throw new ServiceUnavailableException("Service Unavailable");
 
                         var message = "Welcome to Sender, your password has reset, the password is " + password;
                         var phone = country?.Code + account.Mobile;
-                        var responseResult = Utility.SendSMS(message, phone);
+                        var responseResult = await Utility.SendSMSAsync(message, phone,cancellationToken);
                         //if (!responseResult)
                         //    return new ObjectResult("Server not available") { StatusCode = 707 };
 
@@ -1293,10 +1294,10 @@ public class SystemService  : ISystemService
 
 
     
-    public async Task<object> SendFirebaseNotificationAsync(FBNotify fbNotify)
+    public async Task<object> SendFirebaseNotificationAsync(FBNotify fbNotify, CancellationToken cancellationToken)
     {
         string result = "";
-        FirebaseNotificationResponse responseResult = null;
+        FirebaseNotificationResponse? responseResult = null;
        
             if (fbNotify?.Topic != null && fbNotify?.Topic != "")
             {
@@ -1307,42 +1308,42 @@ public class SystemService  : ISystemService
                         {
                             if (fbNotify.UserAccountId != "")
                             {
-                                var usersMessageHub = await _unitOfWork.CaptainRepository.GetCaptainUsersMessageHubsByAsync(u => u.CaptainUserAccountId == fbNotify.UserAccountId);
+                                var usersMessageHub = await _unitOfWork.CaptainRepository.GetCaptainUsersMessageHubsByAsync(u => u.CaptainUserAccountId == fbNotify.UserAccountId,cancellationToken);
                                 var userMessageHub = usersMessageHub.FirstOrDefault();
                                 if (userMessageHub != null && userMessageHub.Id > 0)
                                 {
-                                    result = FirebaseNotification.SendNotification(userMessageHub.ConnectionId, fbNotify.Title, fbNotify.Message);
+                                    result = await FirebaseNotification.SendNotification(userMessageHub.ConnectionId, fbNotify.Title, fbNotify.Message,cancellationToken);
                                 }
                             }
                             else if (fbNotify.UserAccountIds?.Count > 0)
                             {
-                                var usersMessageHub = await _unitOfWork.CaptainRepository.GetCaptainUsersMessageHubsByAsync(u => fbNotify.UserAccountIds.Contains(u.CaptainUserAccountId));
+                                var usersMessageHub = await _unitOfWork.CaptainRepository.GetCaptainUsersMessageHubsByAsync(u => fbNotify.UserAccountIds.Contains(u.CaptainUserAccountId),cancellationToken);
                                 if (usersMessageHub != null && usersMessageHub?.Count() > 0)
                                 {
                                     var tokens = usersMessageHub.Select(u => u.ConnectionId).ToList();
-                                    result = FirebaseNotification.SendNotificationToMultiple(tokens, fbNotify.Title, fbNotify.Message);
+                                    result = await FirebaseNotification.SendNotificationToMultiple(tokens, fbNotify.Title, fbNotify.Message);
                                 }
                             }
                             else
                             {
-                                result = FirebaseNotification.SendNotificationToTopic(fbNotify.Topic.ToLower(), fbNotify.Title, fbNotify.Message);
+                                result =await FirebaseNotification.SendNotificationToTopic(fbNotify.Topic.ToLower(), fbNotify.Title, fbNotify.Message);
                             }
 
                             break;
                         }
                     case FirebaseTopics.Agents:
                         {
-                            result = FirebaseNotification.SendNotificationToTopic(fbNotify.Topic.ToLower(), fbNotify.Title, fbNotify.Message);
+                            result =await FirebaseNotification.SendNotificationToTopic(fbNotify.Topic.ToLower(), fbNotify.Title, fbNotify.Message);
                             break;
                         }
                     case FirebaseTopics.Supports:
                         {
-                            result = FirebaseNotification.SendNotificationToTopic(fbNotify.Topic.ToLower(), fbNotify.Title, fbNotify.Message);
+                            result = await FirebaseNotification.SendNotificationToTopic(fbNotify.Topic.ToLower(), fbNotify.Title, fbNotify.Message);
                             break;
                         }
                     case FirebaseTopics.Admins:
                         {
-                            result = FirebaseNotification.SendNotificationToTopic(fbNotify.Topic.ToLower(), fbNotify.Title, fbNotify.Message);
+                            result = await FirebaseNotification.SendNotificationToTopic(fbNotify.Topic.ToLower(), fbNotify.Title, fbNotify.Message);
                             break;
                         }
                 }

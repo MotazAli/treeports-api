@@ -31,12 +31,12 @@ namespace TreePorts.Presentation
 
 
 
-        public async Task<IEnumerable<Order>> GetOrdersAsync()
+        public async Task<IEnumerable<Order>> GetOrdersAsync(CancellationToken cancellationToken)
         {
 
             try
             {
-                return await _unitOfWork.OrderRepository.GetOrdersAsync();
+                return await _unitOfWork.OrderRepository.GetOrdersAsync(cancellationToken);
             }
             catch (Exception e)
             {
@@ -46,7 +46,7 @@ namespace TreePorts.Presentation
 
 
 
-        public async Task<object> GetOrdersPaginationAsync(FilterParameters parameters)
+        public async Task<object> GetOrdersPaginationAsync(FilterParameters parameters, CancellationToken cancellationToken)
         {
             try
             {
@@ -55,7 +55,7 @@ namespace TreePorts.Presentation
                 var take = parameters.NumberOfObjectsPerPage;
 
 
-                return await _unitOfWork.OrderRepository.GetOrdersPaginationAsync(skip, take);
+                return await _unitOfWork.OrderRepository.GetOrdersPaginationAsync(skip, take,cancellationToken);
 
 
                 /* var total = query.Count();            
@@ -72,14 +72,12 @@ namespace TreePorts.Presentation
 
 
 
-        public async Task<object> UserOrdersPagingByAgentIdAsync(string agentId, FilterParameters parameters)
+        public async Task<object> UserOrdersPagingByAgentIdAsync(string agentId, FilterParameters parameters,CancellationToken cancellationToken)
         {
             try
             {
 
 
-                var result = await Task.Run(() =>
-                {
                     var users = _unitOfWork.OrderRepository.GetByQuerable(o => o.IsDeleted == false && o.AgentId == agentId);
                     //var total = query.Count();
                     //var result = Utility.Pagination(query.ToList(), pagination.NumberOfObjectsPerPage, pagination.Page).ToList();
@@ -92,9 +90,9 @@ namespace TreePorts.Presentation
                     var skip = (parameters.NumberOfObjectsPerPage * (parameters.Page - 1));
                     var take = parameters.NumberOfObjectsPerPage;
 
-                    var result = Utility.GetFilter2<Order>(parameters, users, skip, take, out totalResult);
+                    var result = await Utility.GetFilter2<Order>(parameters, users, skip, take, out totalResult).ToListAsync(cancellationToken);
 
-                    var usersResult = this.mapper.Map<List<OrderResponse>>(result.ToList());
+                    var usersResult = this.mapper.Map<List<OrderResponse>>(result);
                     var totalPages = (int)Math.Ceiling(totalResult / (double)parameters.NumberOfObjectsPerPage);
 
                     foreach (var order in usersResult)
@@ -108,9 +106,7 @@ namespace TreePorts.Presentation
                     }
 
                     return new { Orders = usersResult, TotalResult = totalResult, Total = total, Page = parameters.Page, TotalPages = totalPages };
-                });
-
-                return result;
+                
 
             }
             catch (Exception e)
@@ -121,11 +117,11 @@ namespace TreePorts.Presentation
 
 
 
-        public async Task<IEnumerable<OrderStatusHistory>> GetOrdersStatusHistoriesByOrderIdAsync(long id)
+        public async Task<IEnumerable<OrderStatusHistory>> GetOrdersStatusHistoriesByOrderIdAsync(long id, CancellationToken cancellationToken)
         {
             try
             {
-                return await _unitOfWork.OrderRepository.GetOrdersStatusHistoriesByAsync(o => o.OrderId == id);
+                return await _unitOfWork.OrderRepository.GetOrdersStatusHistoriesByAsync(o => o.OrderId == id,cancellationToken);
 
             }
             catch (Exception e)
@@ -138,12 +134,12 @@ namespace TreePorts.Presentation
 
 
 
-        public async Task<OrderDetails> GetOrderDetailsByOrderIdAsync(long id)
+        public async Task<OrderDetails?> GetOrderDetailsByOrderIdAsync(long id, CancellationToken cancellationToken)
         {
             try
             {
-                var result = await _unitOfWork.OrderRepository.GetOrderDetailsByIdAsync(id);
-                if (result?.QrCode != null && result?.QrCode.Code.Length != 0)
+                var result = await _unitOfWork.OrderRepository.GetOrderDetailsByIdAsync(id,cancellationToken);
+                if (result?.QrCode != null && result?.QrCode?.Code?.Length != 0)
                 {
                     result.QrCode.QrCodeUrl = Utility.ConvertImgToString(result.QrCode.Code);
                 }
@@ -159,24 +155,24 @@ namespace TreePorts.Presentation
 
 
 
-        public async Task<Order> GetOrderByIdAsync(long id)
+        public async Task<Order?> GetOrderByIdAsync(long id, CancellationToken cancellationToken)
         {
             try
             {
-                var resullt = await _unitOfWork.OrderRepository.GetOrderById_oldBehaviourAsync(id);
+                var resullt = await _unitOfWork.OrderRepository.GetOrderById_oldBehaviourAsync(id,cancellationToken);
 
-                var userPayments = await _unitOfWork.CaptainRepository.GetCaptainUsersPaymentsByAsync(p => p.OrderId == resullt.Id);
+                var userPayments = await _unitOfWork.CaptainRepository.GetCaptainUsersPaymentsByAsync(p => p.OrderId == resullt.Id,cancellationToken);
                 var userPayment = userPayments.FirstOrDefault();
                 if (userPayment != null)
                     resullt.OrderDeliveryPaymentAmount = userPayment.Value;
-                var qrCodes = await _unitOfWork.CaptainRepository.GetOrderQRCodeByAsync(p => p.OrderId == resullt.Id);
+                var qrCodes = await _unitOfWork.CaptainRepository.GetOrderQRCodeByAsync(p => p.OrderId == resullt.Id,cancellationToken);
                 var qrCode = qrCodes.FirstOrDefault();
                 if (qrCode != null && qrCode.Code.Length != 0)
                 {
                     qrCode.QrCodeUrl = Utility.ConvertImgToString(qrCode.Code);
                     //resullt.Qrcodes.Add(qrCode);
                 }
-                var userAcceptedRequests = await _unitOfWork.CaptainRepository.GetCaptainUsersAcceptedRequestsByAsync(u => u.OrderId == resullt.Id);
+                var userAcceptedRequests = await _unitOfWork.CaptainRepository.GetCaptainUsersAcceptedRequestsByAsync(u => u.OrderId == resullt.Id,cancellationToken);
 
                 if (userAcceptedRequests != null)
                 {
@@ -197,21 +193,21 @@ namespace TreePorts.Presentation
 
 
 
-        public async Task<object> GetOrderDetailsAsync(long orderId, string captainUserAccountId)//[FromBody] OrderRequest orderRequest)
+        public async Task<object> GetOrderDetailsAsync(long orderId, string captainUserAccountId, CancellationToken cancellationToken)//[FromBody] OrderRequest orderRequest)
         {
 
-            var resullt = await _unitOfWork.OrderRepository.GetOrderById_oldBehaviourAsync(orderId);
-            var agent = await _unitOfWork.AgentRepository.GetAgentByIdAsync(resullt.AgentId);
+            var resullt = await _unitOfWork.OrderRepository.GetOrderById_oldBehaviourAsync(orderId,cancellationToken);
+            var agent = await _unitOfWork.AgentRepository.GetAgentByIdAsync(resullt.AgentId,cancellationToken);
             //resullt.Agent = agent;
 
-            var items = await _unitOfWork.OrderRepository.GetOrdersItemsByAsync(i => i.OrderId == orderId);
+            var items = await _unitOfWork.OrderRepository.GetOrdersItemsByAsync(i => i.OrderId == orderId,cancellationToken);
             //resullt.OrderItems = items.ToList();
 
-            var locations = await _unitOfWork.CaptainRepository.GetCaptainUsersCurrentLocationsByAsync(l => l.CaptainUserAccountId == captainUserAccountId);
+            var locations = await _unitOfWork.CaptainRepository.GetCaptainUsersCurrentLocationsByAsync(l => l.CaptainUserAccountId == captainUserAccountId,cancellationToken);
             var userLocation = locations.FirstOrDefault();
 
-            var system = await _unitOfWork.SystemRepository.GetCurrentSystemSettingAsync();
-            var userAccount = await _unitOfWork.CaptainRepository.GetCaptainUserAccountByIdAsync(captainUserAccountId);
+            var system = await _unitOfWork.SystemRepository.GetCurrentSystemSettingAsync(cancellationToken);
+            var userAccount = await _unitOfWork.CaptainRepository.GetCaptainUserAccountByIdAsync(captainUserAccountId,cancellationToken);
 
 
 
@@ -219,11 +215,11 @@ namespace TreePorts.Presentation
             var customerOrigin = resullt.PickupLocationLat + "," + resullt.PickupLocationLong;
             var customerDestination = resullt.DropLocationLat + "," + resullt.DropLocationLong;
 
-            var customerResponse = await Utility.getDirectionsFromGoogleMap(customerOrigin, customerDestination, "driving");
+            var customerResponse = await Utility.getDirectionsFromGoogleMap(customerOrigin, customerDestination, "driving",cancellationToken);
             var customerResponseResult = JsonConvert.DeserializeObject<GoogleMapsResponse>(customerResponse);
             double customerDistance = 0.0;
-            var customerResponseDistance = customerResponseResult.Routes.FirstOrDefault().Legs.FirstOrDefault().distance;
-            var customerResponseDuration = customerResponseResult.Routes.FirstOrDefault().Legs.FirstOrDefault().duration;
+            var customerResponseDistance = customerResponseResult?.Routes?.FirstOrDefault()?.Legs?.FirstOrDefault()?.distance;
+            var customerResponseDuration = customerResponseResult?.Routes?.FirstOrDefault()?.Legs?.FirstOrDefault()?.duration;
             if (customerResponseDistance.text.Contains("km"))
             {
                 customerDistance = double.Parse(customerResponseDistance.value) / 1000.0;
@@ -236,13 +232,13 @@ namespace TreePorts.Presentation
             /* Customer Distance*/
 
             /* Agent Distance*/
-            var agentOrigin = userLocation.Lat + "," + userLocation.Long;
+            var agentOrigin = userLocation?.Lat + "," + userLocation?.Long;
             var agentDestination = resullt.PickupLocationLat + "," + resullt.PickupLocationLong;
-            var agentResponse = await Utility.getDirectionsFromGoogleMap(agentOrigin, agentDestination, "driving");
+            var agentResponse = await Utility.getDirectionsFromGoogleMap(agentOrigin, agentDestination, "driving",cancellationToken);
 
             var agentResponseResult = JsonConvert.DeserializeObject<GoogleMapsResponse>(agentResponse);
-            var agentResponseDistance = agentResponseResult.Routes.FirstOrDefault().Legs.FirstOrDefault().distance;
-            var agentResponseDuration = agentResponseResult.Routes.FirstOrDefault().Legs.FirstOrDefault().duration;
+            var agentResponseDistance = agentResponseResult?.Routes?.FirstOrDefault()?.Legs?.FirstOrDefault()?.distance;
+            var agentResponseDuration = agentResponseResult?.Routes?.FirstOrDefault()?.Legs?.FirstOrDefault()?.duration;
             double agentDistance = 0.0;
             if (agentResponseDistance.text.Contains("km"))
             {
@@ -251,7 +247,7 @@ namespace TreePorts.Presentation
             }
             else
             {
-                agentDistance = double.Parse(agentResponseDistance.value);
+                agentDistance = double.Parse(agentResponseDistance?.value);
 
             }
             /* Agent Distance*/
@@ -260,7 +256,7 @@ namespace TreePorts.Presentation
             CountryPrice countryPrice; // just using that object as a template to hold the prices for calcutaions
             var agentDeliveryPrices =
                 await _unitOfWork.AgentRepository.GetAgentDeliveryPriceByAsync(a =>
-                    a.AgentId == resullt.AgentId && a.IsCurrent == true);
+                    a.AgentId == resullt.AgentId && a.IsCurrent == true,cancellationToken);
             var agentDeliveryPrice = agentDeliveryPrices.FirstOrDefault();
             if (agentDeliveryPrice != null && agentDeliveryPrice?.Id > 0)
             {
@@ -275,7 +271,7 @@ namespace TreePorts.Presentation
             else
             {
 
-                var cityPrices = await _unitOfWork.CountryRepository.GetCitiesPricesByAsync(c => c.CityId == agent.CityId);
+                var cityPrices = await _unitOfWork.CountryRepository.GetCitiesPricesByAsync(c => c.CityId == agent.CityId,cancellationToken);
                 var cityPrice = cityPrices.FirstOrDefault();
                 if (cityPrice != null && cityPrice?.Id > 0)
                 {
@@ -289,7 +285,7 @@ namespace TreePorts.Presentation
                 }
                 else
                 {
-                    var countriesPrices = await _unitOfWork.CountryRepository.GetCountriesPricesByAsync(c => c.CountryId == agent.CountryId);
+                    var countriesPrices = await _unitOfWork.CountryRepository.GetCountriesPricesByAsync(c => c.CountryId == agent.CountryId,cancellationToken);
                     countryPrice = countriesPrices.FirstOrDefault();
                 }
             }
@@ -328,31 +324,31 @@ namespace TreePorts.Presentation
                     // remainingAmount = ((decimal)(realExtraRemainingKilometers/ countryPrice.ExtraKilometers)) * countryPrice.ExtraKiloPrice;
                     // amount = amount + remainingAmount;
 
-                    remainingAmount = ((decimal)(remainingKilometers)) * countryPrice?.ExtraKiloPrice;
-                    amount = amount + remainingAmount;
+                    remainingAmount = ((decimal)remainingKilometers) * countryPrice?.ExtraKiloPrice;
+                    amount += remainingAmount;
                 }
                 else if (remainingKilometers > 0 && remainingKilometers <= countryPrice?.ExtraKilometers)
                 {
                     remainingAmount = countryPrice.ExtraKiloPrice;
-                    amount = amount + remainingAmount;
+                    amount += remainingAmount;
                 }
-                var agentCoupon = await _unitOfWork.AgentRepository.GetAssignedCoupon(resullt.AgentId, orderId);
+                var agentCoupon = await _unitOfWork.AgentRepository.GetAssignedCoupon(resullt.AgentId, orderId,cancellationToken);
 
                 if (agentCoupon != null)
                 {
-                    amount = amount - ((amount * (decimal)agentCoupon.DiscountPercent) / 100);
+                    amount -= ((amount * (decimal)agentCoupon.DiscountPercent) / 100);
                 }
 
             }
 
 
-            var userPayments = await _unitOfWork.CaptainRepository.GetCaptainUsersPaymentsByAsync(p => p.OrderId == resullt.Id);
+            var userPayments = await _unitOfWork.CaptainRepository.GetCaptainUsersPaymentsByAsync(p => p.OrderId == resullt.Id,cancellationToken);
             var userPayment = userPayments.FirstOrDefault();
 
             if (userPayment != null && userPayment.Id > 0)
             {
                 userPayment.Value = amount;
-                var updatePaymentResult = await _unitOfWork.CaptainRepository.UpdateCaptainUserPaymentAsync(userPayment);
+                var updatePaymentResult = await _unitOfWork.CaptainRepository.UpdateCaptainUserPaymentAsync(userPayment,cancellationToken);
             }
             else
             {
@@ -366,11 +362,11 @@ namespace TreePorts.Presentation
                     Value = amount,
                     CreationDate = DateTime.Now
                 };
-                var insertPaymentResult = await _unitOfWork.CaptainRepository.InsertCaptainUserPaymentAsync(payment);
+                var insertPaymentResult = await _unitOfWork.CaptainRepository.InsertCaptainUserPaymentAsync(payment,cancellationToken);
             }
 
 
-            var result = await _unitOfWork.Save();
+            var result = await _unitOfWork.Save(cancellationToken);
             if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
 
@@ -379,8 +375,8 @@ namespace TreePorts.Presentation
                 Order = resullt,
                 AgentDistance = agentResponseDistance.text,
                 CustomerDistance = customerResponseDistance.text,
-                CustomerDuration = customerResponseDuration.text,
-                AgentDuration = agentResponseDuration.text,
+                CustomerDuration = customerResponseDuration?.text,
+                AgentDuration = agentResponseDuration?.text,
                 DeliveryAmount = amount,
             };
 
@@ -392,16 +388,16 @@ namespace TreePorts.Presentation
 
 
 
-        public async Task<object> GetRunningOrderByCaptainUserAccountIdAsync(string captainUserAccountId)
+        public async Task<object> GetRunningOrderByCaptainUserAccountIdAsync(string captainUserAccountId, CancellationToken cancellationToken)
         {
             try
             {
 
-                var running_orders = await _unitOfWork.OrderRepository.GetRunningOrdersByAsync(r => r.CaptainUserAccountId == captainUserAccountId);
+                var running_orders = await _unitOfWork.OrderRepository.GetRunningOrdersByAsync(r => r.CaptainUserAccountId == captainUserAccountId,cancellationToken);
                 var running_order = running_orders.FirstOrDefault();
                 if (running_order == null || running_order.Id <= 0) throw new NotFoundException("No Running Order");
 
-                return await GetOrderDetailsAsync(running_order.OrderId ?? 0, captainUserAccountId);
+                return await GetOrderDetailsAsync(running_order.OrderId ?? 0, captainUserAccountId,cancellationToken);
                 /*OrderRequest orderRequest = new OrderRequest()
                 {
                     UserId = captainId,
@@ -483,12 +479,12 @@ namespace TreePorts.Presentation
 
 
 
-        public async Task<bool> IgnoreOrderAsync(OrderRequest orderRequest)
+        public async Task<bool> IgnoreOrderAsync(OrderRequest orderRequest, CancellationToken cancellationToken)
         {
 
 
-            var userNewRequests = await _unitOfWork.CaptainRepository.DeleteCaptainUserNewRequestByOrderIdAsync(orderRequest.OrderId);
-            var deleteResult = await _unitOfWork.CaptainRepository.DeleteCaptainUserPaymentByOrderIdAsync(orderRequest.OrderId);
+            var userNewRequests = await _unitOfWork.CaptainRepository.DeleteCaptainUserNewRequestByOrderIdAsync(orderRequest.OrderId,cancellationToken);
+            var deleteResult = await _unitOfWork.CaptainRepository.DeleteCaptainUserPaymentByOrderIdAsync(orderRequest.OrderId,cancellationToken);
 
             //var userNewRequests = await _unitOfWork.CaptainRepository.DeleteUserNewRequestByUserID(orderRequest.UserId);
             //var oldOrderPayment = await _unitOfWork.CaptainRepository.GetUserPaymentBy(p => p.OrderId == orderRequest.OrderId);
@@ -503,8 +499,8 @@ namespace TreePorts.Presentation
                 CreationDate = DateTime.Now
             };
 
-            var insertNewRequestResult = await _unitOfWork.CaptainRepository.InsertCaptainUserIgnoredRequestAsync(driverRequest);
-            var result = await _unitOfWork.Save();
+            var insertNewRequestResult = await _unitOfWork.CaptainRepository.InsertCaptainUserIgnoredRequestAsync(driverRequest,cancellationToken);
+            var result = await _unitOfWork.Save(cancellationToken);
             if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
             return true;
@@ -600,20 +596,20 @@ namespace TreePorts.Presentation
 
 
 
-        public async Task<bool> FakeCancelAsync(string captainUserAccountId)
+        public async Task<bool> FakeCancelAsync(string captainUserAccountId, CancellationToken cancellationToken)
         {
 
 
             var usersMessageHub =
-                     await _unitOfWork.CaptainRepository.GetCaptainUsersMessageHubsByAsync(u => u.CaptainUserAccountId == captainUserAccountId);
+                     await _unitOfWork.CaptainRepository.GetCaptainUsersMessageHubsByAsync(u => u.CaptainUserAccountId == captainUserAccountId,cancellationToken);
             var userMessageHub = usersMessageHub.FirstOrDefault();
             if (userMessageHub != null && userMessageHub.Id > 0)
             {
 
                 FirebaseNotificationResponse? responseResult = null;
-                var result = FirebaseNotification.SendNotification(userMessageHub.ConnectionId, "cancelRequest", "151");
+                var result = await FirebaseNotification.SendNotification(userMessageHub.ConnectionId, "cancelRequest", "151",cancellationToken);
 
-                if (result != "")
+                if (result?.Length > 0)
                     responseResult = JsonConvert.DeserializeObject<FirebaseNotificationResponse>(result);
 
                 if (responseResult == null || responseResult.messageId == "")
@@ -625,23 +621,23 @@ namespace TreePorts.Presentation
         }
 
 
-        public async Task<bool> FakeAssignToCaptainAsync(OrderRequest orderRequest)
+        public async Task<bool> FakeAssignToCaptainAsync(OrderRequest orderRequest, CancellationToken cancellationToken)
         {
 
 
-            var order = await _unitOfWork.OrderRepository.GetOnlyOrderByIdAsync(orderRequest.OrderId);
+            var order = await _unitOfWork.OrderRepository.GetOnlyOrderByIdAsync(orderRequest.OrderId,cancellationToken);
             if (order == null) return false;
 
             var usersMessageHub =
-                     await _unitOfWork.CaptainRepository.GetCaptainUsersMessageHubsByAsync(u => u.CaptainUserAccountId == orderRequest.CaptainUserAccountId);
+                     await _unitOfWork.CaptainRepository.GetCaptainUsersMessageHubsByAsync(u => u.CaptainUserAccountId == orderRequest.CaptainUserAccountId,cancellationToken);
             var userMessageHub = usersMessageHub.FirstOrDefault();
             if (userMessageHub != null && userMessageHub.Id > 0)
             {
 
                 FirebaseNotificationResponse? responseResult = null;
-                var result = FirebaseNotification.SendNotification(userMessageHub.ConnectionId, "assignedRequest", order.Id.ToString());
+                var result = await FirebaseNotification.SendNotification(userMessageHub.ConnectionId, "assignedRequest", order.Id.ToString(),cancellationToken);
 
-                if (result != "")
+                if (result?.Length > 0)
                     responseResult = JsonConvert.DeserializeObject<FirebaseNotificationResponse>(result);
 
                 if (responseResult == null || responseResult.messageId == "")
@@ -661,17 +657,17 @@ namespace TreePorts.Presentation
 
 
 
-        public async Task<bool> AssignToCaptainAsync(OrderRequest orderRequest)
+        public async Task<bool> AssignToCaptainAsync(OrderRequest orderRequest, CancellationToken cancellationToken)
         {
 
             //check if the orderAssigen not saved before and there is no failure happend that cause the orderAssigned to saving it again
-            var ordersAssigned = await _unitOfWork.OrderRepository.GetOrdersAssignmentsByAsync(o => o.OrderId == orderRequest.OrderId);
+            var ordersAssigned = await _unitOfWork.OrderRepository.GetOrdersAssignmentsByAsync(o => o.OrderId == orderRequest.OrderId,cancellationToken);
             var oldOrderAssigned = ordersAssigned?.FirstOrDefault();
             if (oldOrderAssigned != null && oldOrderAssigned.Id > 0) return true;
 
 
-            var order = await _unitOfWork.OrderRepository.GetOnlyOrderByIdAsync(orderRequest.OrderId);
-            var locations = await _unitOfWork.CaptainRepository.GetCaptainUsersCurrentLocationsByAsync(l => l.CaptainUserAccountId == orderRequest.CaptainUserAccountId);
+            var order = await _unitOfWork.OrderRepository.GetOnlyOrderByIdAsync(orderRequest.OrderId,cancellationToken);
+            var locations = await _unitOfWork.CaptainRepository.GetCaptainUsersCurrentLocationsByAsync(l => l.CaptainUserAccountId == orderRequest.CaptainUserAccountId,cancellationToken);
             var userLocation = locations.FirstOrDefault();
 
 
@@ -682,11 +678,11 @@ namespace TreePorts.Presentation
             var customerOrigin = order?.PickupLocationLat + "," + order?.PickupLocationLong;
             var customerDestination = order?.DropLocationLat + "," + order?.DropLocationLong;
 
-            var customerResponse = await Utility.getDirectionsFromGoogleMap(customerOrigin, customerDestination, "driving");
+            var customerResponse = await Utility.getDirectionsFromGoogleMap(customerOrigin, customerDestination, "driving",cancellationToken);
             var customerResponseResult = JsonConvert.DeserializeObject<GoogleMapsResponse>(customerResponse);
             double customerDistance = 0.0;
-            var customerResponseDistance = customerResponseResult.Routes.FirstOrDefault().Legs.FirstOrDefault().distance;
-            var customerResponseDuration = customerResponseResult.Routes.FirstOrDefault().Legs.FirstOrDefault().duration;
+            var customerResponseDistance = customerResponseResult?.Routes?.FirstOrDefault()?.Legs?.FirstOrDefault()?.distance;
+            var customerResponseDuration = customerResponseResult?.Routes?.FirstOrDefault()?.Legs?.FirstOrDefault()?.duration;
             if (customerResponseDistance.text.Contains("km"))
             {
                 customerDistance = double.Parse(customerResponseDistance.value) / 1000.0;
@@ -701,11 +697,11 @@ namespace TreePorts.Presentation
             /* Agent Distance*/
             var agentOrigin = userLocation?.Lat + "," + userLocation?.Long;
             var agentDestination = order?.PickupLocationLat + "," + order?.PickupLocationLong;
-            var agentResponse = await Utility.getDirectionsFromGoogleMap(agentOrigin, agentDestination, "driving");
+            var agentResponse = await Utility.getDirectionsFromGoogleMap(agentOrigin, agentDestination, "driving",cancellationToken);
 
             var agentResponseResult = JsonConvert.DeserializeObject<GoogleMapsResponse>(agentResponse);
-            var agentResponseDistance = agentResponseResult.Routes.FirstOrDefault().Legs.FirstOrDefault().distance;
-            var agentResponseDuration = agentResponseResult.Routes.FirstOrDefault().Legs.FirstOrDefault().duration;
+            var agentResponseDistance = agentResponseResult?.Routes?.FirstOrDefault()?.Legs?.FirstOrDefault()?.distance;
+            var agentResponseDuration = agentResponseResult?.Routes?.FirstOrDefault()?.Legs?.FirstOrDefault()?.duration;
             double agentDistance = 0.0;
             if (agentResponseDistance.text.Contains("km"))
             {
@@ -723,54 +719,54 @@ namespace TreePorts.Presentation
 
             var agentDeliveryPrices =
                 await _unitOfWork.AgentRepository.GetAgentDeliveryPriceByAsync(a =>
-                    a.AgentId == order.AgentId && a.IsCurrent == true);
+                    a.AgentId == order.AgentId && a.IsCurrent == true,cancellationToken);
             var agentDeliveryPrice = agentDeliveryPrices.FirstOrDefault();
             if (agentDeliveryPrice != null && agentDeliveryPrice?.Id > 0)
             {
 
-                AgentOrderDeliveryPrice agentOrderDeliveryPrice = new AgentOrderDeliveryPrice()
+                AgentOrderDeliveryPrice agentOrderDeliveryPrice = new ()
                 {
                     OrderId = order?.Id,
                     AgentDeliveryPriceId = agentDeliveryPrice.Id,
                     CreationDate = DateTime.Now
                 };
                 var insertAgentOrderDeliveryPriceResult =
-                    await _unitOfWork.AgentRepository.InsertAgentOrderDeliveryPriceAsync(agentOrderDeliveryPrice);
+                    await _unitOfWork.AgentRepository.InsertAgentOrderDeliveryPriceAsync(agentOrderDeliveryPrice,cancellationToken);
             }
             else
             {
 
-                var agent = await _unitOfWork.AgentRepository.GetAgentByIdAsync(order.AgentId);
+                var agent = await _unitOfWork.AgentRepository.GetAgentByIdAsync(order.AgentId,cancellationToken);
                 var cityPrices =
                     await _unitOfWork.CountryRepository.GetCitiesPricesByAsync(a =>
-                        a.CityId == agent.CityId && a.IsCurrent == true);
+                        a.CityId == agent.CityId && a.IsCurrent == true,cancellationToken);
                 var cityPrice = cityPrices.FirstOrDefault();
 
                 if (cityPrice != null && cityPrice?.Id > 0)
                 {
-                    CityOrderPrice cityOrderPrice = new CityOrderPrice()
+                    CityOrderPrice cityOrderPrice = new ()
                     {
                         OrderId = order.Id,
                         CityPriceId = cityPrice.Id,
                         CreationDate = DateTime.Now
                     };
                     var insertCityOrderPriceResult =
-                        await _unitOfWork.CountryRepository.InsertCityOrderPriceAsync(cityOrderPrice);
+                        await _unitOfWork.CountryRepository.InsertCityOrderPriceAsync(cityOrderPrice,cancellationToken);
                 }
                 else
                 {
-                    var countriesPrices = await _unitOfWork.CountryRepository.GetCountriesPricesByAsync(c => c.CountryId == agent.CountryId);
+                    var countriesPrices = await _unitOfWork.CountryRepository.GetCountriesPricesByAsync(c => c.CountryId == agent.CountryId,cancellationToken);
                     var countryPrice = countriesPrices.FirstOrDefault();
                     if (countryPrice != null && countryPrice?.Id > 0)
                     {
-                        CountryOrderPrice countryOrderPrice = new CountryOrderPrice()
+                        CountryOrderPrice countryOrderPrice = new ()
                         {
                             OrderId = order.Id,
                             CountryPriceId = countryPrice.Id,
                             CreationDate = DateTime.Now
                         };
                         var insertCountryOrderPriceResult =
-                            await _unitOfWork.CountryRepository.InsertCountryOrderPriceAsync(countryOrderPrice);
+                            await _unitOfWork.CountryRepository.InsertCountryOrderPriceAsync(countryOrderPrice,cancellationToken);
                     }
                 }
             }
@@ -787,9 +783,9 @@ namespace TreePorts.Presentation
                 OrderId = orderRequest.OrderId,
                 CaptainUserAccountId = orderRequest.CaptainUserAccountId,
                 ToAgentKilometer = agentDistance.ToString(),
-                ToAgentTime = agentResponseDuration.text,
+                ToAgentTime = agentResponseDuration?.text,
                 ToCustomerKilometer = customerDistance.ToString(),
-                ToCustomerTime = customerResponseDuration.text,
+                ToCustomerTime = customerResponseDuration?.text,
                 CreationDate = DateTime.Now
 
             };
@@ -820,35 +816,35 @@ namespace TreePorts.Presentation
 
 
             //check if there no QrCode inserted incase if the order assigned to captain throught the Admin or Support and didn't create QrCode for the order from request new order
-            var oldQrCode = await _unitOfWork.OrderRepository.GetQrcodeByOrderIdAsync(order.Id);
+            var oldQrCode = await _unitOfWork.OrderRepository.GetQrcodeByOrderIdAsync(order.Id,cancellationToken);
             if (oldQrCode == null || oldQrCode.Id <= 0)
             {
                 /* Create QrCode and Insert*/
                 var qRCode = Utility.CreateQRCode(orderRequest.CaptainUserAccountId, order.Id);
-                var qRCodeResult = await _unitOfWork.OrderRepository.InsertQrCodeAsync(qRCode);
+                var qRCodeResult = await _unitOfWork.OrderRepository.InsertQrCodeAsync(qRCode,cancellationToken);
                 /* Create QrCode and Insert*/
             }
 
 
-            var updatedOrder = await _unitOfWork.OrderRepository.UpdateOrderCurrentStatusAsync(order.Id, (long)OrderStatusTypes.AssignedToCaptain);
-            var userNewRequests = await _unitOfWork.CaptainRepository.DeleteCaptainUserNewRequestByUserIdAsync(orderRequest.CaptainUserAccountId);
-            var insertRunningOrderResult = await _unitOfWork.OrderRepository.InsertRunningOrderAsync(runningOrder);
-            var insertOrderStatusResult = await _unitOfWork.OrderRepository.InsertOrderStatusAsync(orderCurrentStatus);
-            var orderAssignmentResult = await _unitOfWork.OrderRepository.InsertOrderAssignmentAsync(orderAssignment);
-            var insertNewRequestResult = await _unitOfWork.CaptainRepository.InsertCaptainUserAcceptedRequestAsync(driverRequest);
-            var insertUserStatusResult = await _unitOfWork.CaptainRepository.InsertCaptainUserCurrentStatusAsync(userCurrentStatus);
-            var result = await _unitOfWork.Save();
+            var updatedOrder = await _unitOfWork.OrderRepository.UpdateOrderCurrentStatusAsync(order.Id, (long)OrderStatusTypes.AssignedToCaptain,cancellationToken);
+            var userNewRequests = await _unitOfWork.CaptainRepository.DeleteCaptainUserNewRequestByUserIdAsync(orderRequest.CaptainUserAccountId,cancellationToken);
+            var insertRunningOrderResult = await _unitOfWork.OrderRepository.InsertRunningOrderAsync(runningOrder,cancellationToken);
+            var insertOrderStatusResult = await _unitOfWork.OrderRepository.InsertOrderStatusAsync(orderCurrentStatus,cancellationToken);
+            var orderAssignmentResult = await _unitOfWork.OrderRepository.InsertOrderAssignmentAsync(orderAssignment,cancellationToken);
+            var insertNewRequestResult = await _unitOfWork.CaptainRepository.InsertCaptainUserAcceptedRequestAsync(driverRequest,cancellationToken);
+            var insertUserStatusResult = await _unitOfWork.CaptainRepository.InsertCaptainUserCurrentStatusAsync(userCurrentStatus,cancellationToken);
+            var result = await _unitOfWork.Save(cancellationToken);
             if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
-            _ = _notify.NotifyOrderStatusChanged(OrderStatusTypes.AssignedToCaptain, order.Id, order.AgentId);
+            _ = _notify.NotifyOrderStatusChanged(OrderStatusTypes.AssignedToCaptain, order.Id, order.AgentId,cancellationToken);
 
-            _ = _notify.SendGoogleCloudMessageToCaptain(orderRequest.CaptainUserAccountId, "assignedRequest", order.Id.ToString());
+            _ = _notify.SendGoogleCloudMessageToCaptain(orderRequest.CaptainUserAccountId, "assignedRequest", order.Id.ToString(),cancellationToken);
 
             _ = Task.Run(() =>
             {
                 Task.Delay(TimeSpan.FromSeconds(10));
-                _ = _notify.ChangeOrderStatusAndNotify(OrderStatusTypes.Progress, order.Id, order.AgentId);
-            });
+                _ = _notify.ChangeOrderStatusAndNotify(OrderStatusTypes.Progress, order.Id, order.AgentId,cancellationToken);
+            },cancellationToken);
 
 
             return true;
@@ -864,7 +860,7 @@ namespace TreePorts.Presentation
 
 
 
-        public async Task<bool> AcceptOrderAsync(OrderRequest orderRequest)
+        public async Task<bool> AcceptOrderAsync(OrderRequest orderRequest, CancellationToken cancellationToken)
         {
 
 
@@ -890,13 +886,13 @@ namespace TreePorts.Presentation
 
 
             //check if the orderAssigen not saved before and there is no failure happend that cause the orderAssigned to saving it again
-            var ordersAssigned = await _unitOfWork.OrderRepository.GetOrdersAssignmentsByAsync(o => o.OrderId == orderRequest.OrderId);
+            var ordersAssigned = await _unitOfWork.OrderRepository.GetOrdersAssignmentsByAsync(o => o.OrderId == orderRequest.OrderId,cancellationToken);
             var oldOrderAssigned = ordersAssigned?.FirstOrDefault();
             if (oldOrderAssigned != null && oldOrderAssigned.Id > 0) return true;
 
 
-            var order = await _unitOfWork.OrderRepository.GetOnlyOrderByIdAsync(orderRequest.OrderId);
-            var locations = await _unitOfWork.CaptainRepository.GetCaptainUsersCurrentLocationsByAsync(l => l.CaptainUserAccountId == orderRequest.CaptainUserAccountId);
+            var order = await _unitOfWork.OrderRepository.GetOnlyOrderByIdAsync(orderRequest.OrderId,cancellationToken);
+            var locations = await _unitOfWork.CaptainRepository.GetCaptainUsersCurrentLocationsByAsync(l => l.CaptainUserAccountId == orderRequest.CaptainUserAccountId,cancellationToken);
             var userLocation = locations.FirstOrDefault();
 
 
@@ -915,11 +911,11 @@ namespace TreePorts.Presentation
             var customerOrigin = order?.PickupLocationLat + "," + order?.PickupLocationLong;
             var customerDestination = order?.DropLocationLat + "," + order?.DropLocationLong;
 
-            var customerResponse = await Utility.getDirectionsFromGoogleMap(customerOrigin, customerDestination, "driving");
+            var customerResponse = await Utility.getDirectionsFromGoogleMap(customerOrigin, customerDestination, "driving",cancellationToken);
             var customerResponseResult = JsonConvert.DeserializeObject<GoogleMapsResponse>(customerResponse);
             double customerDistance = 0.0;
-            var customerResponseDistance = customerResponseResult.Routes.FirstOrDefault().Legs.FirstOrDefault().distance;
-            var customerResponseDuration = customerResponseResult.Routes.FirstOrDefault().Legs.FirstOrDefault().duration;
+            var customerResponseDistance = customerResponseResult?.Routes?.FirstOrDefault()?.Legs?.FirstOrDefault()?.distance;
+            var customerResponseDuration = customerResponseResult?.Routes?.FirstOrDefault()?.Legs?.FirstOrDefault()?.duration;
             if (customerResponseDistance.text.Contains("km"))
             {
                 customerDistance = double.Parse(customerResponseDistance.value) / 1000.0;
@@ -934,11 +930,11 @@ namespace TreePorts.Presentation
             /* Agent Distance*/
             var agentOrigin = userLocation?.Lat + "," + userLocation?.Long;
             var agentDestination = order?.PickupLocationLat + "," + order?.PickupLocationLong;
-            var agentResponse = await Utility.getDirectionsFromGoogleMap(agentOrigin, agentDestination, "driving");
+            var agentResponse = await Utility.getDirectionsFromGoogleMap(agentOrigin, agentDestination, "driving",cancellationToken);
 
             var agentResponseResult = JsonConvert.DeserializeObject<GoogleMapsResponse>(agentResponse);
-            var agentResponseDistance = agentResponseResult.Routes.FirstOrDefault().Legs.FirstOrDefault().distance;
-            var agentResponseDuration = agentResponseResult.Routes.FirstOrDefault().Legs.FirstOrDefault().duration;
+            var agentResponseDistance = agentResponseResult?.Routes?.FirstOrDefault()?.Legs?.FirstOrDefault()?.distance;
+            var agentResponseDuration = agentResponseResult?.Routes?.FirstOrDefault()?.Legs?.FirstOrDefault()?.duration;
             double agentDistance = 0.0;
             if (agentResponseDistance.text.Contains("km"))
             {
@@ -956,27 +952,27 @@ namespace TreePorts.Presentation
 
             var agentDeliveryPrices =
                 await _unitOfWork.AgentRepository.GetAgentDeliveryPriceByAsync(a =>
-                    a.AgentId == order.AgentId && a.IsCurrent == true);
+                    a.AgentId == order.AgentId && a.IsCurrent == true,cancellationToken);
             var agentDeliveryPrice = agentDeliveryPrices.FirstOrDefault();
             if (agentDeliveryPrice != null && agentDeliveryPrice?.Id > 0)
             {
 
-                AgentOrderDeliveryPrice agentOrderDeliveryPrice = new AgentOrderDeliveryPrice()
+                AgentOrderDeliveryPrice agentOrderDeliveryPrice = new ()
                 {
                     OrderId = order?.Id,
                     AgentDeliveryPriceId = agentDeliveryPrice.Id,
                     CreationDate = DateTime.Now
                 };
                 var insertAgentOrderDeliveryPriceResult =
-                    await _unitOfWork.AgentRepository.InsertAgentOrderDeliveryPriceAsync(agentOrderDeliveryPrice);
+                    await _unitOfWork.AgentRepository.InsertAgentOrderDeliveryPriceAsync(agentOrderDeliveryPrice,cancellationToken);
             }
             else
             {
 
-                var agent = await _unitOfWork.AgentRepository.GetAgentByIdAsync(order.AgentId);
+                var agent = await _unitOfWork.AgentRepository.GetAgentByIdAsync(order.AgentId,cancellationToken);
                 var cityPrices =
                     await _unitOfWork.CountryRepository.GetCitiesPricesByAsync(a =>
-                        a.CityId == agent.CityId && a.IsCurrent == true);
+                        a.CityId == agent.CityId && a.IsCurrent == true,cancellationToken);
                 var cityPrice = cityPrices.FirstOrDefault();
 
                 if (cityPrice != null && cityPrice?.Id > 0)
@@ -988,22 +984,22 @@ namespace TreePorts.Presentation
                         CreationDate = DateTime.Now
                     };
                     var insertCityOrderPriceResult =
-                        await _unitOfWork.CountryRepository.InsertCityOrderPriceAsync(cityOrderPrice);
+                        await _unitOfWork.CountryRepository.InsertCityOrderPriceAsync(cityOrderPrice,cancellationToken);
                 }
                 else
                 {
-                    var countriesPrices = await _unitOfWork.CountryRepository.GetCountriesPricesByAsync(c => c.CountryId == agent.CountryId);
+                    var countriesPrices = await _unitOfWork.CountryRepository.GetCountriesPricesByAsync(c => c.CountryId == agent.CountryId,cancellationToken);
                     var countryPrice = countriesPrices.FirstOrDefault();
                     if (countryPrice != null && countryPrice?.Id > 0)
                     {
-                        CountryOrderPrice countryOrderPrice = new CountryOrderPrice()
+                        CountryOrderPrice countryOrderPrice = new ()
                         {
                             OrderId = order.Id,
                             CountryPriceId = countryPrice.Id,
                             CreationDate = DateTime.Now
                         };
                         var insertCountryOrderPriceResult =
-                            await _unitOfWork.CountryRepository.InsertCountryOrderPriceAsync(countryOrderPrice);
+                            await _unitOfWork.CountryRepository.InsertCountryOrderPriceAsync(countryOrderPrice,cancellationToken);
                     }
                 }
             }
@@ -1020,9 +1016,9 @@ namespace TreePorts.Presentation
                 OrderId = orderRequest.OrderId,
                 CaptainUserAccountId = orderRequest.CaptainUserAccountId,
                 ToAgentKilometer = agentDistance.ToString(),
-                ToAgentTime = agentResponseDuration.text,
+                ToAgentTime = agentResponseDuration?.text,
                 ToCustomerKilometer = customerDistance.ToString(),
-                ToCustomerTime = customerResponseDuration.text,
+                ToCustomerTime = customerResponseDuration?.text,
                 CreationDate = DateTime.Now
 
             };
@@ -1052,27 +1048,27 @@ namespace TreePorts.Presentation
 
 
             //check if there no QrCode inserted incase if the order assigned to captain throught the Admin or Support and didn't create QrCode for the order from request new order
-            var oldQrCode = await _unitOfWork.OrderRepository.GetQrcodeByOrderIdAsync(order.Id);
+            var oldQrCode = await _unitOfWork.OrderRepository.GetQrcodeByOrderIdAsync(order.Id,cancellationToken);
             if (oldQrCode == null || oldQrCode.Id <= 0)
             {
                 /* Create QrCode and Insert*/
                 var qRCode = Utility.CreateQRCode(orderRequest.CaptainUserAccountId, order.Id);
-                var qRCodeResult = await _unitOfWork.OrderRepository.InsertQrCodeAsync(qRCode);
+                var qRCodeResult = await _unitOfWork.OrderRepository.InsertQrCodeAsync(qRCode,cancellationToken);
                 /* Create QrCode and Insert*/
             }
 
 
-            var updatedOrder = await _unitOfWork.OrderRepository.UpdateOrderCurrentStatusAsync(order.Id, (long)OrderStatusTypes.AssignedToCaptain);
-            var userNewRequests = await _unitOfWork.CaptainRepository.DeleteCaptainUserNewRequestByUserIdAsync(orderRequest.CaptainUserAccountId);
-            var insertRunningOrderResult = await _unitOfWork.OrderRepository.InsertRunningOrderAsync(runningOrder);
-            var insertOrderStatusResult = await _unitOfWork.OrderRepository.InsertOrderStatusAsync(orderCurrentStatus);
-            var orderAssignmentResult = await _unitOfWork.OrderRepository.InsertOrderAssignmentAsync(orderAssignment);
-            var insertNewRequestResult = await _unitOfWork.CaptainRepository.InsertCaptainUserAcceptedRequestAsync(driverRequest);
-            var insertUserStatusResult = await _unitOfWork.CaptainRepository.InsertCaptainUserCurrentStatusAsync(userCurrentStatus);
-            var result = await _unitOfWork.Save();
+            var updatedOrder = await _unitOfWork.OrderRepository.UpdateOrderCurrentStatusAsync(order.Id, (long)OrderStatusTypes.AssignedToCaptain,cancellationToken);
+            var userNewRequests = await _unitOfWork.CaptainRepository.DeleteCaptainUserNewRequestByUserIdAsync(orderRequest.CaptainUserAccountId,cancellationToken);
+            var insertRunningOrderResult = await _unitOfWork.OrderRepository.InsertRunningOrderAsync(runningOrder,cancellationToken);
+            var insertOrderStatusResult = await _unitOfWork.OrderRepository.InsertOrderStatusAsync(orderCurrentStatus,cancellationToken);
+            var orderAssignmentResult = await _unitOfWork.OrderRepository.InsertOrderAssignmentAsync(orderAssignment,cancellationToken);
+            var insertNewRequestResult = await _unitOfWork.CaptainRepository.InsertCaptainUserAcceptedRequestAsync(driverRequest,cancellationToken);
+            var insertUserStatusResult = await _unitOfWork.CaptainRepository.InsertCaptainUserCurrentStatusAsync(userCurrentStatus,cancellationToken);
+            var result = await _unitOfWork.Save(cancellationToken);
             if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
-            _ = _notify.NotifyOrderStatusChanged(OrderStatusTypes.AssignedToCaptain, order.Id, order.AgentId);
+            _ = _notify.NotifyOrderStatusChanged(OrderStatusTypes.AssignedToCaptain, order.Id, order.AgentId,cancellationToken);
 
             //TODO var _newnotify = new NotifyService(_serviceProvider);
             /* _ = Task.Run(async () => {
@@ -1197,7 +1193,7 @@ namespace TreePorts.Presentation
         */
 
 
-        public async Task<bool> OrderPickedUpAsync(long id)
+        public async Task<bool> OrderPickedUpAsync(long id, CancellationToken cancellationToken)
         {
 
 
@@ -1224,8 +1220,8 @@ namespace TreePorts.Presentation
                 IsCurrent = true,
 
             };
-            var order = await _unitOfWork.OrderRepository.GetOnlyOrderByIdAsync(id);
-            var orderAssgined = await _unitOfWork.OrderRepository.GetOrdersAssignmentsByAsync(a => a.OrderId == id);
+            var order = await _unitOfWork.OrderRepository.GetOnlyOrderByIdAsync(id,cancellationToken);
+            var orderAssgined = await _unitOfWork.OrderRepository.GetOrdersAssignmentsByAsync(a => a.OrderId == id,cancellationToken);
 
 
             //TODO need to implement
@@ -1245,8 +1241,8 @@ namespace TreePorts.Presentation
 
             Bookkeeping bookkeeping = new()
             {
-                OrderId = order.Id,
-                CaptainUserAccountId = orderAssgined.FirstOrDefault().CaptainUserAccountId,
+                OrderId = order?.Id,
+                CaptainUserAccountId = orderAssgined.FirstOrDefault()?.CaptainUserAccountId,
                 DepositTypeId = (long)DepositTypes.Order_Items_Amount,
                 CreationDate = DateTime.Now
             };
@@ -1261,28 +1257,28 @@ namespace TreePorts.Presentation
                 bookkeeping.Value = order_amount;
             }
 
-            var captainUserAccountId = orderAssgined.FirstOrDefault().CaptainUserAccountId;
-            var userCurrentLocation = await _unitOfWork.CaptainRepository.GetCaptainUsersCurrentLocationsByAsync(l => l.CaptainUserAccountId == captainUserAccountId);
+            var captainUserAccountId = orderAssgined?.FirstOrDefault()?.CaptainUserAccountId;
+            var userCurrentLocation = await _unitOfWork.CaptainRepository.GetCaptainUsersCurrentLocationsByAsync(l => l.CaptainUserAccountId == captainUserAccountId,cancellationToken);
             var currentLocation = userCurrentLocation.FirstOrDefault();
 
             OrderStartLocation orderStartLocation = new()
             {
                 OrderId = id,
-                OrderAssignId = (long)orderAssgined.FirstOrDefault().Id,
+                OrderAssignId = orderAssgined?.FirstOrDefault()?.Id,
                 PickedupLat = currentLocation?.Lat,
                 PickedupLong = currentLocation?.Long,
                 CreationDate = DateTime.Now
 
             };
 
-            var updatedOrder = await _unitOfWork.OrderRepository.UpdateOrderCurrentStatusAsync(order.Id, (long)OrderStatusTypes.PickedUp);
-            var insertBookkeepingResult = await _unitOfWork.PaymentRepository.InsertBookkeepingAsync(bookkeeping);
-            var insertOrderStartLocationResult = await _unitOfWork.OrderRepository.InsertOrderStartLocationAsync(orderStartLocation);
-            var insertOrderStatusResult = await _unitOfWork.OrderRepository.InsertOrderStatusAsync(orderCurrentStatus);
-            var result = await _unitOfWork.Save();
+            var updatedOrder = await _unitOfWork.OrderRepository.UpdateOrderCurrentStatusAsync(order.Id, (long)OrderStatusTypes.PickedUp,cancellationToken);
+            var insertBookkeepingResult = await _unitOfWork.PaymentRepository.InsertBookkeepingAsync(bookkeeping,cancellationToken);
+            var insertOrderStartLocationResult = await _unitOfWork.OrderRepository.InsertOrderStartLocationAsync(orderStartLocation,cancellationToken);
+            var insertOrderStatusResult = await _unitOfWork.OrderRepository.InsertOrderStatusAsync(orderCurrentStatus,cancellationToken);
+            var result = await _unitOfWork.Save(cancellationToken);
             if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
-            _ = _notify.NotifyOrderStatusChanged(OrderStatusTypes.PickedUp, order.Id, order.AgentId);
+            _ = _notify.NotifyOrderStatusChanged(OrderStatusTypes.PickedUp, order.Id, order.AgentId,cancellationToken);
 
             return true;
 
@@ -1290,7 +1286,7 @@ namespace TreePorts.Presentation
 
 
 
-        public async Task<bool> OrderDroppedAsync(long id)
+        public async Task<bool> OrderDroppedAsync(long id, CancellationToken cancellationToken)
         {
 
 
@@ -1310,12 +1306,12 @@ namespace TreePorts.Presentation
 
 
 
-            var orderAssgined = await _unitOfWork.OrderRepository.GetOrdersAssignmentsByAsync(a => a.OrderId == id);
+            var orderAssgined = await _unitOfWork.OrderRepository.GetOrdersAssignmentsByAsync(a => a.OrderId == id,cancellationToken);
 
             var captainUserAccountId = orderAssgined.FirstOrDefault()?.CaptainUserAccountId;
-            var userCurrentLocation = await _unitOfWork.CaptainRepository.GetCaptainUsersCurrentLocationsByAsync(l => l.CaptainUserAccountId == captainUserAccountId);
+            var userCurrentLocation = await _unitOfWork.CaptainRepository.GetCaptainUsersCurrentLocationsByAsync(l => l.CaptainUserAccountId == captainUserAccountId,cancellationToken);
             var currentLocation = userCurrentLocation.FirstOrDefault();
-            var userPayments = await _unitOfWork.CaptainRepository.GetCaptainUsersPaymentsByAsync(p => p.OrderId == id);
+            var userPayments = await _unitOfWork.CaptainRepository.GetCaptainUsersPaymentsByAsync(p => p.OrderId == id,cancellationToken);
             var userPayment = userPayments.FirstOrDefault();
             userPayment.PaymentStatusTypeId = (long)PaymentStatusTypes.Complete;
 
@@ -1360,11 +1356,11 @@ namespace TreePorts.Presentation
             //}
 
             //delete the order items amount from captain wallet
-            var order_items_amount_bookkeeping = await _unitOfWork.PaymentRepository.GetBookkeepingByAsync(b => b.OrderId == id && b.DepositTypeId == (long)DepositTypes.Order_Items_Amount);
+            var order_items_amount_bookkeeping = await _unitOfWork.PaymentRepository.GetBookkeepingByAsync(b => b.OrderId == id && b.DepositTypeId == (long)DepositTypes.Order_Items_Amount,cancellationToken);
             if (order_items_amount_bookkeeping?.FirstOrDefault()?.Id > 0)
             {
                 var bookkeeping_id = order_items_amount_bookkeeping?.FirstOrDefault()?.Id;
-                var deleteBookkeepingResult = await _unitOfWork.PaymentRepository.DeleteBookkeepingAsync((long)bookkeeping_id);
+                var deleteBookkeepingResult = await _unitOfWork.PaymentRepository.DeleteBookkeepingAsync((long)bookkeeping_id,cancellationToken);
             }
 
             // add the delivery amount to the captain wallet
@@ -1377,19 +1373,19 @@ namespace TreePorts.Presentation
                 CreationDate = DateTime.Now
             };
 
-            var updatedOrder = await _unitOfWork.OrderRepository.UpdateOrderCurrentStatusAsync(id, (long)OrderStatusTypes.Delivered);
-            var insertedDeliveryBookkeeping = await _unitOfWork.PaymentRepository.InsertBookkeepingAsync(delivery_bookkeeping);
-            var insertPaymentResult = await _unitOfWork.CaptainRepository.UpdateCaptainUserPaymentAsync(userPayment);
-            var insertOrderEndLocationResult = await _unitOfWork.OrderRepository.InsertOrderEndLocationAsync(orderEndLocation);
-            var insertUserStatusResult = await _unitOfWork.CaptainRepository.InsertCaptainUserCurrentStatusAsync(userCurrentStatus);
-            var insertOrderStatusResult = await _unitOfWork.OrderRepository.InsertOrderStatusAsync(orderCurrentStatus);
-            var oldRunningOrder = await _unitOfWork.OrderRepository.DeleteRunningOrderByOrderIdAsync(id);
-            var insertOrderDeliveredStatusResult = await _unitOfWork.OrderRepository.InsertOrderStatusAsync(orderDeliveredCurrentStatus);
-            var result = await _unitOfWork.Save();
+            var updatedOrder = await _unitOfWork.OrderRepository.UpdateOrderCurrentStatusAsync(id, (long)OrderStatusTypes.Delivered,cancellationToken);
+            var insertedDeliveryBookkeeping = await _unitOfWork.PaymentRepository.InsertBookkeepingAsync(delivery_bookkeeping,cancellationToken);
+            var insertPaymentResult = await _unitOfWork.CaptainRepository.UpdateCaptainUserPaymentAsync(userPayment,cancellationToken);
+            var insertOrderEndLocationResult = await _unitOfWork.OrderRepository.InsertOrderEndLocationAsync(orderEndLocation,cancellationToken);
+            var insertUserStatusResult = await _unitOfWork.CaptainRepository.InsertCaptainUserCurrentStatusAsync(userCurrentStatus,cancellationToken);
+            var insertOrderStatusResult = await _unitOfWork.OrderRepository.InsertOrderStatusAsync(orderCurrentStatus,cancellationToken);
+            var oldRunningOrder = await _unitOfWork.OrderRepository.DeleteRunningOrderByOrderIdAsync(id,cancellationToken);
+            var insertOrderDeliveredStatusResult = await _unitOfWork.OrderRepository.InsertOrderStatusAsync(orderDeliveredCurrentStatus, cancellationToken);
+            var result = await _unitOfWork.Save(cancellationToken);
             if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
-            var order = await _unitOfWork.OrderRepository.GetOnlyOrderByIdAsync(id);
-            _ = _notify.NotifyOrderStatusChanged(OrderStatusTypes.Dropped, order.Id, order.AgentId);
+            var order = await _unitOfWork.OrderRepository.GetOnlyOrderByIdAsync(id,cancellationToken);
+            _ = _notify.NotifyOrderStatusChanged(OrderStatusTypes.Dropped, order.Id, order.AgentId,cancellationToken);
 
             //TODO var _newnotify = new NotifyService(_serviceProvider);
             /* _ = Task.Run(async () => {
@@ -1444,7 +1440,7 @@ namespace TreePorts.Presentation
 
 
 
-        public async Task<bool> CancelOrderAsync(long id)
+        public async Task<bool> CancelOrderAsync(long id, CancellationToken cancellationToken)
         {
 
 
@@ -1462,24 +1458,24 @@ namespace TreePorts.Presentation
             //}
 
 
-            var order = await _unitOfWork.OrderRepository.GetOnlyOrderByIdAsync(id);
+            var order = await _unitOfWork.OrderRepository.GetOnlyOrderByIdAsync(id,cancellationToken);
             if (order == null || order.Id <= 0) throw new NoContentException("NoContent");
 
-            var ordersAssgined = await _unitOfWork.OrderRepository.GetOrdersAssignmentsByAsync(a => a.OrderId == id);
+            var ordersAssgined = await _unitOfWork.OrderRepository.GetOrdersAssignmentsByAsync(a => a.OrderId == id,cancellationToken);
             var orderAssgined = ordersAssgined?.FirstOrDefault();
 
             if (orderAssgined != null && orderAssgined.Id > 0)
             {
                 var userId = orderAssgined.CaptainUserAccountId;
-                var userCurrentLocation = await _unitOfWork.CaptainRepository.GetCaptainUsersCurrentLocationsByAsync(l => l.CaptainUserAccountId == userId);
+                var userCurrentLocation = await _unitOfWork.CaptainRepository.GetCaptainUsersCurrentLocationsByAsync(l => l.CaptainUserAccountId == userId,cancellationToken);
                 var currentLocation = userCurrentLocation.FirstOrDefault();
-                var userPayments = await _unitOfWork.CaptainRepository.GetCaptainUsersPaymentsByAsync(p => p.OrderId == id);
+                var userPayments = await _unitOfWork.CaptainRepository.GetCaptainUsersPaymentsByAsync(p => p.OrderId == id,cancellationToken);
                 var userPayment = userPayments.FirstOrDefault();
                 if (userPayment != null)
                 {
                     userPayment.PaymentStatusTypeId = (long)PaymentStatusTypes.Canclled;
                     // add the delivery amount to the captain wallet
-                    Bookkeeping delivery_bookkeeping = new Bookkeeping()
+                    Bookkeeping delivery_bookkeeping = new ()
                     {
                         OrderId = id,
                         CaptainUserAccountId = userId,
@@ -1488,11 +1484,11 @@ namespace TreePorts.Presentation
                         CreationDate = DateTime.Now
                     };
 
-                    var insertedDeliveryBookkeeping = await _unitOfWork.PaymentRepository.InsertBookkeepingAsync(delivery_bookkeeping);
-                    var insertPaymentResult = await _unitOfWork.CaptainRepository.UpdateCaptainUserPaymentAsync(userPayment);
+                    var insertedDeliveryBookkeeping = await _unitOfWork.PaymentRepository.InsertBookkeepingAsync(delivery_bookkeeping,cancellationToken);
+                    var insertPaymentResult = await _unitOfWork.CaptainRepository.UpdateCaptainUserPaymentAsync(userPayment,cancellationToken);
                 }
 
-                OrderEndLocation orderEndLocation = new OrderEndLocation()
+                OrderEndLocation orderEndLocation = new ()
                 {
                     OrderId = id,
                     OrderAssignId = orderAssgined.Id,
@@ -1511,20 +1507,20 @@ namespace TreePorts.Presentation
 
 
                 //delete the order items amount from captain wallet
-                var order_items_amount_bookkeeping = await _unitOfWork.PaymentRepository.GetBookkeepingByAsync(b => b.OrderId == id && b.DepositTypeId == (long)DepositTypes.Order_Items_Amount);
+                var order_items_amount_bookkeeping = await _unitOfWork.PaymentRepository.GetBookkeepingByAsync(b => b.OrderId == id && b.DepositTypeId == (long)DepositTypes.Order_Items_Amount,cancellationToken);
                 if (order_items_amount_bookkeeping?.FirstOrDefault()?.Id > 0)
                 {
                     var bookkeeping_id = order_items_amount_bookkeeping?.FirstOrDefault()?.Id;
-                    var deleteBookkeepingResult = await _unitOfWork.PaymentRepository.DeleteBookkeepingAsync(bookkeeping_id ?? 0);
+                    var deleteBookkeepingResult = await _unitOfWork.PaymentRepository.DeleteBookkeepingAsync(bookkeeping_id ?? 0,cancellationToken);
                 }
 
 
-                var insertOrderEndLocationResult = await _unitOfWork.OrderRepository.InsertOrderEndLocationAsync(orderEndLocation);
-                var insertUserStatusResult = await _unitOfWork.CaptainRepository.InsertCaptainUserCurrentStatusAsync(userCurrentStatus);
+                var insertOrderEndLocationResult = await _unitOfWork.OrderRepository.InsertOrderEndLocationAsync(orderEndLocation,cancellationToken);
+                var insertUserStatusResult = await _unitOfWork.CaptainRepository.InsertCaptainUserCurrentStatusAsync(userCurrentStatus,cancellationToken);
             }
 
 
-            OrderCurrentStatus orderCurrentStatus = new OrderCurrentStatus()
+            OrderCurrentStatus orderCurrentStatus = new ()
             {
                 OrderId = id,
                 OrderStatusTypeId = (long)OrderStatusTypes.Canceled,
@@ -1533,17 +1529,17 @@ namespace TreePorts.Presentation
             };
 
 
-            var updatedOrder = await _unitOfWork.OrderRepository.UpdateOrderCurrentStatusAsync(id, (long)OrderStatusTypes.Canceled);
-            var insertOrderStatusResult = await _unitOfWork.OrderRepository.InsertOrderStatusAsync(orderCurrentStatus);
-            var oldRunningOrder = await _unitOfWork.OrderRepository.DeleteRunningOrderByOrderIdAsync(id);
-            var result = await _unitOfWork.Save();
+            var updatedOrder = await _unitOfWork.OrderRepository.UpdateOrderCurrentStatusAsync(id, (long)OrderStatusTypes.Canceled,cancellationToken);
+            var insertOrderStatusResult = await _unitOfWork.OrderRepository.InsertOrderStatusAsync(orderCurrentStatus,cancellationToken);
+            var oldRunningOrder = await _unitOfWork.OrderRepository.DeleteRunningOrderByOrderIdAsync(id,cancellationToken);
+            var result = await _unitOfWork.Save(cancellationToken);
             if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
-            _ = _notify.NotifyOrderStatusChanged(OrderStatusTypes.Canceled, order.Id, order.AgentId);
+            _ = _notify.NotifyOrderStatusChanged(OrderStatusTypes.Canceled, order.Id, order.AgentId,cancellationToken);
 
             if (orderAssgined != null && orderAssgined.Id > 0)
             {
-                _ = _notify.SendGoogleCloudMessageToCaptain(orderAssgined.CaptainUserAccountId, "cancelRequest", order.Id.ToString());
+                _ = _notify.SendGoogleCloudMessageToCaptain(orderAssgined.CaptainUserAccountId, "cancelRequest", order.Id.ToString(),cancellationToken);
             }
 
 
@@ -1553,7 +1549,7 @@ namespace TreePorts.Presentation
 
 
 
-        public async Task<object> AddOrderAsync(Order order, HttpContext httpContext, string CouponCode)
+        public async Task<object> AddOrderAsync(Order order, HttpContext httpContext, string CouponCode, CancellationToken cancellationToken)
         {
 
 
@@ -1576,9 +1572,9 @@ namespace TreePorts.Presentation
                 order.AgentId = agentId;
             }
 
-            order.CurrentOrderStatusTypeId = (long)OrderStatusTypes.New;
-            var orderInsertResult = await _unitOfWork.OrderRepository.InsertOrderAsync(order);
-            var result = await _unitOfWork.Save();
+            order.OrderStatusTypeId = (long)OrderStatusTypes.New;
+            var orderInsertResult = await _unitOfWork.OrderRepository.InsertOrderAsync(order,cancellationToken);
+            var result = await _unitOfWork.Save(cancellationToken);
             if (result <= 0) throw new ServiceUnavailableException("Service Unavailable");
 
 
@@ -1588,15 +1584,15 @@ namespace TreePorts.Presentation
                 OrderStatusTypeId = (long)OrderStatusTypes.New,
                 IsCurrent = true
             };
-            var insertResult = await _unitOfWork.OrderRepository.InsertOrderStatusAsync(orderCurrentStatus);
-            var resultSecondeOperation = await _unitOfWork.Save();
+            var insertResult = await _unitOfWork.OrderRepository.InsertOrderStatusAsync(orderCurrentStatus,cancellationToken);
+            var resultSecondeOperation = await _unitOfWork.Save(cancellationToken);
             if (resultSecondeOperation <= 0) throw new ServiceUnavailableException("Service Unavailable");
 
 
-            _ = await _notify.NotifyOrderStatusChanged(OrderStatusTypes.New, orderInsertResult.Id, orderInsertResult.AgentId);
+            _ = await _notify.NotifyOrderStatusChanged(OrderStatusTypes.New, orderInsertResult.Id, orderInsertResult.AgentId,cancellationToken);
 
 
-            _ = SearchForCaptainAndNotifyOrder(orderInsertResult);
+            _ = SearchForCaptainAndNotifyOrder(orderInsertResult,cancellationToken);
 
             return new
             {
@@ -1979,11 +1975,11 @@ namespace TreePorts.Presentation
          }*/
 
 
-        public async Task<Order> DeleteOrderAsync(long id)
+        public async Task<Order> DeleteOrderAsync(long id, CancellationToken cancellationToken)
         {
             try
             {
-                return await _unitOfWork.OrderRepository.DeleteOrderAsync(id);
+                return await _unitOfWork.OrderRepository.DeleteOrderAsync(id,cancellationToken);
             }
             catch (Exception e)
             {
@@ -1993,11 +1989,11 @@ namespace TreePorts.Presentation
 
 
 
-        public async Task<OrderInvoice> AddOrderInvoiceAsync(OrderInvoice orderInvoice)
+        public async Task<OrderInvoice> AddOrderInvoiceAsync(OrderInvoice orderInvoice, CancellationToken cancellationToken)
         {
 
-            var insertResullt = await _unitOfWork.OrderRepository.InsertOrderInvoiceAsync(orderInvoice);
-            var result = await _unitOfWork.Save();
+            var insertResullt = await _unitOfWork.OrderRepository.InsertOrderInvoiceAsync(orderInvoice,cancellationToken);
+            var result = await _unitOfWork.Save(cancellationToken);
             if (result == 0) throw new Exception("Service Unavailable");
 
             return insertResullt;
@@ -2007,11 +2003,11 @@ namespace TreePorts.Presentation
 
 
 
-        public async Task<PaidOrder> AddPaidOrderAsync(PaidOrder paidOrder)
+        public async Task<PaidOrder> AddPaidOrderAsync(PaidOrder paidOrder, CancellationToken cancellationToken)
         {
 
-            var insertResullt = await _unitOfWork.OrderRepository.InsertPaidOrderAsync(paidOrder);
-            var result = await _unitOfWork.Save();
+            var insertResullt = await _unitOfWork.OrderRepository.InsertPaidOrderAsync(paidOrder,cancellationToken);
+            var result = await _unitOfWork.Save(cancellationToken);
             if (result == 0) throw new Exception("Service Unavailable");
 
             return insertResullt;
@@ -2022,21 +2018,21 @@ namespace TreePorts.Presentation
 
 
 
-        public async Task<object> GetOrderCurrentLocationByOrderIdAsync(long id) // order id
+        public async Task<object> GetOrderCurrentLocationByOrderIdAsync(long id, CancellationToken cancellationToken) // order id
         {
 
 
             var orderStatuses =
-                await _unitOfWork.OrderRepository.GetOrderCurrentStatusesByAsync(s => s.OrderId == id && s.IsCurrent == true);
+                await _unitOfWork.OrderRepository.GetOrderCurrentStatusesByAsync(s => s.OrderId == id && s.IsCurrent == true,cancellationToken);
             var orderStatus = orderStatuses.FirstOrDefault();
             if (orderStatus == null || orderStatus?.OrderStatusTypeId == (long)OrderStatusTypes.Dropped)
                 throw new NotFoundException("NotFound");
 
-            var orderAssigns = await _unitOfWork.OrderRepository.GetOrdersAssignmentsByAsync(a => a.OrderId == id);
+            var orderAssigns = await _unitOfWork.OrderRepository.GetOrdersAssignmentsByAsync(a => a.OrderId == id,cancellationToken);
             var orderAssign = orderAssigns.FirstOrDefault();
             if (orderAssign == null) throw new NoContentException("NoContent");
 
-            var usersLocations = await _unitOfWork.CaptainRepository.GetCaptainUsersCurrentLocationsByAsync(u => u.CaptainUserAccountId == orderAssign.CaptainUserAccountId);
+            var usersLocations = await _unitOfWork.CaptainRepository.GetCaptainUsersCurrentLocationsByAsync(u => u.CaptainUserAccountId == orderAssign.CaptainUserAccountId,cancellationToken);
             var userLocation = usersLocations.FirstOrDefault();
             if (userLocation == null) throw new NoContentException("NoContent");
 
@@ -2049,11 +2045,11 @@ namespace TreePorts.Presentation
 
 
 
-        public async Task<IEnumerable<OrderItem>> GetOrderItemsAsync(long id)
+        public async Task<IEnumerable<OrderItem>> GetOrderItemsAsync(long id, CancellationToken cancellationToken)
         {
             try
             {
-                return await _unitOfWork.OrderRepository.GetOrdersItemsByAsync(i => i.OrderId == id);
+                return await _unitOfWork.OrderRepository.GetOrdersItemsByAsync(i => i.OrderId == id,cancellationToken);
 
 
             }
@@ -2064,10 +2060,10 @@ namespace TreePorts.Presentation
         }
 
 
-        public async Task<object> GetQRCodeByOrderIdAsync(long id)
+        public async Task<object> GetQRCodeByOrderIdAsync(long id, CancellationToken cancellationToken)
         {
 
-            var qRCode = await _unitOfWork.OrderRepository.GetQrcodeByOrderIdAsync(id);
+            var qRCode = await _unitOfWork.OrderRepository.GetQrcodeByOrderIdAsync(id,cancellationToken);
             if (qRCode == null) throw new NotFoundException("NotFound");
 
             qRCode.QrCodeUrl = Utility.ConvertImgToString(qRCode.Code);
@@ -2199,14 +2195,12 @@ namespace TreePorts.Presentation
 
 
 
-        public async Task<object> SearchDetailsAsync(FilterParameters parameters)
+        public async Task<object> SearchDetailsAsync(FilterParameters parameters,CancellationToken cancellationToken)
         {
             try
             {
 
 
-                var taskResult = await Task.Run(() =>
-                {
 
                     //var query = _unitOfWork.OrderRepository.GetAllOrdersQuerable();
                     var query = _unitOfWork.OrderRepository.GetAllOrdersDetailsQuerable();
@@ -2215,7 +2209,7 @@ namespace TreePorts.Presentation
                     var totalResult = 0;
                     var ordersResult = Utility.GetFilter3<OrderDetails>(parameters, query, skip, take, out totalResult);
                     //var ordersResult = Utility.GetFilter2<Order>(parameters, query, skip, take,out totalResult);
-                    var orders = ordersResult.ToList();
+                    var orders = await ordersResult.ToListAsync(cancellationToken);
                     //var orders = this.mapper.Map<List<OrderResponse>>(ordersResult);
                     //var orders = this.mapper.Map<List<OrderResponse>>(ordersResult.ToList());
 
@@ -2232,9 +2226,7 @@ namespace TreePorts.Presentation
 
                     //return Ok(new { Orders = orders, TotalResult = totalResult, Page = parameters.Page, TotalPages = totalPages });
                     return new { result = orders, TotalResult = totalResult, Page = parameters.Page, TotalPages = totalPages };
-                });
-
-                return taskResult;
+               
 
 
             }
@@ -2253,14 +2245,14 @@ namespace TreePorts.Presentation
 
 
 
-        public async Task<object> ChartAsync()
+        public async Task<object> ChartAsync(CancellationToken cancellationToken)
         {
             try
             {
                 var taskResult = await Task.Run(() =>
                 {
                     return _unitOfWork.OrderRepository.OrdersReportCount();
-                });
+                },cancellationToken);
 
                 return taskResult;
             }
@@ -2274,14 +2266,14 @@ namespace TreePorts.Presentation
 
 
 
-        public async Task<IEnumerable<OrderFilterResponse>> SearchAsync(OrderFilter orderFilter)
+        public async Task<IEnumerable<OrderFilterResponse>> SearchAsync(OrderFilter orderFilter, CancellationToken cancellationToken)
         {
             try
             {
                 if (orderFilter?.Page != null)
                     orderFilter.Page = (orderFilter?.NumberOfObjects * (orderFilter?.Page - 1));
 
-                var result = await _unitOfWork.OrderRepository.FilterAsync(orderFilter);
+                var result = await _unitOfWork.OrderRepository.FilterAsync(orderFilter,cancellationToken);
                 return result;
             }
             catch (Exception e)
@@ -2301,7 +2293,7 @@ namespace TreePorts.Presentation
 
 
 
-        public async Task<bool> SearchForCaptainAndNotifyOrder(Order order)
+        public async Task<bool> SearchForCaptainAndNotifyOrder(Order order, CancellationToken cancellationToken)
         {
             try
             {
@@ -2317,13 +2309,13 @@ namespace TreePorts.Presentation
                     if (_notify == null) return false;
 
                     _ = await _notify.ChangeOrderStatusAndNotify(OrderStatusTypes.SearchingForCaptain, order.Id,
-                        order.AgentId);
+                        order.AgentId,cancellationToken);
 
-                    var captain = await _unitOfWork.CaptainRepository.GetCaptainUserAccountNearestLocationAsync(order.PickupLocationLat, order.PickupLocationLong);
+                    var captain = await _unitOfWork.CaptainRepository.GetCaptainUserAccountNearestLocationAsync(order.PickupLocationLat, order.PickupLocationLong,cancellationToken);
                     if (captain == null)
                     {
                         _ = await _notify.ChangeOrderStatusAndNotify(OrderStatusTypes.NotAssignedToCaptain, order.Id,
-                            order.AgentId);
+                            order.AgentId,cancellationToken);
 
                         return false;
                     }
@@ -2337,16 +2329,16 @@ namespace TreePorts.Presentation
                         CreationDate = DateTime.Now
                     };
 
-                    var insertNewRequestResult = await _unitOfWork.CaptainRepository.InsertCaptainUserNewRequestAsync(driverRequest);
-                    var result = await _unitOfWork.Save();
+                    var insertNewRequestResult = await _unitOfWork.CaptainRepository.InsertCaptainUserNewRequestAsync(driverRequest,cancellationToken);
+                    var result = await _unitOfWork.Save(cancellationToken);
                     if (result <= 0) return false;
 
-                    var usersMessageHub = await _unitOfWork.CaptainRepository.GetCaptainUsersMessageHubsByAsync(u => u.CaptainUserAccountId == captain.Id);
+                    var usersMessageHub = await _unitOfWork.CaptainRepository.GetCaptainUsersMessageHubsByAsync(u => u.CaptainUserAccountId == captain.Id,cancellationToken);
                     var userMessageHub = usersMessageHub.FirstOrDefault();
                     if (userMessageHub != null && userMessageHub.Id > 0)
                     {
-                        var notificationReuslt = Utility.SendFirebaseNotification(_hostingEnvironment, "newRequest", order.Id.ToString(), userMessageHub.ConnectionId);
-                        if (notificationReuslt == "") return false;
+                        var notificationReuslt = await Utility.SendFirebaseNotification(_hostingEnvironment, "newRequest", order.Id.ToString(), userMessageHub.ConnectionId,cancellationToken);
+                        if (notificationReuslt?.Length == 0) return false;
                     }
 
 
@@ -2361,16 +2353,19 @@ namespace TreePorts.Presentation
 
 
                     bool isDriverAcceptOrder = false;
-                    bool isDriverRejectOrIgnoredOrder = false;
+                    //bool isDriverRejectOrIgnoredOrder = false;
                     //bool isDriverIgnoredOrder = false;
 
 
                     do
                     {
-                        var orderAssigns = await _unitOfWork.OrderRepository.GetOrdersAssignmentsByAsync(r => r.OrderId == order.Id);
+                        var orderAssigns = await _unitOfWork.OrderRepository.GetOrdersAssignmentsByAsync(r => r.OrderId == order.Id,cancellationToken);
                         var orderAssign = orderAssigns.FirstOrDefault();
-                        if (orderAssign != null)
+                        if (orderAssign != null && orderAssign?.Id > 0)
+                        {
                             isDriverAcceptOrder = true;
+                            break;
+                        }
 
                         /*var ordersReject = await _unitOfWork.CaptainRepository.GetUsersRejectedRequestsByAsync(r => r.OrderId == order.Id);
 						var rejectedOrder = ordersReject.FirstOrDefault();
@@ -2378,12 +2373,12 @@ namespace TreePorts.Presentation
 							isDriverRejectOrIgnoredOrder = true;*/
 
 
-                        var ordersIgnored = await _unitOfWork.CaptainRepository.GetCaptainUsersIgnoredRequestsByAsync(r => r.OrderId == order.Id);
+                        var ordersIgnored = await _unitOfWork.CaptainRepository.GetCaptainUsersIgnoredRequestsByAsync(r => r.OrderId == order.Id,cancellationToken);
                         var ignoredOrder = ordersIgnored.FirstOrDefault();
-                        if (ignoredOrder != null)
-                            isDriverRejectOrIgnoredOrder = true;
+                        if (ignoredOrder != null && ignoredOrder?.Id > 0)
+                            break;
 
-                    } while (isDriverAcceptOrder == false && isDriverRejectOrIgnoredOrder == false && time <= 50000);
+                    } while ( time <= 50000);
                     timer1.Enabled = false;
 
 
@@ -2391,18 +2386,18 @@ namespace TreePorts.Presentation
                     {
                         /* Create QrCode and Insert*/
                         var qRCode = Utility.CreateQRCode(captain.Id, order.Id);
-                        var qRCodeResult = await _unitOfWork.OrderRepository.InsertQrCodeAsync(qRCode);
+                        var qRCodeResult = await _unitOfWork.OrderRepository.InsertQrCodeAsync(qRCode,cancellationToken);
                         /* Create QrCode and Insert*/
-                        result = await _unitOfWork.Save();
+                        result = await _unitOfWork.Save(cancellationToken);
                         if (result <= 0) return false;
 
-                        _ = await _notify.ChangeOrderStatusAndNotify(OrderStatusTypes.AssignedToCaptain, order.Id, order.AgentId);
+                        _ = await _notify.ChangeOrderStatusAndNotify(OrderStatusTypes.AssignedToCaptain, order.Id, order.AgentId,cancellationToken);
                         return true;
                     }
 
                     // case captain reject or ignored the request, or didn't received the request because of firebase failure and the timeout passed
                     _ = await _notify.ChangeOrderStatusAndNotify(OrderStatusTypes.NotAssignedToCaptain, order.Id,
-                        order.AgentId);
+                        order.AgentId,cancellationToken);
                     return false;
                 }
             }
@@ -2459,7 +2454,7 @@ namespace TreePorts.Presentation
 
 */
 
-        public async Task<object> AddNewOrder(Order order)
+        public async Task<object?> AddNewOrder(Order order, CancellationToken cancellationToken)
         {
             try
             {
@@ -2471,28 +2466,28 @@ namespace TreePorts.Presentation
 
 
 
-                order.CurrentOrderStatusTypeId = (long)OrderStatusTypes.New;
-                var orderInsertResult = await _unitOfWork.OrderRepository.InsertOrderAsync(order);
-                var result = await _unitOfWork.Save();
+                order.OrderStatusTypeId = (long)OrderStatusTypes.New;
+                var orderInsertResult = await _unitOfWork.OrderRepository.InsertOrderAsync(order,cancellationToken);
+                var result = await _unitOfWork.Save(cancellationToken);
                 if (result <= 0) return null;
 
 
-                OrderCurrentStatus orderCurrentStatus = new OrderCurrentStatus()
+                OrderCurrentStatus orderCurrentStatus = new ()
                 {
                     OrderId = orderInsertResult.Id,
                     OrderStatusTypeId = (long)OrderStatusTypes.New,
                     IsCurrent = true
                 };
-                var insertResult = await _unitOfWork.OrderRepository.InsertOrderStatusAsync(orderCurrentStatus);
-                var resultSecondeOperation = await _unitOfWork.Save();
+                var insertResult = await _unitOfWork.OrderRepository.InsertOrderStatusAsync(orderCurrentStatus,cancellationToken);
+                var resultSecondeOperation = await _unitOfWork.Save(cancellationToken);
                 if (resultSecondeOperation <= 0) return null;
 
 
                 _ = await _notify.NotifyOrderStatusChanged(OrderStatusTypes.New, orderInsertResult.Id,
-                    orderInsertResult.AgentId);
+                    orderInsertResult.AgentId,cancellationToken);
 
 
-                _ = SearchForCaptainAndNotifyOrder(orderInsertResult);
+                _ = SearchForCaptainAndNotifyOrder(orderInsertResult,cancellationToken);
 
                 return new
                 {

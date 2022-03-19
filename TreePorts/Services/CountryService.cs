@@ -11,26 +11,26 @@ public class CountryService : ICountryService
     }
 
     
-    public async Task<IEnumerable<Country>> GetCountriesAsync()
+    public async Task<IEnumerable<CountryResponse>> GetCountriesAsync(CancellationToken cancellationToken)
     {
         try
         {
-            return await _unitOfWork.CountryRepository.GetCountriesAsync();
+            return await _unitOfWork.CountryRepository.GetCountriesAsync(cancellationToken);
 
         }
         catch (Exception ex)
         {
-            return new List<Country>();
+            return Enumerable.Empty<CountryResponse>();
         }
     }
 
    
     
-    public async Task<IEnumerable<City>> GetCitiesByCountryIdAsync(long id)
+    public async Task<IEnumerable<City>> GetCitiesByCountryIdAsync(long id, CancellationToken cancellationToken)
     {
         try
         {
-            return await _unitOfWork.CountryRepository.GetCitiesByAsync(c => c.CountryId == id);
+            return await _unitOfWork.CountryRepository.GetCitiesByAsync(c => c.CountryId == id, cancellationToken);
 
         }
         catch (Exception ex)
@@ -40,11 +40,24 @@ public class CountryService : ICountryService
     }
 
     
-    public async Task<object?> GetCountryByIdAsync(long id)
+    public async Task<CountryResponse?> GetCountryByIdAsync(long id, CancellationToken cancellationToken)
     {
         try
         {
-            return await _unitOfWork.CountryRepository.GetCountryAllDataAsync(id);
+            return await _unitOfWork.CountryRepository.GetCountryByIdAsync(id, cancellationToken);
+        }
+        catch (Exception e)
+        {
+            return new CountryResponse();// new ObjectResult(e.Message) { StatusCode = 666 };
+        }
+    }
+
+
+    public async Task<object?> GetHeavyCountryByIdAsync(long id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await _unitOfWork.CountryRepository.GetCountryAllDataAsync(id,cancellationToken);
         }
         catch (Exception e)
         {
@@ -53,25 +66,25 @@ public class CountryService : ICountryService
     }
 
 
-    
-    public async Task<Country?> UpdateCountryAsync(int id, Country country)
+
+    public async Task<Country?> UpdateCountryAsync(int id, Country country, CancellationToken cancellationToken)
     {
         
-            var countryupdatedResult = await _unitOfWork.CountryRepository.UpdateCountryAsync(country);
-            var result = await _unitOfWork.Save();
+            var countryupdatedResult = await _unitOfWork.CountryRepository.UpdateCountryAsync(country,cancellationToken);
+            var result = await _unitOfWork.Save(cancellationToken);
             if (result <= 0) throw new ServiceUnavailableException("Service Unavailable");
 
             return countryupdatedResult;
     }
 
     
-    public async Task<bool> DeleteCountryAsync(long id)
+    public async Task<bool> DeleteCountryAsync(long id, CancellationToken cancellationToken)
     {
        
-            var deletedResult = await _unitOfWork.CountryRepository.DeleteCountryAsync(id);
+            var deletedResult = await _unitOfWork.CountryRepository.DeleteCountryAsync(id,cancellationToken);
             //if (deletedResult == null) throw new Exception("NoContent");
 
-            var result = await _unitOfWork.Save();
+            var result = await _unitOfWork.Save(cancellationToken);
             if (result <= 0) throw new ServiceUnavailableException("Service Unavailable");
 
             return true;
@@ -80,11 +93,11 @@ public class CountryService : ICountryService
 
 
     
-    public async Task<CountryPrice> AddCountryPriceAsync( CountryPrice countryPrice)
+    public async Task<CountryPrice> AddCountryPriceAsync( CountryPrice countryPrice, CancellationToken cancellationToken)
     {
        
-            var countryPriceInsertedResult = await _unitOfWork.CountryRepository.InsertCountryPriceAsync(countryPrice);
-            var result = await _unitOfWork.Save();
+            var countryPriceInsertedResult = await _unitOfWork.CountryRepository.InsertCountryPriceAsync(countryPrice,cancellationToken);
+            var result = await _unitOfWork.Save(cancellationToken);
             if (result <= 0) throw new ServiceUnavailableException("Service Unavailable");
 
             return countryPriceInsertedResult;
@@ -93,11 +106,11 @@ public class CountryService : ICountryService
     }
 
     
-    public async Task<CountryProductPrice> AddCountryProductPriceAsync(CountryProductPrice countryProductPrice)
+    public async Task<CountryProductPrice> AddCountryProductPriceAsync(CountryProductPrice countryProductPrice, CancellationToken cancellationToken)
     {
         
-            var countryProductPriceInsertedResult = await _unitOfWork.CountryRepository.InsertCountryProductPriceAsync(countryProductPrice);
-            var result = await _unitOfWork.Save();
+            var countryProductPriceInsertedResult = await _unitOfWork.CountryRepository.InsertCountryProductPriceAsync(countryProductPrice,cancellationToken);
+            var result = await _unitOfWork.Save(cancellationToken);
             if (result <= 0) throw new ServiceUnavailableException("Service Unavailable");
 
             return countryProductPriceInsertedResult;
@@ -107,22 +120,22 @@ public class CountryService : ICountryService
 
 
     
-    public async Task<bool> DeleteCountryPriceAsync(long id)
+    public async Task<bool> DeleteCountryPriceAsync(long id, CancellationToken cancellationToken)
     {
         
-            var deletedResult = await _unitOfWork.CountryRepository.DeleteCountryPriceAsync(id);
-            var result = await _unitOfWork.Save();
+            var deletedResult = await _unitOfWork.CountryRepository.DeleteCountryPriceAsync(id,cancellationToken);
+            var result = await _unitOfWork.Save(cancellationToken);
             if (result <= 0) throw new ServiceUnavailableException("Service Unavailable");
 
             return true;
     }
 
     
-    public async Task<bool> DeleteCountryProductPriceAsync(long id)
+    public async Task<bool> DeleteCountryProductPriceAsync(long id, CancellationToken cancellationToken)
     {
        
-            var deletedResult = await _unitOfWork.CountryRepository.DeleteCountryProductPriceAsync(id);
-            var result = await _unitOfWork.Save();
+            var deletedResult = await _unitOfWork.CountryRepository.DeleteCountryProductPriceAsync(id,cancellationToken);
+            var result = await _unitOfWork.Save(cancellationToken);
             if (result <= 0) throw new ServiceUnavailableException("Service Unavailable");
 
             return true;
@@ -130,11 +143,11 @@ public class CountryService : ICountryService
 
 
 
-    public async Task<IEnumerable<object>?> GetCountriesCitiesAsync()
+    public async Task<IEnumerable<object>?> GetCountriesCitiesAsync(CancellationToken cancellationToken)
     {
         try
         {
-            return await _unitOfWork.CountryRepository.GetCountriesCitiesAsync();
+            return await _unitOfWork.CountryRepository.GetCountriesCitiesAsync(cancellationToken);
         }
         catch (Exception ex)
         {
@@ -144,11 +157,11 @@ public class CountryService : ICountryService
 
 
     
-    public async Task<City> AddCityAsync( City city)
+    public async Task<City> AddCityAsync( City city, CancellationToken cancellationToken)
     {
        
-            var insertedResult = await _unitOfWork.CountryRepository.InsertCityAsync(city);
-            var result = await _unitOfWork.Save();
+            var insertedResult = await _unitOfWork.CountryRepository.InsertCityAsync(city,cancellationToken);
+            var result = await _unitOfWork.Save(cancellationToken);
             if (result <= 0) throw new ServiceUnavailableException("Service Unavailable");
 
             return insertedResult;
@@ -156,11 +169,11 @@ public class CountryService : ICountryService
     }
 
     
-    public async Task<City?> UpdateCityAsync(long id, City city)
+    public async Task<City?> UpdateCityAsync(long id, City city, CancellationToken cancellationToken)
     {
        
-            var updatedResult = await _unitOfWork.CountryRepository.UpdateCityAsync(city);
-            var result = await _unitOfWork.Save();
+            var updatedResult = await _unitOfWork.CountryRepository.UpdateCityAsync(city,cancellationToken);
+            var result = await _unitOfWork.Save(cancellationToken);
             if (result <= 0) throw new ServiceUnavailableException("Service Unavailable");
 
             return updatedResult;
@@ -169,13 +182,13 @@ public class CountryService : ICountryService
 
 
     
-    public async Task<bool> DeleteCityAsync(long id)
+    public async Task<bool> DeleteCityAsync(long id, CancellationToken cancellationToken)
     {
         
-            var deletedResult = await _unitOfWork.CountryRepository.DeleteCityAsync(id);
+            var deletedResult = await _unitOfWork.CountryRepository.DeleteCityAsync(id,cancellationToken);
             //if (deletedResult == null) throw new Exception("NoContent");
 
-            var result = await _unitOfWork.Save();
+            var result = await _unitOfWork.Save(cancellationToken);
             if (result <= 0) throw new ServiceUnavailableException("Service Unavailable");
 
             return true;

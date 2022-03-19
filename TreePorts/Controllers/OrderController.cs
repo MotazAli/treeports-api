@@ -4,25 +4,9 @@ using System.Collections.ObjectModel;
 using System.Device.Location;
 using System.Linq;
 using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
-using System.Timers;
-using AutoMapper;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
-using Nancy.Json;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using TreePorts.DTO;
 using TreePorts.DTO.Records;
-using TreePorts.DTO.ReturnDTO;
-using TreePorts.Hubs;
-using TreePorts.Models;
-using TreePorts.Presentation;
-using TreePorts.Utilities;
 
 namespace TreePorts.Controllers
 {
@@ -46,12 +30,12 @@ namespace TreePorts.Controllers
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Order>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetOrders()
+        public async Task<IActionResult> GetOrders(CancellationToken cancellationToken)
         {
 
             try {
                 
-                return Ok(await _orderService.GetOrdersAsync());
+                return Ok(await _orderService.GetOrdersAsync(cancellationToken));
             } catch (Exception e) {
                 return NoContent();// new ObjectResult(e.Message) { StatusCode = 666 };
             }
@@ -62,12 +46,12 @@ namespace TreePorts.Controllers
         [HttpGet("Paging")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> OrdersPaging([FromQuery] FilterParameters parameters)
+        public async Task<IActionResult> OrdersPaging([FromQuery] FilterParameters parameters, CancellationToken cancellationToken)
         {
             try
             {
 
-                return Ok(await _orderService.GetOrdersPaginationAsync(parameters));
+                return Ok(await _orderService.GetOrdersPaginationAsync(parameters,cancellationToken));
             }
             catch (Exception e)
             {
@@ -80,12 +64,12 @@ namespace TreePorts.Controllers
         [HttpGet("Agents/{id}/Paging")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> UserOrdersPaging( string? id , [FromQuery] FilterParameters parameters)
+        public async Task<IActionResult> UserOrdersPaging( string? id , [FromQuery] FilterParameters parameters, CancellationToken cancellationToken)
         {
             try
             {
                 
-                return Ok(await _orderService.UserOrdersPagingByAgentIdAsync(id ?? "",parameters));
+                return Ok(await _orderService.UserOrdersPagingByAgentIdAsync(id ?? "",parameters,cancellationToken));
             }
             catch (Exception e)
             {
@@ -98,11 +82,11 @@ namespace TreePorts.Controllers
         [HttpGet("{id}/StatusHistories")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<OrderStatusHistory>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> OrderStatusHistory(long id)
+        public async Task<IActionResult> OrderStatusHistory(long id, CancellationToken cancellationToken)
         {
             try
             {
-                 return Ok(await _orderService.GetOrdersStatusHistoriesByOrderIdAsync(id));
+                 return Ok(await _orderService.GetOrdersStatusHistoriesByOrderIdAsync(id, cancellationToken));
             }
             catch (Exception e)
             {
@@ -118,11 +102,11 @@ namespace TreePorts.Controllers
         [HttpGet("{id}/Info")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(OrderDetails))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetOrderDetailsByOrderId(long id)
+        public async Task<IActionResult> GetOrderDetailsByOrderId(long id, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _orderService.GetOrderDetailsByOrderIdAsync(id));
+                return Ok(await _orderService.GetOrderDetailsByOrderIdAsync(id,cancellationToken));
             }
             catch (Exception e)
             {
@@ -136,11 +120,11 @@ namespace TreePorts.Controllers
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Order))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetOrder(long id)
+        public async Task<IActionResult> GetOrder(long id, CancellationToken cancellationToken)
         {
             try
             {
-                 return Ok(await _orderService.GetOrderByIdAsync(id));
+                 return Ok(await _orderService.GetOrderByIdAsync(id,cancellationToken));
             }
             catch (Exception e)
             {
@@ -155,11 +139,11 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetOrderDetails([FromRoute(Name ="id")] long orderId, [FromRoute(Name = "captainAccountId")] string captainId)//[FromBody] OrderRequest orderRequest)
+        public async Task<IActionResult> GetOrderDetails([FromRoute(Name ="id")] long orderId, [FromRoute(Name = "captainAccountId")] string captainId, CancellationToken cancellationToken)//[FromBody] OrderRequest orderRequest)
         {
             try
             {
-                return Ok(await _orderService.GetOrderDetailsAsync(orderId,captainId));
+                return Ok(await _orderService.GetOrderDetailsAsync(orderId,captainId,cancellationToken));
             }
             catch (Exception e)
             {
@@ -177,12 +161,12 @@ namespace TreePorts.Controllers
         [HttpGet("Running/Captains/{captainAccountId}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetRunningOrderByCaptainId( [FromRoute(Name = "captainAccountId")] string? captainId)
+        public async Task<IActionResult> GetRunningOrderByCaptainId( [FromRoute(Name = "captainAccountId")] string? captainId, CancellationToken cancellationToken)
         {
             try
             {
 
-                return Ok(await _orderService.GetRunningOrderByCaptainUserAccountIdAsync(captainId ?? ""));
+                return Ok(await _orderService.GetRunningOrderByCaptainUserAccountIdAsync(captainId ?? "",cancellationToken));
                 
 
             }
@@ -201,12 +185,12 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> IgnoreOrder([FromBody] OrderRequest orderRequest)
+        public async Task<IActionResult> IgnoreOrder([FromBody] OrderRequest orderRequest, CancellationToken cancellationToken)
         {
             try
             {
 
-                return Ok(await _orderService.IgnoreOrderAsync(orderRequest));
+                return Ok(await _orderService.IgnoreOrderAsync(orderRequest,cancellationToken));
 
 
             }
@@ -222,12 +206,12 @@ namespace TreePorts.Controllers
         [HttpGet("FakeCancel/{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> FakeCancel(string? id)
+        public async Task<IActionResult> FakeCancel(string? id, CancellationToken cancellationToken)
         {
             try
             {
 
-                return Ok(await _orderService.FakeCancelAsync(id));
+                return Ok(await _orderService.FakeCancelAsync(id,cancellationToken));
             }
             catch (Exception e)
             {
@@ -241,11 +225,11 @@ namespace TreePorts.Controllers
         [HttpPost("FakeAssignToCaptain")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> FakeAssignToCaptain([FromBody] OrderRequest orderRequest)
+        public async Task<IActionResult> FakeAssignToCaptain([FromBody] OrderRequest orderRequest, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _orderService.FakeAssignToCaptainAsync(orderRequest));
+                return Ok(await _orderService.FakeAssignToCaptainAsync(orderRequest,cancellationToken));
             }
             catch (Exception e)
             {
@@ -266,12 +250,12 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> AssignToCaptain([FromBody] OrderRequest orderRequest)
+        public async Task<IActionResult> AssignToCaptain([FromBody] OrderRequest orderRequest, CancellationToken cancellationToken)
         {
             try
             {
 
-                return Ok(await _orderService.AssignToCaptainAsync(orderRequest));
+                return Ok(await _orderService.AssignToCaptainAsync(orderRequest,cancellationToken));
 
 
             }
@@ -295,12 +279,12 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> AcceptOrder([FromBody] OrderRequest orderRequest)
+        public async Task<IActionResult> AcceptOrder([FromBody] OrderRequest orderRequest, CancellationToken cancellationToken)
         {
             try
             {
 
-                return Ok(await _orderService.AcceptOrderAsync(orderRequest));
+                return Ok(await _orderService.AcceptOrderAsync(orderRequest,cancellationToken));
 
 
             }
@@ -339,12 +323,12 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> OrderPickedUp(long id)
+        public async Task<IActionResult> OrderPickedUp(long id, CancellationToken cancellationToken)
         {
             try
             {
 
-                return Ok(await _orderService.OrderPickedUpAsync(id));
+                return Ok(await _orderService.OrderPickedUpAsync(id,cancellationToken));
             }
             catch (Exception e)
             {
@@ -358,13 +342,13 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> OrderDropped(long id)
+        public async Task<IActionResult> OrderDropped(long id, CancellationToken cancellationToken)
         {
             try
             {
 
 
-                return Ok(await _orderService.OrderDroppedAsync(id));
+                return Ok(await _orderService.OrderDroppedAsync(id,cancellationToken));
                
             }
             catch (Exception e)
@@ -382,12 +366,12 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> Cancel(long id)
+        public async Task<IActionResult> Cancel(long id, CancellationToken cancellationToken)
         {
             try
             {
 
-                return Ok(await _orderService.CancelOrderAsync(id));
+                return Ok(await _orderService.CancelOrderAsync(id,cancellationToken));
             }
             catch (Exception e)
             {
@@ -402,13 +386,13 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> AddOrder([FromBody] Order order, [FromQuery] string CouponCode)
+        public async Task<IActionResult> AddOrder([FromBody] Order order, [FromQuery] string CouponCode, CancellationToken cancellationToken)
         {
             try
             {
 
                 
-                return Ok(await _orderService.AddOrderAsync(order,HttpContext,CouponCode));
+                return Ok(await _orderService.AddOrderAsync(order,HttpContext,CouponCode,cancellationToken));
 
 
             }
@@ -423,11 +407,11 @@ namespace TreePorts.Controllers
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Order))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> Delete(long id)
+        public async Task<IActionResult> Delete(long id, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _orderService.DeleteOrderAsync(id));
+                return Ok(await _orderService.DeleteOrderAsync(id,cancellationToken));
             }
             catch (Exception e)
             {
@@ -441,11 +425,11 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(OrderInvoice))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> AddOrderInvoice([FromBody] OrderInvoice orderInvoice)
+        public async Task<IActionResult> AddOrderInvoice([FromBody] OrderInvoice orderInvoice, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _orderService.AddOrderInvoiceAsync(orderInvoice));
+                return Ok(await _orderService.AddOrderInvoiceAsync(orderInvoice,cancellationToken));
 
             }
             catch (Exception e)
@@ -460,11 +444,11 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PaidOrder))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> AddPaidOrder([FromBody] PaidOrder paidOrder)
+        public async Task<IActionResult> AddPaidOrder([FromBody] PaidOrder paidOrder, CancellationToken cancellationTokenr)
         {
             try
             {
-                return Ok(await _orderService.AddPaidOrderAsync(paidOrder));
+                return Ok(await _orderService.AddPaidOrderAsync(paidOrder,cancellationTokenr));
 
             }
             catch (Exception e)
@@ -479,14 +463,14 @@ namespace TreePorts.Controllers
         [HttpGet("{id}/Locations/Current")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetOrderCurrentLocationByOrderId(long id) // order id
+        public async Task<IActionResult> GetOrderCurrentLocationByOrderId(long id, CancellationToken cancellationToken) // order id
         {
             try
             {
 
 
                 
-                return Ok(await _orderService.GetOrderCurrentLocationByOrderIdAsync(id));
+                return Ok(await _orderService.GetOrderCurrentLocationByOrderIdAsync(id,cancellationToken));
             }
             catch (Exception e)
             {
@@ -503,11 +487,11 @@ namespace TreePorts.Controllers
         [HttpGet("{id}/Items")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<OrderItem>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetOrderItems(long id)
+        public async Task<IActionResult> GetOrderItems(long id, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _orderService.GetOrderItemsAsync(id));
+                return Ok(await _orderService.GetOrderItemsAsync(id,cancellationToken));
 
             }
             catch (Exception e)
@@ -522,12 +506,12 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetQRCodeByOrder(long id)
+        public async Task<IActionResult> GetQRCodeByOrder(long id, CancellationToken cancellationToken)
 		{
             try
 			{
                 
-                return Ok(await _orderService.GetQRCodeByOrderIdAsync(id));
+                return Ok(await _orderService.GetQRCodeByOrderIdAsync(id,cancellationToken));
 			}
             catch (Exception e)
 			{
@@ -559,14 +543,14 @@ namespace TreePorts.Controllers
         [HttpGet("SearchDetails")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> SearchDetails([FromQuery] FilterParameters parameters)
+        public async Task<IActionResult> SearchDetails([FromQuery] FilterParameters parameters, CancellationToken cancellationToken)
         {
             try
             {
 
 
                 
-                return Ok(await _orderService.SearchDetailsAsync(parameters));
+                return Ok(await _orderService.SearchDetailsAsync(parameters,cancellationToken));
 
                 
             }
@@ -588,11 +572,11 @@ namespace TreePorts.Controllers
         [HttpGet("Charts")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> Chart()
+        public async Task<IActionResult> Chart(CancellationToken cancellationToken)
 		{
             try
             {
-                return Ok(await _orderService.ChartAsync());
+                return Ok(await _orderService.ChartAsync(cancellationToken));
             }
             catch (Exception e)
             {
@@ -607,11 +591,11 @@ namespace TreePorts.Controllers
         [HttpPost("Search")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<OrderFilterResponse>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> Search([FromBody] OrderFilter orderFilter)
+        public async Task<IActionResult> Search([FromBody] OrderFilter orderFilter, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _orderService.SearchAsync(orderFilter));
+                return Ok(await _orderService.SearchAsync(orderFilter,cancellationToken));
             }
             catch (Exception e)
             {

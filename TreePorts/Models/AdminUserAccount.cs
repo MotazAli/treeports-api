@@ -5,6 +5,12 @@ namespace TreePorts.Models
 {
     public partial class AdminUserAccount
     {
+        public AdminUserAccount()
+        {
+            AdminCurrentStatus = new HashSet<AdminCurrentStatus>();
+            AdminUserMessageHubs = new HashSet<AdminUserMessageHub>();
+        }
+
         public string Id { get; set; } = null!;
         public string? AdminUserId { get; set; }
         public long? AdminTypeId { get; set; }
@@ -24,5 +30,8 @@ namespace TreePorts.Models
 
         public virtual AdminType? AdminType { get; set; }
         public virtual AdminUser? AdminUser { get; set; }
+        public virtual StatusType? StatusType { get; set; }
+        public virtual ICollection<AdminCurrentStatus> AdminCurrentStatus { get; set; }
+        public virtual ICollection<AdminUserMessageHub> AdminUserMessageHubs { get; set; }
     }
 }

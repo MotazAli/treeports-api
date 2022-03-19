@@ -14,9 +14,9 @@ namespace TreePorts.Repositories
             _context = context;
         }
 
-        public async Task<Order?> DeleteOrderAsync(long id)
+        public async Task<Order?> DeleteOrderAsync(long id, CancellationToken cancellationToken)
         {
-            var order = await _context.Orders.FirstOrDefaultAsync(u => u.Id == id);
+            var order = await _context.Orders.FirstOrDefaultAsync(u => u.Id == id,cancellationToken);
             if (order == null) return null;
 
             order.IsDeleted = true;
@@ -24,71 +24,71 @@ namespace TreePorts.Repositories
             return order;
         }
 
-        public async Task<List<OrderCurrentStatus>> GetCurrentOrdersStatusesAsync()
+        public async Task<List<OrderCurrentStatus>> GetCurrentOrdersStatusesAsync(CancellationToken cancellationToken)
         {
-            return await _context.OrderCurrentStatuses.Where(o => o.IsCurrent == true).ToListAsync();
+            return await _context.OrderCurrentStatuses.Where(o => o.IsCurrent == true).ToListAsync(cancellationToken);
         }
 
-        public async Task<List<OrderAssignment>> GetOrdersAssignmentsAsync()
+        public async Task<List<OrderAssignment>> GetOrdersAssignmentsAsync(CancellationToken cancellationToken)
         {
-            return await _context.OrderAssignments.ToListAsync();
+            return await _context.OrderAssignments.ToListAsync(cancellationToken);
         }
 
-        public async Task<List<OrderEndLocation>> GetOrdersEndLocationsAsync()
+        public async Task<List<OrderEndLocation>> GetOrdersEndLocationsAsync(CancellationToken cancellationToken)
         {
-            return await _context.OrderEndLocations.ToListAsync();
+            return await _context.OrderEndLocations.ToListAsync(cancellationToken);
         }
 
-        public async Task<List<OrderItem>> GetOrdersItemsAsync()
+        public async Task<List<OrderItem>> GetOrdersItemsAsync(CancellationToken cancellationToken)
         {
-            return await _context.OrderItems.ToListAsync();
+            return await _context.OrderItems.ToListAsync(cancellationToken);
         }
 
-        public async Task<List<OrderStartLocation>> GetOrdersStartLocationsAsync()
+        public async Task<List<OrderStartLocation>> GetOrdersStartLocationsAsync(CancellationToken cancellationToken)
         {
-            return await _context.OrderStartLocations.ToListAsync();
+            return await _context.OrderStartLocations.ToListAsync(cancellationToken);
         }
 
-        public async Task<List<OrderCurrentStatus>> GetOrdersStatusesAsync()
+        public async Task<List<OrderCurrentStatus>> GetOrdersStatusesAsync(CancellationToken cancellationToken)
         {
-            return await _context.OrderCurrentStatuses.ToListAsync();
+            return await _context.OrderCurrentStatuses.ToListAsync(cancellationToken);
         }
 
-        public async Task<List<OrderStatusHistory>> GetOrdersStatusHistoriesAsync()
+        public async Task<List<OrderStatusHistory>> GetOrdersStatusHistoriesAsync(CancellationToken cancellationToken)
         {
-            return await _context.OrderStatusHistories.ToListAsync();
+            return await _context.OrderStatusHistories.ToListAsync(cancellationToken);
         }
 
-        public async Task<List<OrderStatusType>> GetOrderStatusTypesAsync()
+        public async Task<List<OrderStatusType>> GetOrderStatusTypesAsync(CancellationToken cancellationToken)
         {
-            return await _context.OrderStatusTypes.ToListAsync();
+            return await _context.OrderStatusTypes.ToListAsync(cancellationToken);
         }
 
-        public async Task<List<ProductType>> GetProductTypesAsync()
+        public async Task<List<ProductType>> GetProductTypesAsync(CancellationToken cancellationToken)
         {
-            return await _context.ProductTypes.ToListAsync();
+            return await _context.ProductTypes.ToListAsync(cancellationToken);
         }
 
-        public async Task<List<OrderAssignment>> GetOrdersAssignmentsByAsync(Expression<Func<OrderAssignment, bool>> predicate)
+        public async Task<List<OrderAssignment>> GetOrdersAssignmentsByAsync(Expression<Func<OrderAssignment, bool>> predicate, CancellationToken cancellationToken)
         {
             return await _context.OrderAssignments
                 .Where(predicate)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
         }
 
-        public async Task<OrderAssignment?> GetOrderAssignmentByIdAsync(long id)
+        public async Task<OrderAssignment?> GetOrderAssignmentByIdAsync(long id, CancellationToken cancellationToken)
         {
-            return await _context.OrderAssignments.FirstOrDefaultAsync(a => a.Id == id);
+            return await _context.OrderAssignments.FirstOrDefaultAsync(a => a.Id == id,cancellationToken);
         }
 
-        public async Task<List<Order>> GetOrdersByAsync(Expression<Func<Order, bool>> predicate)
+        public async Task<List<Order>> GetOrdersByAsync(Expression<Func<Order, bool>> predicate, CancellationToken cancellationToken)
         {
             return await _context.Orders
                 .Where(predicate)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
         }
 
-        public async Task<Order?> GetOrderById_oldBehaviourAsync(long id)//GetOrderById
+        public async Task<Order?> GetOrderById_oldBehaviourAsync(long id, CancellationToken cancellationToken)//GetOrderById
         {
             return await _context.Orders.AsNoTracking()
                 .Where(a => a.Id == id)
@@ -98,17 +98,17 @@ namespace TreePorts.Repositories
                 //.Include(o => o.ProductType)
                 //.Include(o => o.OrderCurrentStatus)
                 //.Include(o => o.OrderStatusHistories)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(cancellationToken);
         }
 
 
-        public async Task<Order?> GetOnlyOrderByIdAsync(long id)
+        public async Task<Order?> GetOnlyOrderByIdAsync(long id, CancellationToken cancellationToken)
         {
-            return await _context.Orders.AsNoTracking().FirstOrDefaultAsync(a => a.Id == id);
+            return await _context.Orders.AsNoTracking().FirstOrDefaultAsync(a => a.Id == id,cancellationToken);
         }
 
 
-        public async Task<Order?> GetLiteOrderByIdAsync(long id)
+        public async Task<Order?> GetLiteOrderByIdAsync(long id, CancellationToken cancellationToken)
         {
             return await _context.Orders.AsNoTracking()
                 .Where(a => a.Id == id)
@@ -116,10 +116,10 @@ namespace TreePorts.Repositories
                 //.Include(o => o.OrderItems)
                 //.Include(o => o.PaymentType)
                 //.Include(o => o.ProductType)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(cancellationToken);
         }
 
-        public async Task<OrderDetails> GetOrderDetailsByIdAsync(long id)
+        public async Task<OrderDetails> GetOrderDetailsByIdAsync(long id, CancellationToken cancellationToken)
         {
 
             var query = await (from orders in _context.Orders.Where(o => o.Id == id).AsNoTracking()
@@ -160,7 +160,7 @@ namespace TreePorts.Repositories
                                    Agent = agents,
                                    Country = country,
                                    City = city
-                               }).FirstOrDefaultAsync();
+                               }).FirstOrDefaultAsync(cancellationToken);
             //_context.ChangeTracker.LazyLoadingEnabled = true;
 
             //var reuslt = query.Where(a => a.Agent.Id == 2).ToList();
@@ -169,111 +169,111 @@ namespace TreePorts.Repositories
 
 
 
-        public async Task<List<OrderEndLocation>> GetOrdersEndLocationByAsync(Expression<Func<OrderEndLocation, bool>> predicate)
+        public async Task<List<OrderEndLocation>> GetOrdersEndLocationByAsync(Expression<Func<OrderEndLocation, bool>> predicate, CancellationToken cancellationToken)
         {
-            return await _context.OrderEndLocations.Where(predicate).ToListAsync();
+            return await _context.OrderEndLocations.Where(predicate).ToListAsync(cancellationToken);
         }
 
-        public async Task<OrderEndLocation?> GetOrderEndLocationByIdAsync(long id)
+        public async Task<OrderEndLocation?> GetOrderEndLocationByIdAsync(long id, CancellationToken cancellationToken)
         {
-            return await _context.OrderEndLocations.FirstOrDefaultAsync(a => a.Id == id);
+            return await _context.OrderEndLocations.FirstOrDefaultAsync(a => a.Id == id,cancellationToken);
         }
 
-        public async Task<List<OrderItem>> GetOrdersItemsByAsync(Expression<Func<OrderItem, bool>> predicate)
+        public async Task<List<OrderItem>> GetOrdersItemsByAsync(Expression<Func<OrderItem, bool>> predicate, CancellationToken cancellationToken)
         {
-            return await _context.OrderItems.Where(predicate).ToListAsync();
+            return await _context.OrderItems.Where(predicate).ToListAsync(cancellationToken);
         }
 
-        public async Task<OrderItem?> GetOrderItemByIdAsync(long id)
+        public async Task<OrderItem?> GetOrderItemByIdAsync(long id, CancellationToken cancellationToken)
         {
-            return await _context.OrderItems.FirstOrDefaultAsync(a => a.Id == id);
+            return await _context.OrderItems.FirstOrDefaultAsync(a => a.Id == id,cancellationToken);
         }
 
-        public async Task<List<Order>> GetOrdersAsync()
+        public async Task<List<Order>> GetOrdersAsync(CancellationToken cancellationToken)
         {
             return await _context.Orders
                 //.Include(o => o.Agent)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
         }
 
-        public async Task<List<OrderStartLocation>> GetOrdersStartLocationByAsync(Expression<Func<OrderStartLocation, bool>> predicate)
+        public async Task<List<OrderStartLocation>> GetOrdersStartLocationByAsync(Expression<Func<OrderStartLocation, bool>> predicate, CancellationToken cancellationToken)
         {
-            return await _context.OrderStartLocations.Where(predicate).ToListAsync();
+            return await _context.OrderStartLocations.Where(predicate).ToListAsync(cancellationToken);
         }
 
-        public async Task<OrderStartLocation?> GetOrderStartLocationByIdAsync(long id)
+        public async Task<OrderStartLocation?> GetOrderStartLocationByIdAsync(long id, CancellationToken cancellationToken)
         {
-            return await _context.OrderStartLocations.FirstOrDefaultAsync(a => a.Id == id);
+            return await _context.OrderStartLocations.FirstOrDefaultAsync(a => a.Id == id,cancellationToken);
         }
 
-        public async Task<List<OrderCurrentStatus>> GetOrderCurrentStatusesByAsync(Expression<Func<OrderCurrentStatus, bool>> predicate)
+        public async Task<List<OrderCurrentStatus>> GetOrderCurrentStatusesByAsync(Expression<Func<OrderCurrentStatus, bool>> predicate, CancellationToken cancellationToken)
         {
-            return await _context.OrderCurrentStatuses.Where(predicate).ToListAsync();
+            return await _context.OrderCurrentStatuses.Where(predicate).ToListAsync(cancellationToken);
         }
 
-        public async Task<List<OrderStatusHistory>> GetOrdersStatusHistoriesByAsync(Expression<Func<OrderStatusHistory, bool>> predicate)
+        public async Task<List<OrderStatusHistory>> GetOrdersStatusHistoriesByAsync(Expression<Func<OrderStatusHistory, bool>> predicate, CancellationToken cancellationToken)
         {
-            return await _context.OrderStatusHistories.Where(predicate).ToListAsync();
+            return await _context.OrderStatusHistories.Where(predicate).ToListAsync(cancellationToken);
         }
 
-        public async Task<OrderCurrentStatus?> GetOrderStatusByIdAsync(long id)
+        public async Task<OrderCurrentStatus?> GetOrderStatusByIdAsync(long id, CancellationToken cancellationToken)
         {
-            return await _context.OrderCurrentStatuses.FirstOrDefaultAsync(a => a.Id == id);
+            return await _context.OrderCurrentStatuses.FirstOrDefaultAsync(a => a.Id == id,cancellationToken);
         }
 
-        public async Task<OrderStatusHistory?> GetOrderStatusHistoryByIdAsync(long id)
+        public async Task<OrderStatusHistory?> GetOrderStatusHistoryByIdAsync(long id, CancellationToken cancellationToken)
         {
-            return await _context.OrderStatusHistories.FirstOrDefaultAsync(a => a.Id == id);
+            return await _context.OrderStatusHistories.FirstOrDefaultAsync(a => a.Id == id,cancellationToken);
         }
 
-        public async Task<OrderStatusType?> GetOrderStatusTypeByIdAsync(long id)
+        public async Task<OrderStatusType?> GetOrderStatusTypeByIdAsync(long id, CancellationToken cancellationToken)
         {
-            return await _context.OrderStatusTypes.FirstOrDefaultAsync(a => a.Id == id);
+            return await _context.OrderStatusTypes.FirstOrDefaultAsync(a => a.Id == id,cancellationToken);
         }
 
-        public async Task<ProductType?> GetProductTypeByIdAsync(long id)
+        public async Task<ProductType?> GetProductTypeByIdAsync(long id, CancellationToken cancellationToken)
         {
-            return await _context.ProductTypes.FirstOrDefaultAsync(a => a.Id == id);
+            return await _context.ProductTypes.FirstOrDefaultAsync(a => a.Id == id,cancellationToken);
         }
 
-        public async Task<Order> InsertOrderAsync(Order order)
+        public async Task<Order> InsertOrderAsync(Order order, CancellationToken cancellationToken)
         {
             order.CreationDate = DateTime.Now;
-            var insertResult = await _context.Orders.AddAsync(order);
+            var insertResult = await _context.Orders.AddAsync(order,cancellationToken);
             return insertResult.Entity;
         }
 
-        public async Task<OrderAssignment> InsertOrderAssignmentAsync(OrderAssignment assign)
+        public async Task<OrderAssignment> InsertOrderAssignmentAsync(OrderAssignment assign, CancellationToken cancellationToken)
         {
             assign.CreationDate = DateTime.Now;
-            var insertResult = await _context.OrderAssignments.AddAsync(assign);
+            var insertResult = await _context.OrderAssignments.AddAsync(assign,cancellationToken);
             return insertResult.Entity;
         }
 
-        public async Task<OrderEndLocation> InsertOrderEndLocationAsync(OrderEndLocation orderEndLocation)
+        public async Task<OrderEndLocation> InsertOrderEndLocationAsync(OrderEndLocation orderEndLocation, CancellationToken cancellationToken)
         {
             orderEndLocation.CreationDate = DateTime.Now;
-            var insertResult = await _context.OrderEndLocations.AddAsync(orderEndLocation);
+            var insertResult = await _context.OrderEndLocations.AddAsync(orderEndLocation,cancellationToken);
             return insertResult.Entity;
         }
 
-        public async Task<OrderItem> InsertOrderItemAsync(OrderItem orderItem)
+        public async Task<OrderItem> InsertOrderItemAsync(OrderItem orderItem, CancellationToken cancellationToken)
         {
             orderItem.CreationDate = DateTime.Now;
-            var insertResult = await _context.OrderItems.AddAsync(orderItem);
+            var insertResult = await _context.OrderItems.AddAsync(orderItem,cancellationToken);
             return insertResult.Entity;
         }
 
-        public async Task<OrderStartLocation> InsertOrderStartLocationAsync(OrderStartLocation orderStartLocation)
+        public async Task<OrderStartLocation> InsertOrderStartLocationAsync(OrderStartLocation orderStartLocation, CancellationToken cancellationToken)
         {
             orderStartLocation.CreationDate = DateTime.Now;
-            var insertResult = await _context.OrderStartLocations.AddAsync(orderStartLocation);
+            var insertResult = await _context.OrderStartLocations.AddAsync(orderStartLocation,cancellationToken);
             return insertResult.Entity;
         }
 
-        public async Task<OrderCurrentStatus> InsertOrderStatusAsync(OrderCurrentStatus orderStatus)
+        public async Task<OrderCurrentStatus> InsertOrderStatusAsync(OrderCurrentStatus orderStatus, CancellationToken cancellationToken)
         {
-            var oldstatus = await _context.OrderCurrentStatuses.FirstOrDefaultAsync(s => s.OrderId == orderStatus.OrderId);
+            var oldstatus = await _context.OrderCurrentStatuses.FirstOrDefaultAsync(s => s.OrderId == orderStatus.OrderId,cancellationToken);
             if (oldstatus != null && oldstatus.Id > 0)
             {
                 OrderStatusHistory history = new ()
@@ -284,7 +284,7 @@ namespace TreePorts.Repositories
 
                 };
 
-                await this.InsertOrderStatusHistoryAsync(history);
+                await this.InsertOrderStatusHistoryAsync(history,cancellationToken);
 
                 oldstatus.OrderStatusTypeId = orderStatus.OrderStatusTypeId;
                 oldstatus.CreationDate = DateTime.Now;
@@ -296,20 +296,20 @@ namespace TreePorts.Repositories
             }
 
             orderStatus.CreationDate = DateTime.Now;
-            var insertResult = await _context.OrderCurrentStatuses.AddAsync(orderStatus);
+            var insertResult = await _context.OrderCurrentStatuses.AddAsync(orderStatus,cancellationToken);
             return insertResult.Entity;
         }
 
-        public async Task<OrderStatusHistory> InsertOrderStatusHistoryAsync(OrderStatusHistory orderStatus)
+        public async Task<OrderStatusHistory> InsertOrderStatusHistoryAsync(OrderStatusHistory orderStatus, CancellationToken cancellationToken)
         {
             orderStatus.CreationDate = DateTime.Now;
-            var insertResult = await _context.OrderStatusHistories.AddAsync(orderStatus);
+            var insertResult = await _context.OrderStatusHistories.AddAsync(orderStatus,cancellationToken);
             return insertResult.Entity;
         }
 
-        public async Task<Order?> UpdateOrderAsync(Order order)
+        public async Task<Order?> UpdateOrderAsync(Order order, CancellationToken cancellationToken)
         {
-            var oldOrder = await _context.Orders.FirstOrDefaultAsync(o => o.Id == order.Id);
+            var oldOrder = await _context.Orders.FirstOrDefaultAsync(o => o.Id == order.Id,cancellationToken);
             if (oldOrder == null) return null;
 
             oldOrder.AgentId = order.AgentId;
@@ -342,9 +342,9 @@ namespace TreePorts.Repositories
             return oldOrder;
         }
 
-        public async Task<OrderAssignment?> UpdateOrderAssignmentAsync(OrderAssignment assign)
+        public async Task<OrderAssignment?> UpdateOrderAssignmentAsync(OrderAssignment assign, CancellationToken cancellationToken)
         {
-            var oldOrderAssign = await _context.OrderAssignments.FirstOrDefaultAsync(a => a.Id == assign.Id);
+            var oldOrderAssign = await _context.OrderAssignments.FirstOrDefaultAsync(a => a.Id == assign.Id,cancellationToken);
             if (oldOrderAssign == null) return null;
 
 
@@ -361,9 +361,9 @@ namespace TreePorts.Repositories
             return oldOrderAssign;
         }
 
-        public async Task<OrderEndLocation?> UpdateOrderEndLocationAsync(OrderEndLocation orderEndLocation)
+        public async Task<OrderEndLocation?> UpdateOrderEndLocationAsync(OrderEndLocation orderEndLocation, CancellationToken cancellationToken)
         {
-            var oldOrderEndLocaion = await _context.OrderEndLocations.FirstOrDefaultAsync(a => a.Id == orderEndLocation.Id);
+            var oldOrderEndLocaion = await _context.OrderEndLocations.FirstOrDefaultAsync(a => a.Id == orderEndLocation.Id,cancellationToken);
             if (oldOrderEndLocaion == null) return null;
 
 
@@ -378,9 +378,9 @@ namespace TreePorts.Repositories
             return oldOrderEndLocaion;
         }
 
-        public async Task<OrderItem?> UpdateOrderItemAsync(OrderItem orderItem)
+        public async Task<OrderItem?> UpdateOrderItemAsync(OrderItem orderItem, CancellationToken cancellationToken)
         {
-            var oldOrderItem = await _context.OrderItems.FirstOrDefaultAsync(a => a.Id == orderItem.Id);
+            var oldOrderItem = await _context.OrderItems.FirstOrDefaultAsync(a => a.Id == orderItem.Id,cancellationToken);
             if (oldOrderItem == null) return null;
 
 
@@ -396,9 +396,9 @@ namespace TreePorts.Repositories
             return oldOrderItem;
         }
 
-        public async Task<OrderStartLocation?> UpdateOrderStartLocationAsync(OrderStartLocation orderStartLocation)
+        public async Task<OrderStartLocation?> UpdateOrderStartLocationAsync(OrderStartLocation orderStartLocation, CancellationToken cancellationToken)
         {
-            var oldOrderStartLocation = await _context.OrderStartLocations.FirstOrDefaultAsync(a => a.Id == orderStartLocation.Id);
+            var oldOrderStartLocation = await _context.OrderStartLocations.FirstOrDefaultAsync(a => a.Id == orderStartLocation.Id,cancellationToken);
             if (oldOrderStartLocation == null) return null;
 
 
@@ -415,9 +415,9 @@ namespace TreePorts.Repositories
 
 
 
-        public async Task<OrderStatusHistory?> UpdateOrderStatusHistoryAsync(OrderStatusHistory orderStatus)
+        public async Task<OrderStatusHistory?> UpdateOrderStatusHistoryAsync(OrderStatusHistory orderStatus, CancellationToken cancellationToken)
         {
-            var oldOrderStatusHistory = await _context.OrderStatusHistories.FirstOrDefaultAsync(a => a.Id == orderStatus.Id);
+            var oldOrderStatusHistory = await _context.OrderStatusHistories.FirstOrDefaultAsync(a => a.Id == orderStatus.Id,cancellationToken);
             if (oldOrderStatusHistory == null) return null;
 
 
@@ -430,31 +430,31 @@ namespace TreePorts.Repositories
             return oldOrderStatusHistory;
         }
 
-        public async Task<List<OrderInvoice>> GetOrdersInvoicesAsync()
+        public async Task<List<OrderInvoice>> GetOrdersInvoicesAsync(CancellationToken cancellationToken)
         {
-            return await _context.OrderInvoices.ToListAsync();
+            return await _context.OrderInvoices.ToListAsync(cancellationToken);
         }
 
-        public async Task<OrderInvoice?> GetOrderInvoiceByIdAsync(long id)
+        public async Task<OrderInvoice?> GetOrderInvoiceByIdAsync(long id, CancellationToken cancellationToken)
         {
-            return await _context.OrderInvoices.FirstOrDefaultAsync(i => i.Id == id);
+            return await _context.OrderInvoices.FirstOrDefaultAsync(i => i.Id == id,cancellationToken);
         }
 
-        public async Task<List<OrderInvoice>> GetOrdersInvoicesByAsync(Expression<Func<OrderInvoice, bool>> predicate)
+        public async Task<List<OrderInvoice>> GetOrdersInvoicesByAsync(Expression<Func<OrderInvoice, bool>> predicate, CancellationToken cancellationToken)
         {
-            return await _context.OrderInvoices.Where(predicate).ToListAsync();
+            return await _context.OrderInvoices.Where(predicate).ToListAsync(cancellationToken);
         }
 
-        public async Task<OrderInvoice> InsertOrderInvoiceAsync(OrderInvoice orderInvoice)
+        public async Task<OrderInvoice> InsertOrderInvoiceAsync(OrderInvoice orderInvoice, CancellationToken cancellationToken)
         {
             orderInvoice.CreationDate = DateTime.Now;
-            var insertResult = await _context.OrderInvoices.AddAsync(orderInvoice);
+            var insertResult = await _context.OrderInvoices.AddAsync(orderInvoice,cancellationToken);
             return insertResult.Entity;
         }
 
-        public async Task<OrderInvoice?> UpdateOrderInvoiceAsync(OrderInvoice orderInvoice)
+        public async Task<OrderInvoice?> UpdateOrderInvoiceAsync(OrderInvoice orderInvoice, CancellationToken cancellationToken)
         {
-            var oldOrderInvoice = await _context.OrderInvoices.FirstOrDefaultAsync(i => i.Id == orderInvoice.Id);
+            var oldOrderInvoice = await _context.OrderInvoices.FirstOrDefaultAsync(i => i.Id == orderInvoice.Id,cancellationToken);
             if (oldOrderInvoice == null) return null;
 
 
@@ -473,9 +473,9 @@ namespace TreePorts.Repositories
 
         }
 
-        public async Task<OrderInvoice?> DeleteOrderInvoiceAsync(long id)
+        public async Task<OrderInvoice?> DeleteOrderInvoiceAsync(long id, CancellationToken cancellationToken)
         {
-            var oldOrderInvoice = await _context.OrderInvoices.FirstOrDefaultAsync(i => i.Id == id);
+            var oldOrderInvoice = await _context.OrderInvoices.FirstOrDefaultAsync(i => i.Id == id,cancellationToken);
             if (oldOrderInvoice == null) return null;
 
             _context.OrderInvoices.Remove(oldOrderInvoice);
@@ -483,31 +483,31 @@ namespace TreePorts.Repositories
 
         }
 
-        public async Task<List<PaidOrder>> GetPaidOrdersAsync()
+        public async Task<List<PaidOrder>> GetPaidOrdersAsync(CancellationToken cancellationToken)
         {
-            return await _context.PaidOrders.ToListAsync();
+            return await _context.PaidOrders.ToListAsync(cancellationToken);
         }
 
-        public async Task<PaidOrder?> GetPaidOrderByIdAsync(long id)
+        public async Task<PaidOrder?> GetPaidOrderByIdAsync(long id, CancellationToken cancellationToken)
         {
-            return await _context.PaidOrders.FirstOrDefaultAsync(p => p.Id == id);
+            return await _context.PaidOrders.FirstOrDefaultAsync(p => p.Id == id,cancellationToken);
         }
 
-        public async Task<List<PaidOrder>> GetPaidOrdersByAsync(Expression<Func<PaidOrder, bool>> predicate)
+        public async Task<List<PaidOrder>> GetPaidOrdersByAsync(Expression<Func<PaidOrder, bool>> predicate, CancellationToken cancellationToken)
         {
-            return await _context.PaidOrders.Where(predicate).ToListAsync();
+            return await _context.PaidOrders.Where(predicate).ToListAsync(cancellationToken);
         }
 
-        public async Task<PaidOrder> InsertPaidOrderAsync(PaidOrder paidOrder)
+        public async Task<PaidOrder> InsertPaidOrderAsync(PaidOrder paidOrder, CancellationToken cancellationToken)
         {
             paidOrder.CreationDate = DateTime.Now;
-            var insertResult = await _context.PaidOrders.AddAsync(paidOrder);
+            var insertResult = await _context.PaidOrders.AddAsync(paidOrder,cancellationToken);
             return insertResult.Entity;
         }
 
-        public async Task<PaidOrder?> UpdatePaidOrderAsync(PaidOrder paidOrder)
+        public async Task<PaidOrder?> UpdatePaidOrderAsync(PaidOrder paidOrder, CancellationToken cancellationToken)
         {
-            var oldPaidOrder = await _context.PaidOrders.FirstOrDefaultAsync(p => p.Id == paidOrder.Id);
+            var oldPaidOrder = await _context.PaidOrders.FirstOrDefaultAsync(p => p.Id == paidOrder.Id,cancellationToken);
             if (oldPaidOrder == null) return null;
 
 
@@ -523,9 +523,9 @@ namespace TreePorts.Repositories
             return oldPaidOrder;
         }
 
-        public async Task<PaidOrder?> DeletePaidOrderAsync(long id)
+        public async Task<PaidOrder?> DeletePaidOrderAsync(long id, CancellationToken cancellationToken)
         {
-            var oldPaidOrder = await _context.PaidOrders.FirstOrDefaultAsync(p => p.Id == id);
+            var oldPaidOrder = await _context.PaidOrders.FirstOrDefaultAsync(p => p.Id == id,cancellationToken);
             if (oldPaidOrder == null) return null;
 
 
@@ -534,9 +534,9 @@ namespace TreePorts.Repositories
 
         }
 
-        public async Task<OrderCurrentStatus?> DeleteOrderStatusAsync(long id)
+        public async Task<OrderCurrentStatus?> DeleteOrderStatusAsync(long id, CancellationToken cancellationToken)
         {
-            var oldOrderCurrentStatus = await _context.OrderCurrentStatuses.FirstOrDefaultAsync(p => p.Id == id);
+            var oldOrderCurrentStatus = await _context.OrderCurrentStatuses.FirstOrDefaultAsync(p => p.Id == id,cancellationToken);
             if (oldOrderCurrentStatus == null) return null;
 
 
@@ -544,19 +544,19 @@ namespace TreePorts.Repositories
             return oldOrderCurrentStatus;
         }
 
-        public async Task<List<PaymentType>> GetPaymentTypesAsync()
+        public async Task<List<PaymentType>> GetPaymentTypesAsync(CancellationToken cancellationToken)
         {
-            return await _context.PaymentTypes.ToListAsync();
+            return await _context.PaymentTypes.ToListAsync(cancellationToken);
         }
 
-        public async Task<PaymentType?> GetPaymentTypeByIdAsync(long id)
+        public async Task<PaymentType?> GetPaymentTypeByIdAsync(long id, CancellationToken cancellationToken)
         {
-            return await _context.PaymentTypes.FirstOrDefaultAsync(p => p.Id == id);
+            return await _context.PaymentTypes.FirstOrDefaultAsync(p => p.Id == id,cancellationToken);
         }
 
-        public async Task<Order?> DeleteOrderPermenetAsync(long id)
+        public async Task<Order?> DeleteOrderPermenetAsync(long id, CancellationToken cancellationToken)
         {
-            var oldOrder = await _context.Orders.FirstOrDefaultAsync(o => o.Id == id);
+            var oldOrder = await _context.Orders.FirstOrDefaultAsync(o => o.Id == id,cancellationToken);
             if (oldOrder == null) return null;
 
             _context.Orders.Remove(oldOrder);
@@ -564,31 +564,31 @@ namespace TreePorts.Repositories
 
         }
 
-        public async Task<List<RunningOrder>> GetRunningOrdersAsync()
+        public async Task<List<RunningOrder>> GetRunningOrdersAsync(CancellationToken cancellationToken)
         {
-            return await _context.RunningOrders.ToListAsync();
+            return await _context.RunningOrders.ToListAsync(cancellationToken);
         }
 
-        public async Task<RunningOrder?> GetRunningOrderByIdAsync(long id)
+        public async Task<RunningOrder?> GetRunningOrderByIdAsync(long id, CancellationToken cancellationToken)
         {
-            return await _context.RunningOrders.FirstOrDefaultAsync(r => r.Id == id);
+            return await _context.RunningOrders.FirstOrDefaultAsync(r => r.Id == id,cancellationToken);
         }
 
-        public async Task<List<RunningOrder>> GetRunningOrdersByAsync(Expression<Func<RunningOrder, bool>> predicate)
+        public async Task<List<RunningOrder>> GetRunningOrdersByAsync(Expression<Func<RunningOrder, bool>> predicate, CancellationToken cancellationToken)
         {
-            return await _context.RunningOrders.Where(predicate).ToListAsync();
+            return await _context.RunningOrders.Where(predicate).ToListAsync(cancellationToken);
         }
 
-        public async Task<RunningOrder> InsertRunningOrderAsync(RunningOrder runningOrder)
+        public async Task<RunningOrder> InsertRunningOrderAsync(RunningOrder runningOrder, CancellationToken cancellationToken)
         {
             runningOrder.CreationDate = DateTime.Now;
-            var insertResult = await _context.RunningOrders.AddAsync(runningOrder);
+            var insertResult = await _context.RunningOrders.AddAsync(runningOrder,cancellationToken);
             return insertResult.Entity;
         }
 
-        public async Task<RunningOrder?> UpdateRunningOrderAsync(RunningOrder runningOrder)
+        public async Task<RunningOrder?> UpdateRunningOrderAsync(RunningOrder runningOrder, CancellationToken cancellationToken)
         {
-            var oldRunningOrder = await _context.RunningOrders.FirstOrDefaultAsync(r => r.Id == runningOrder.Id);
+            var oldRunningOrder = await _context.RunningOrders.FirstOrDefaultAsync(r => r.Id == runningOrder.Id,cancellationToken);
             if (oldRunningOrder == null) return null;// throw new NotFoundException("Running order not found");
 
             oldRunningOrder.OrderId = runningOrder.OrderId;
@@ -600,18 +600,18 @@ namespace TreePorts.Repositories
         }
 
 
-        public async Task<RunningOrder?> DeleteRunningOrderAsync(long id)
+        public async Task<RunningOrder?> DeleteRunningOrderAsync(long id, CancellationToken cancellationToken)
         {
-            var oldRunningOrder = await _context.RunningOrders.FirstOrDefaultAsync(r => r.Id == id);
+            var oldRunningOrder = await _context.RunningOrders.FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
             if (oldRunningOrder == null) return null;// throw new NotFoundException("Running order not found");
 
             _context.RunningOrders.Remove(oldRunningOrder);
             return oldRunningOrder;
         }
 
-        public async Task<RunningOrder?> DeleteRunningOrderByOrderIdAsync(long id)
+        public async Task<RunningOrder?> DeleteRunningOrderByOrderIdAsync(long id, CancellationToken cancellationToken)
         {
-            var oldRunningOrder = await _context.RunningOrders.FirstOrDefaultAsync(r => r.OrderId == id);
+            var oldRunningOrder = await _context.RunningOrders.FirstOrDefaultAsync(r => r.OrderId == id,cancellationToken);
             if (oldRunningOrder == null) return null; // throw new NotFoundException("Running order not found");
 
             _context.RunningOrders.Remove(oldRunningOrder);
@@ -620,22 +620,22 @@ namespace TreePorts.Repositories
 
         /* QRCode For Order*/
         // Get By Order
-        public async Task<OrderQrcode?> GetQrcodeByOrderIdAsync(long id)
+        public async Task<OrderQrcode?> GetQrcodeByOrderIdAsync(long id, CancellationToken cancellationToken)
         {
-            var qRCode = await _context.OrderQrcodes.FirstOrDefaultAsync(qr => qr.OrderId == id);
+            var qRCode = await _context.OrderQrcodes.FirstOrDefaultAsync(qr => qr.OrderId == id,cancellationToken);
             return qRCode;
         }
         // Insert
-        public async Task<OrderQrcode> InsertQrCodeAsync(OrderQrcode qrcode)
+        public async Task<OrderQrcode> InsertQrCodeAsync(OrderQrcode qrcode, CancellationToken cancellationToken)
         {
             qrcode.CreationDate = DateTime.Now;
-            var qRCode = await _context.OrderQrcodes.AddAsync(qrcode);
+            var qRCode = await _context.OrderQrcodes.AddAsync(qrcode,cancellationToken);
             return qRCode.Entity;
         }
         // Delete
-        public async Task<OrderQrcode?> DeleteQrCodeAsync(long id)
+        public async Task<OrderQrcode?> DeleteQrCodeAsync(long id, CancellationToken cancellationToken)
         {
-            var olderQRCode = await _context.OrderQrcodes.FirstOrDefaultAsync(qr => qr.Id == id);
+            var olderQRCode = await _context.OrderQrcodes.FirstOrDefaultAsync(qr => qr.Id == id,cancellationToken);
             if (olderQRCode == null) return null; // throw new NotFoundException("QRCode Not Found not found");
             _context.Remove(olderQRCode);
             return olderQRCode;
@@ -747,9 +747,9 @@ namespace TreePorts.Repositories
             return new object();
         }
 
-        public async Task<Order?> UpdateOrderLocationAsync(Order order)
+        public async Task<Order?> UpdateOrderLocationAsync(Order order, CancellationToken cancellationToken)
         {
-            var oldOrder = await _context.Orders.FirstOrDefaultAsync(o => o.Id == order.Id);
+            var oldOrder = await _context.Orders.FirstOrDefaultAsync(o => o.Id == order.Id,cancellationToken);
             if (oldOrder == null) return null;
 
             oldOrder.DropLocationLat = order.DropLocationLat;
@@ -797,7 +797,7 @@ namespace TreePorts.Repositories
         public int GetTotalOrdersCount()
         {
             return _context.Orders.Count();
-            ; }
+        }
 
 
 
@@ -843,12 +843,12 @@ namespace TreePorts.Repositories
 
         }
 
-        public async Task<Order?> UpdateOrderCurrentStatusAsync(long orderId, long CurrentStatusId)
+        public async Task<Order?> UpdateOrderCurrentStatusAsync(long orderId, long CurrentStatusId, CancellationToken cancellationToken)
         {
-            var oldOrder = await _context.Orders.FirstOrDefaultAsync(o => o.Id == orderId);
+            var oldOrder = await _context.Orders.FirstOrDefaultAsync(o => o.Id == orderId,cancellationToken);
             if (oldOrder == null) return null;
 
-            oldOrder.CurrentOrderStatusTypeId = CurrentStatusId;
+            oldOrder.OrderStatusTypeId = CurrentStatusId;
             oldOrder.ModificationDate = DateTime.Now;
             _context.Entry<Order>(oldOrder).State = EntityState.Modified;
             return oldOrder;
@@ -856,7 +856,7 @@ namespace TreePorts.Repositories
 
 
 
-        public async Task<List<OrderFilterResponse>> ReportAsync(OrderFilter orderFilter)
+        public async Task<List<OrderFilterResponse>> ReportAsync(OrderFilter orderFilter, CancellationToken cancellationToken)
         {
             bool isOrderHasWhereQuery = false;
             string selectColumnsQuery = "";
@@ -966,10 +966,10 @@ namespace TreePorts.Repositories
 
             List<OrderFilterResponse> result = new ();
             var conn = _context.Database.GetDbConnection();
-            await conn.OpenAsync();
+            await conn.OpenAsync(cancellationToken);
             var command = conn.CreateCommand();
             command.CommandText = query;
-            using var reader = await command.ExecuteReaderAsync();
+            using var reader = await command.ExecuteReaderAsync(cancellationToken);
             while (reader.Read())
             {
 
@@ -1058,7 +1058,7 @@ namespace TreePorts.Repositories
             return result;
         }
 
-        public async Task<List<OrderFilterResponse>> FilterAsync(OrderFilter orderFilter)
+        public async Task<List<OrderFilterResponse>> FilterAsync(OrderFilter orderFilter, CancellationToken cancellationToken)
         {
             bool isOrderHasWhereQuery = false;
             string selectColumnsQuery = "";
@@ -1191,10 +1191,10 @@ namespace TreePorts.Repositories
 
             List<OrderFilterResponse> result = new();
             var conn = _context.Database.GetDbConnection();
-            await conn.OpenAsync();
+            await conn.OpenAsync(cancellationToken);
             var command = conn.CreateCommand();
             command.CommandText = query;
-            using var reader = await command.ExecuteReaderAsync();
+            using var reader = await command.ExecuteReaderAsync(cancellationToken);
             while (reader.Read())
             {
 
@@ -1285,19 +1285,19 @@ namespace TreePorts.Repositories
 
 
 
-        public async Task<List<Order>> GetOrdersPaginationAsync(int skip, int take)
+        public async Task<List<Order>> GetOrdersPaginationAsync(int skip, int take, CancellationToken cancellationToken)
         {
             return await _context.Orders
                 .OrderByDescending(o => o.CreationDate)
                 .Skip(skip)
                 .Take(take)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
         }
 
 
-        public async Task<OrderAssignment?> DeleteOrderAssignmentAsync(long id) 
+        public async Task<OrderAssignment?> DeleteOrderAssignmentAsync(long id, CancellationToken cancellationToken) 
         {
-            var oldOrderAssigne = await _context.OrderAssignments.FirstOrDefaultAsync(a => a.Id == id);
+            var oldOrderAssigne = await _context.OrderAssignments.FirstOrDefaultAsync(a => a.Id == id,cancellationToken);
             if (oldOrderAssigne == null) return null;
 
             _context.OrderAssignments.Remove(oldOrderAssigne);

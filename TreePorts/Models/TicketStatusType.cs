@@ -8,6 +8,7 @@ namespace TreePorts.Models
         public TicketStatusType()
         {
             TicketAssignments = new HashSet<TicketAssignment>();
+            Tickets = new HashSet<Ticket>();
         }
 
         public long Id { get; set; }
@@ -21,5 +22,6 @@ namespace TreePorts.Models
         public DateTime? ModificationDate { get; set; }
 
         public virtual ICollection<TicketAssignment> TicketAssignments { get; set; }
+        public virtual ICollection<Ticket> Tickets { get; set; }
     }
 }

@@ -54,7 +54,7 @@ namespace TreePorts.Hubs
                             };
 
                             var insertedUser =
-                                await _unitOfWork.SupportRepository.InsertSupportUserMessageHubAsync(supportUserMessageHub);
+                                await _unitOfWork.SupportRepository.InsertSupportUserMessageHubAsync(supportUserMessageHub,default);
                             var result = await _unitOfWork.Save();
                             if (result == 0) return "Support user not found in message hub";
 
@@ -71,7 +71,7 @@ namespace TreePorts.Hubs
 
 
                             var insertedUser =
-                                await _unitOfWork.AgentRepository.InsertAgentMessageHubAsync(agentMessageHub);
+                                await _unitOfWork.AgentRepository.InsertAgentMessageHubAsync(agentMessageHub,default);
                             var result = await _unitOfWork.Save();
                             if (result == 0) return "Agent user not found in message hub";
 
@@ -86,7 +86,7 @@ namespace TreePorts.Hubs
                             };
 
                             var insertedUser =
-                                await _unitOfWork.AdminRepository.InsertAdminUserMessageHubAsync(admintUserMessageHub);
+                                await _unitOfWork.AdminRepository.InsertAdminUserMessageHubAsync(admintUserMessageHub,default);
                             var result = await _unitOfWork.Save();
                             if (result == 0) return "Admin user not found in message hub";
 

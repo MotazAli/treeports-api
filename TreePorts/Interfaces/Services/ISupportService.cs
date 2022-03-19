@@ -4,28 +4,28 @@ using TreePorts.DTO.Records;
 namespace TreePorts.Interfaces.Services;
 public interface ISupportService 
 {
-    Task<IEnumerable<Ticket>> GetTicketsAsyncs();
-    Task<Ticket?> GetTicketByIdAsync(long id);
-    Task<SupportUser> GetSupportAccountUserBySupportUserAccountIdAsync(string supportUserAccountId);
-    Task<object> GetSupportUsersAccountsAsync(FilterParameters parameters);
-    Task<bool> AddTicketAsync(Ticket ticket);
-    Task<TicketAssignment> GetTicketAssignedByCaptainUserAccountIdAsync(string captainUserAccountId);
-    Task<IEnumerable<TicketAssignment>> GetTicketsAssignedBySupportUserAccountIdAsync(string supportUserAccountId);
-    Task<bool> UpdateTicketAsync(long ticketId, Ticket ticket);
-    Task<bool> UpdateTicketAssignmentByTicketIdAsync(long ticketId, TicketAssignment ticketAssgin);
-    Task<IEnumerable<SupportUser>> GetSupportUsersAccountsAsync();
-    Task<IEnumerable<SupportType>> GetTicketTypesAsync();
-    Task<SupportUser?> UpdateSupportUserAccountAsync(long supportUserAccountId, SupportUser user);
-    Task<bool> DeleteSupportUserAccountAsync(string supportUserAccountId);
-    Task<SupportUserResponse> AddSupportUserAccountAsync(SupportUserDto supportUserDto);
-    Task<SupportUserResponse?> LoginAsync(LoginUserDto user);
-    Task<bool> SendMessageAsync(TicketMessage supportMessage);
-    Task<bool> UploadFileAsync(HttpContext httpContext);
-    Task<object> GetSupportUsersPagingAsync(Pagination pagination, FilterParameters parameters);
-    Task<object> SearchAsync(FilterParameters parameters);
-    //Task<object> SearchTicketAsync(FilterParameters parameters);
-    //Task<object> ReportAsync(FilterParameters reportParameters);
-    Task<string> SendFirebaseNotificationAsync(FBNotify fbNotify);
+    Task<IEnumerable<Ticket>> GetTicketsAsyncs(CancellationToken cancellationToken);
+    Task<Ticket?> GetTicketByIdAsync(long id,CancellationToken cancellationToken);
+    Task<SupportUser> GetSupportAccountUserBySupportUserAccountIdAsync(string supportUserAccountId,CancellationToken cancellationToken);
+    Task<object> GetSupportUsersAccountsAsync(FilterParameters parameters,CancellationToken cancellationToken);
+    Task<bool> AddTicketAsync(Ticket ticket,CancellationToken cancellationToken);
+    Task<TicketAssignment> GetTicketAssignedByCaptainUserAccountIdAsync(string captainUserAccountId,CancellationToken cancellationToken);
+    Task<IEnumerable<TicketAssignment>> GetTicketsAssignedBySupportUserAccountIdAsync(string supportUserAccountId,CancellationToken cancellationToken);
+    Task<bool> UpdateTicketAsync(long ticketId, Ticket ticket,CancellationToken cancellationToken);
+    Task<bool> UpdateTicketAssignmentByTicketIdAsync(long ticketId, TicketAssignment ticketAssgin,CancellationToken cancellationToken);
+    Task<IEnumerable<SupportUser>> GetSupportUsersAccountsAsync(CancellationToken cancellationToken);
+    Task<IEnumerable<SupportType>> GetTicketTypesAsync(CancellationToken cancellationToken);
+    Task<SupportUser?> UpdateSupportUserAccountAsync(long supportUserAccountId, SupportUser user,CancellationToken cancellationToken);
+    Task<bool> DeleteSupportUserAccountAsync(string supportUserAccountId,CancellationToken cancellationToken);
+    Task<SupportUserResponse> AddSupportUserAccountAsync(SupportUserDto supportUserDto,CancellationToken cancellationToken);
+    Task<SupportUserResponse?> LoginAsync(LoginUserDto user,CancellationToken cancellationToken);
+    Task<bool> SendMessageAsync(TicketMessage supportMessage,CancellationToken cancellationToken);
+    Task<bool> UploadFileAsync(HttpContext httpContext,CancellationToken cancellationToken);
+    Task<object> GetSupportUsersPagingAsync(Pagination pagination, FilterParameters parameters,CancellationToken cancellationToken);
+    Task<object> SearchAsync(FilterParameters parameters,CancellationToken cancellationToken);
+    //Task<object> SearchTicketAsync(FilterParameters parameters,CancellationToken cancellationToken);
+    //Task<object> ReportAsync(FilterParameters reportParameters,CancellationToken cancellationToken);
+    Task<string> SendFirebaseNotificationAsync(FBNotify fbNotify,CancellationToken cancellationToken);
 
 }
 

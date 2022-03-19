@@ -21,11 +21,11 @@ namespace TreePorts.Controllers
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Agent>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> Get(CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _agentService.GetWorkingAgentsAsync());
+                return Ok(await _agentService.GetWorkingAgentsAsync(cancellationToken));
 
             }
             catch (Exception e)
@@ -39,11 +39,11 @@ namespace TreePorts.Controllers
         [HttpGet("Active")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Agent>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> Active()
+        public async Task<IActionResult> Active(CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _agentService.GetActiveAgentsAsync());
+                return Ok(await _agentService.GetActiveAgentsAsync(cancellationToken));
             }
             catch (Exception e)
             {
@@ -64,11 +64,11 @@ namespace TreePorts.Controllers
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Agent))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> Get(string? id = "")
+        public async Task<IActionResult> Get(string? id, CancellationToken cancellationToken)
         {
             try
             {  
-                return Ok(await _agentService.GetAgentByIdAsync(id));
+                return Ok(await _agentService.GetAgentByIdAsync(id?? "",cancellationToken));
 
             }
             catch (Exception e)
@@ -82,11 +82,11 @@ namespace TreePorts.Controllers
         [HttpGet("Types")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<AgentType>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetAgentTypes()
+        public async Task<IActionResult> GetAgentTypes(CancellationToken cancellationToken)
         {
             try
             {
-               return Ok(await _agentService.GetAgentTypesAsync());
+               return Ok(await _agentService.GetAgentTypesAsync(cancellationToken));
             }
             catch (Exception e)
             {
@@ -98,11 +98,11 @@ namespace TreePorts.Controllers
         [HttpPost("Paging")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Agent>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetAgentsPaging( [FromQuery] FilterParameters parameters)
+        public async Task<IActionResult> GetAgentsPaging( [FromQuery] FilterParameters parameters, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _agentService.GetAgentsPagingAsync(parameters));
+                return Ok(await _agentService.GetAgentsPagingAsync(parameters,cancellationToken));
             }
             catch (Exception e)
             {
@@ -116,11 +116,11 @@ namespace TreePorts.Controllers
         [HttpPost("New")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Agent>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetNewRegisteredAgents()
+        public async Task<IActionResult> GetNewRegisteredAgents(CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _agentService.GetNewRegisteredAgentsAsync());
+                return Ok(await _agentService.GetNewRegisteredAgentsAsync(cancellationToken));
             }
             catch (Exception e)
             {
@@ -133,11 +133,11 @@ namespace TreePorts.Controllers
         [HttpPost("New/paging")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetNewRegisteredAgentsPaging( [FromQuery] FilterParameters parameters)
+        public async Task<IActionResult> GetNewRegisteredAgentsPaging( [FromQuery] FilterParameters parameters, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _agentService.GetNewRegisteredAgentsPagingAsync(parameters));
+                return Ok(await _agentService.GetNewRegisteredAgentsPagingAsync(parameters, cancellationToken));
             }
             catch (Exception e)
             {
@@ -150,11 +150,11 @@ namespace TreePorts.Controllers
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(long))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> Post([FromBody] AgentDto agent)
+        public async Task<IActionResult> Post([FromBody] AgentDto agent, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _agentService.AddAgentAsync(agent));
+                return Ok(await _agentService.AddAgentAsync(agent,cancellationToken));
             }
             catch (Exception e)
             {
@@ -170,12 +170,12 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> AcceptRegisterAgent(string? id = "")
+        public async Task<IActionResult> AcceptRegisterAgent(string? id, CancellationToken cancellationToken)
          {
 
             try
             {
-                return Ok(await _agentService.AcceptRegisterAgentAsync(id));
+                return Ok(await _agentService.AcceptRegisterAgentAsync(id?? "", cancellationToken));
             }
             catch (Exception e)
             {
@@ -192,11 +192,11 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Agent))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> Put(string? id ,[FromBody] AgentDto agent)
+        public async Task<IActionResult> Put(string? id ,[FromBody] AgentDto agent, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _agentService.UpdateAgentAsync(id,agent));
+                return Ok(await _agentService.UpdateAgentAsync(id,agent,cancellationToken));
             }
             catch (Exception e)
             {
@@ -209,11 +209,11 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> Delete(string? id)
+        public async Task<IActionResult> Delete(string? id, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _agentService.DeleteAgentAsync(id ?? ""));
+                return Ok(await _agentService.DeleteAgentAsync(id ?? "", cancellationToken));
             }
             catch (Exception e)
             {
@@ -229,14 +229,14 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Agent))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> Login([FromBody] LoginUserDto user)
+        public async Task<IActionResult> Login([FromBody] LoginUserDto user, CancellationToken cancellationToken)
         {
 
 
             try
             {
 
-                return Ok(await _agentService.LoginAsync(user));
+                return Ok(await _agentService.LoginAsync(user,cancellationToken));
             }
             catch (Exception e)
             {
@@ -253,12 +253,12 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Agent))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> UpdateLoaction(long id ,[FromBody] Agent agent)
+        public async Task<IActionResult> UpdateLoaction(long id ,[FromBody] Agent agent, CancellationToken cancellationToken)
         {
             try
             {
 
-                return Ok(await _agentService.UpdateAgentLoactionAsync(id,agent));
+                return Ok(await _agentService.UpdateAgentLoactionAsync(id,agent,cancellationToken));
             }
             catch (Exception e)
             {
@@ -275,11 +275,11 @@ namespace TreePorts.Controllers
         [HttpPost("Upload")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> Upload()
+        public async Task<IActionResult> Upload(CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _agentService.UploadFileAsync(HttpContext));
+                return Ok(await _agentService.UploadFileAsync(HttpContext, cancellationToken));
             }
             catch (Exception e)
             {
@@ -294,11 +294,11 @@ namespace TreePorts.Controllers
         [HttpGet("Report")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> Report([FromQuery] FilterParameters reportParameters)
+        public async Task<IActionResult> Report([FromQuery] FilterParameters reportParameters, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _agentService.ReportAsync(HttpContext,reportParameters));
+                return Ok(await _agentService.ReportAsync(HttpContext,reportParameters,cancellationToken));
                 
             }
             catch (Exception e)
@@ -314,12 +314,12 @@ namespace TreePorts.Controllers
         [HttpGet("Search")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> Search([FromQuery] FilterParameters parameters)
+        public async Task<IActionResult> Search([FromQuery] FilterParameters parameters, CancellationToken cancellationToken)
         {
             try
             {
 
-                return Ok(await _agentService.SearchAsync(parameters));
+                return Ok(await _agentService.SearchAsync(parameters, cancellationToken));
                 
             }
             catch (Exception e)
@@ -333,12 +333,12 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> CreateAgentCoupon([FromBody] AgentCouponDto agentCouponDto)
+        public async Task<IActionResult> CreateAgentCoupon([FromBody] AgentCouponDto agentCouponDto, CancellationToken cancellationToken)
 		{
 			try
 			{
 				
-                return Ok(await _agentService.CreateAgentCouponAsync(agentCouponDto));
+                return Ok(await _agentService.CreateAgentCouponAsync(agentCouponDto,cancellationToken));
                 
             }
             catch (Exception e)
@@ -356,13 +356,13 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> AssignExistingCoupon([FromBody] AssignCouponDto assignCouponDto)
+        public async Task<IActionResult> AssignExistingCoupon([FromBody] AssignCouponDto assignCouponDto, CancellationToken cancellationToken)
 		{
 			
             try
             {
                 
-                return Ok(await _agentService.AssignExistingCouponAsync(assignCouponDto));
+                return Ok(await _agentService.AssignExistingCouponAsync(assignCouponDto, cancellationToken));
             }
             catch (Exception e)
             {
@@ -378,11 +378,11 @@ namespace TreePorts.Controllers
         [HttpGet("Chart")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> Chart()
+        public async Task<IActionResult> Chart(CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _agentService.ChartAsync());
+                return Ok(await _agentService.ChartAsync(cancellationToken));
             }
             catch (Exception e)
             {
@@ -396,13 +396,13 @@ namespace TreePorts.Controllers
         [HttpGet("{id}/Coupons/Check")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Coupon))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> CheckCoupon( string? id ,[FromQuery(Name = "couponCode")]string couponCode, [FromQuery(Name = "countryId")] long? countryId)
+        public async Task<IActionResult> CheckCoupon( string? id ,[FromQuery(Name = "couponCode")]string couponCode, [FromQuery(Name = "countryId")] long? countryId, CancellationToken cancellationToken)
         {
             try
             {
 
                 
-                return Ok(await _agentService.CheckCouponAsync(id,couponCode, countryId));
+                return Ok(await _agentService.CheckCouponAsync(id,couponCode, countryId,cancellationToken));
             }
             catch (Exception e)
             {
@@ -416,11 +416,11 @@ namespace TreePorts.Controllers
         [HttpGet("DeliveryPrices")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetDeliveryPrices()
+        public async Task<IActionResult> GetDeliveryPrices(CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _agentService.GetAgentsDeliveryPricesAsync());
+                return Ok(await _agentService.GetAgentsDeliveryPricesAsync(cancellationToken));
             }
             catch (Exception e)
             {
@@ -432,11 +432,11 @@ namespace TreePorts.Controllers
         [HttpGet("DeliveryPrices/{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetDeliveryPriceById(string? id)
+        public async Task<IActionResult> GetDeliveryPriceById(string? id, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _agentService.GetAgentDeliveryPricesByAgentIdAsync(id ?? ""));
+                return Ok(await _agentService.GetAgentDeliveryPricesByAgentIdAsync(id ?? "",cancellationToken));
             }
             catch (Exception e)
             {
@@ -449,11 +449,11 @@ namespace TreePorts.Controllers
         [HttpGet("{id}/DeliveryPrices")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<AgentDeliveryPrice>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetDeliveryPricesByAgentId(string? id)
+        public async Task<IActionResult> GetDeliveryPricesByAgentId(string? id, CancellationToken cancellationToken)
         {
             try
             {
-                 return Ok(await _agentService.GetAgentDeliveryPricesByAgentIdAsync(id ?? ""));
+                 return Ok(await _agentService.GetAgentDeliveryPricesByAgentIdAsync(id ?? "",cancellationToken));
             }
             catch (Exception e)
             {
@@ -467,11 +467,11 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AgentDeliveryPrice))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> AddDeliveryPrice([FromBody] AgentDeliveryPrice agentDeliveryPrice)
+        public async Task<IActionResult> AddDeliveryPrice([FromBody] AgentDeliveryPrice agentDeliveryPrice, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _agentService.AddAgentDeliveryPriceAsync(agentDeliveryPrice));
+                return Ok(await _agentService.AddAgentDeliveryPriceAsync(agentDeliveryPrice,cancellationToken));
             }
             catch (Exception e)
             {
@@ -485,11 +485,11 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AgentDeliveryPrice))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> DeleteDeliveryPrice(long id)
+        public async Task<IActionResult> DeleteDeliveryPrice(long id, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _agentService.DeleteDeliveryPriceAsync(id));
+                return Ok(await _agentService.DeleteDeliveryPriceAsync(id,cancellationToken));
             }
             catch (Exception e)
             {
@@ -504,11 +504,11 @@ namespace TreePorts.Controllers
         [HttpPost("SendFirebaseNotification")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> SendFirebaseNotification([FromBody] FBNotify fbNotify)
+        public async Task<IActionResult> SendFirebaseNotification([FromBody] FBNotify fbNotify, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _agentService.SendFirebaseNotificationAsync(fbNotify));
+                return Ok(await _agentService.SendFirebaseNotificationAsync(fbNotify, cancellationToken));
             }
             catch (Exception e)
             {

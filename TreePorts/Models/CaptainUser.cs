@@ -39,6 +39,8 @@ namespace TreePorts.Models
 
         public virtual City? City { get; set; }
         public virtual Country? Country { get; set; }
+        public virtual City? ResidenceCity { get; set; }
+        public virtual Country? ResidenceCountry { get; set; }
         public virtual ICollection<CaptainUserAccount> CaptainUserAccounts { get; set; }
     }
 }

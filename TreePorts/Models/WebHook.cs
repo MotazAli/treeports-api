@@ -17,6 +17,7 @@ namespace TreePorts.Models
         public DateTime? CreationDate { get; set; }
         public DateTime? ModificationDate { get; set; }
 
+        public virtual Agent? Agent { get; set; }
         public virtual WebhookType? WebhookType { get; set; }
     }
 }

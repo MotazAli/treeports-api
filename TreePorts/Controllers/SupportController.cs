@@ -20,11 +20,11 @@ namespace TreePorts.Controllers
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Ticket>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetTicketsAsync()
+        public async Task<IActionResult> GetTicketsAsync(CancellationToken cancellationToken)
         {
             try
             { 
-                return Ok(await _supportService.GetTicketsAsyncs());
+                return Ok(await _supportService.GetTicketsAsyncs(cancellationToken));
             }
             catch (Exception e)
             {
@@ -36,11 +36,11 @@ namespace TreePorts.Controllers
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Ticket))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetTicketByIdAsync(long id)
+        public async Task<IActionResult> GetTicketByIdAsync(long id, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _supportService.GetTicketByIdAsync(id));
+                return Ok(await _supportService.GetTicketByIdAsync(id, cancellationToken));
             }
             catch (Exception e)
             {
@@ -53,13 +53,13 @@ namespace TreePorts.Controllers
         [HttpGet("Users/{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SupportUser))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetSupportUserByUserId(string? id)
+        public async Task<IActionResult> GetSupportUserByUserId(string? id, CancellationToken cancellationToken)
         {
 
 
             try
             {
-                return Ok(await _supportService.GetSupportAccountUserBySupportUserAccountIdAsync(id ?? ""));
+                return Ok(await _supportService.GetSupportAccountUserBySupportUserAccountIdAsync(id ?? "",cancellationToken));
             }
             catch (Exception e)
             {
@@ -73,11 +73,11 @@ namespace TreePorts.Controllers
         [HttpGet("Users/Paging")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> Users( [FromQuery] FilterParameters parameters)
+        public async Task<IActionResult> Users( [FromQuery] FilterParameters parameters, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _supportService.GetSupportUsersAccountsAsync(parameters));
+                return Ok(await _supportService.GetSupportUsersAccountsAsync(parameters,cancellationToken));
             }
             catch (Exception e)
             {
@@ -92,11 +92,11 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> AddTicketAsync([FromBody] Ticket ticket)
+        public async Task<IActionResult> AddTicketAsync([FromBody] Ticket ticket, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _supportService.AddTicketAsync(ticket));
+                return Ok(await _supportService.AddTicketAsync(ticket,cancellationToken));
             }
             catch (Exception e)
             {
@@ -112,11 +112,11 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TicketAssignment))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetTicketAssignedByCaptainIdAsync(string? id)
+        public async Task<IActionResult> GetTicketAssignedByCaptainIdAsync(string? id, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _supportService.GetTicketAssignedByCaptainUserAccountIdAsync(id ?? ""));
+                return Ok(await _supportService.GetTicketAssignedByCaptainUserAccountIdAsync(id ?? "",cancellationToken));
             }
             catch (Exception e)
             {
@@ -130,11 +130,11 @@ namespace TreePorts.Controllers
         [HttpGet("Assignments/Users/{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<TicketAssignment>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetTicketsAssignedBySupportUserAccountIdAsync(string? id)
+        public async Task<IActionResult> GetTicketsAssignedBySupportUserAccountIdAsync(string? id, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _supportService.GetTicketsAssignedBySupportUserAccountIdAsync(id??""));
+                return Ok(await _supportService.GetTicketsAssignedBySupportUserAccountIdAsync(id??"",cancellationToken));
             }
             catch (Exception e)
             {
@@ -147,11 +147,11 @@ namespace TreePorts.Controllers
         [HttpGet("Users/{id}/Assignments")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<TicketAssignment>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetAllTicketAssignedAsync(string? id)
+        public async Task<IActionResult> GetAllTicketAssignedAsync(string? id, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _supportService.GetTicketsAssignedBySupportUserAccountIdAsync(id??""));
+                return Ok(await _supportService.GetTicketsAssignedBySupportUserAccountIdAsync(id??"",cancellationToken));
             }
             catch (Exception e)
             {
@@ -166,12 +166,12 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> UpdateTicketAsync( long? id ,[FromBody] Ticket ticket)
+        public async Task<IActionResult> UpdateTicketAsync( long? id ,[FromBody] Ticket ticket, CancellationToken cancellationToken)
         {
             try
             {
 
-                return Ok(await _supportService.UpdateTicketAsync((long)id, ticket));
+                return Ok(await _supportService.UpdateTicketAsync((long)id, ticket,cancellationToken));
             }
             catch (Exception e)
             {
@@ -187,12 +187,12 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> UpdateTicketAssignmentByTicketIdAsync(long id ,[FromBody] TicketAssignment ticketAssgin)
+        public async Task<IActionResult> UpdateTicketAssignmentByTicketIdAsync(long id ,[FromBody] TicketAssignment ticketAssgin, CancellationToken cancellationToken)
         {
             try
             {
 
-                return Ok(await _supportService.UpdateTicketAssignmentByTicketIdAsync(id, ticketAssgin));
+                return Ok(await _supportService.UpdateTicketAssignmentByTicketIdAsync(id, ticketAssgin,cancellationToken));
             }
             catch (Exception e)
             {
@@ -205,12 +205,12 @@ namespace TreePorts.Controllers
         [HttpGet("Users")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<SupportUser>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetSupportUsersAccountsAsync()
+        public async Task<IActionResult> GetSupportUsersAccountsAsync(CancellationToken cancellationToken)
         {
             try
             {
 
-                return Ok(await _supportService.GetSupportUsersAccountsAsync());
+                return Ok(await _supportService.GetSupportUsersAccountsAsync(cancellationToken));
             }
             catch (Exception e)
             {
@@ -224,11 +224,11 @@ namespace TreePorts.Controllers
         [HttpGet("Types")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<SupportType>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetTicketTypesAsync()
+        public async Task<IActionResult> GetTicketTypesAsync(CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _supportService.GetTicketTypesAsync());
+                return Ok(await _supportService.GetTicketTypesAsync(cancellationToken));
             }
             catch (Exception e)
             {
@@ -265,11 +265,11 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SupportUser))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> UpdateSupportUser( long id , [FromBody] SupportUser user)
+        public async Task<IActionResult> UpdateSupportUser( long id , [FromBody] SupportUser user, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _supportService.UpdateSupportUserAccountAsync(id,user));
+                return Ok(await _supportService.UpdateSupportUserAccountAsync(id,user,cancellationToken));
             }
             catch (Exception e)
             {
@@ -283,11 +283,11 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> DeleteSupportUser(string? id)
+        public async Task<IActionResult> DeleteSupportUser(string? id, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _supportService.DeleteSupportUserAccountAsync(id??""));
+                return Ok(await _supportService.DeleteSupportUserAccountAsync(id??"",cancellationToken));
             }
             catch (Exception e)
             {
@@ -304,11 +304,11 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> AddSupportUser([FromBody] SupportUserDto user)
+        public async Task<IActionResult> AddSupportUser([FromBody] SupportUserDto user, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _supportService.AddSupportUserAccountAsync(user));
+                return Ok(await _supportService.AddSupportUserAccountAsync(user,cancellationToken));
             }
             catch (Exception e)
             {
@@ -327,11 +327,11 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> Login([FromBody] LoginUserDto user)
+        public async Task<IActionResult> Login([FromBody] LoginUserDto user, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _supportService.LoginAsync(user));
+                return Ok(await _supportService.LoginAsync(user,cancellationToken));
             }
             catch (Exception e)
             {
@@ -347,11 +347,11 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> SendMessage([FromBody] TicketMessage ticketMessage)
+        public async Task<IActionResult> SendMessage([FromBody] TicketMessage ticketMessage, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _supportService.SendMessageAsync(ticketMessage));
+                return Ok(await _supportService.SendMessageAsync(ticketMessage,cancellationToken));
 
             }
             catch (Exception e)
@@ -368,11 +368,11 @@ namespace TreePorts.Controllers
         [HttpPost("Upload")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> Upload()
+        public async Task<IActionResult> Upload(CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _supportService.UploadFileAsync(HttpContext));
+                return Ok(await _supportService.UploadFileAsync(HttpContext, cancellationToken));
             }
             catch (Exception e)
             {
@@ -387,11 +387,11 @@ namespace TreePorts.Controllers
         [HttpPost("Users/Paging")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetSupportUsersPaging([FromBody] Pagination pagination, [FromQuery] FilterParameters parameters)
+        public async Task<IActionResult> GetSupportUsersPaging([FromBody] Pagination pagination, [FromQuery] FilterParameters parameters, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _supportService.GetSupportUsersPagingAsync(pagination,parameters));
+                return Ok(await _supportService.GetSupportUsersPagingAsync(pagination,parameters,cancellationToken));
             }
             catch (Exception e)
             {
@@ -433,11 +433,11 @@ namespace TreePorts.Controllers
         [HttpGet("Search")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> Search([FromQuery] FilterParameters parameters)
+        public async Task<IActionResult> Search([FromQuery] FilterParameters parameters, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _supportService.SearchAsync(parameters));
+                return Ok(await _supportService.SearchAsync(parameters, cancellationToken));
             }
             catch (Exception e)
             {
@@ -487,11 +487,11 @@ namespace TreePorts.Controllers
         [HttpPost("SendFirebaseNotification")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> SendFirebaseNotification([FromBody] FBNotify fbNotify)
+        public async Task<IActionResult> SendFirebaseNotification([FromBody] FBNotify fbNotify, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _supportService.SendFirebaseNotificationAsync(fbNotify));
+                return Ok(await _supportService.SendFirebaseNotificationAsync(fbNotify,cancellationToken));
             }
             catch (Exception e)
             {

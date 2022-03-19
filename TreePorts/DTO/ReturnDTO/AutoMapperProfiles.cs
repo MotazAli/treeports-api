@@ -66,7 +66,7 @@ namespace TreePorts.DTO.ReturnDTO
 			/* Agent Mapping*/
 
 			/*Order Mapping*/
-			CreateMap<City, CityReponse>();
+			CreateMap<City, CityResponse>();
 			CreateMap<Country, CountryResponse>();
 		    CreateMap<OrderItem, OrderItemResponse>();
 			CreateMap<OrderAssignment, OrderAssignReponse>();

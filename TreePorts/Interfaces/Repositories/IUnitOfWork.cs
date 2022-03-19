@@ -18,6 +18,6 @@ namespace TreePorts.Interfaces.Repositories
         IOrderRepository OrderRepository { get; }
         IWebhookRepository HookRepository { get; }
         IPaymentRepository PaymentRepository { get; }
-        Task<int> Save();
+        Task<int> Save(CancellationToken cancellationToken = default);
     }
 }

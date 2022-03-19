@@ -132,7 +132,7 @@ namespace TreePorts.Utilities
 
 
 
-		public static bool SendSMS(string message, string phone)
+		public static async Task<bool> SendSMSAsync(string message, string phone, CancellationToken cancellationToken = default)
 		{
 			using (var client = new HttpClient())
 			{
@@ -149,20 +149,20 @@ namespace TreePorts.Utilities
 					//Content = new StringContent("{\n    \"message\": \"" + message + "\",\n    \"to\": \"+201227642025\",\n    \"sender_id\": \"Sender\"}", Encoding.UTF8, "application/json")
 				};
 
-				var response = client.SendAsync(httpRequestMessage).Result;
-				return (response.StatusCode == HttpStatusCode.OK) ? true : false;
+				var response = await client.SendAsync(httpRequestMessage,cancellationToken);
+				return (response.StatusCode == HttpStatusCode.OK);
 			}
 		}
 
 
 
 
-		public static string SendFirebaseNotification(IWebHostEnvironment hostingEnvironment, string title, string massageBody, string userMessageToken)
+		public static async Task<string?> SendFirebaseNotification(IWebHostEnvironment hostingEnvironment, string title, string massageBody, string userMessageToken, CancellationToken cancellationToken= default)
 		{
 
 			try
 			{
-				var result = FirebaseNotification.SendNotification(userMessageToken, title, massageBody);
+				var result = await FirebaseNotification.SendNotification(userMessageToken, title, massageBody,cancellationToken);
 				return result;
 
 			}
@@ -330,7 +330,7 @@ namespace TreePorts.Utilities
 
 
 
-		public static async Task<string> sendGridMail(string from_email, string from_name, string subject_email, string content, bool isHTMLContent = true)
+		public static async Task<string?> sendGridMail(string from_email, string from_name, string subject_email, string content, bool isHTMLContent = true, CancellationToken cancellationToken = default)
 		{
 			var apiKey = "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";
 			var client = new SendGridClient(apiKey);
@@ -353,14 +353,14 @@ Message : {content} ";
 
 
 			var msg = MailHelper.CreateSingleEmail(from, to, subject, plainTextContent, htmlContent);
-			var response = await client.SendEmailAsync(msg).ConfigureAwait(false);
+			var response = await client.SendEmailAsync(msg,cancellationToken).ConfigureAwait(false);
 			return response.Body.ToString();
 		}
 
 
 
 
-		public static async Task<string> getDirectionsFromGoogleMap(string origin, string destination, string mode)
+		public static async Task<string> getDirectionsFromGoogleMap(string origin, string destination, string mode, CancellationToken cancellationToken= default)
 		{
 			string api_key = "AIzaSyDOEAaFxR6LsONryMrNiFi5t8zncaCHyX8";
 			using (var client = new HttpClient())
@@ -380,8 +380,8 @@ Message : {content} ";
 					//Content = new StringContent("{\n    \"message\": \"" + message + "\",\n    \"to\": \"+201227642025\",\n    \"sender_id\": \"Sender\"}", Encoding.UTF8, "application/json")
 				};
 
-				var response = client.SendAsync(httpRequestMessage).Result;
-				return await response.Content.ReadAsStringAsync();
+				var response = client.SendAsync(httpRequestMessage,cancellationToken).Result;
+				return await response.Content.ReadAsStringAsync(cancellationToken);
 			}
 		}
 
@@ -1438,8 +1438,10 @@ Message : {content} ";
 		// Generate Coupons
 
 		// Http Hooks
-		public static bool ExecuteWebHook( string url, string body)
+		public static async Task<bool> ExecuteWebHook( string? url, string body, CancellationToken cancellationToken = default)
 		{
+			if (url is null || url.Length == 0) return false;
+
 			using (var client = new HttpClient())
 			{
 				var httpRequestMessage = new HttpRequestMessage
@@ -1453,8 +1455,8 @@ Message : {content} ";
 					},
 					Content = new StringContent(body, Encoding.UTF8, "application/json")
 				};
-				var response = client.SendAsync(httpRequestMessage).Result;
-				return (response.StatusCode == HttpStatusCode.OK) ? true : false;
+				var response = await client.SendAsync(httpRequestMessage,cancellationToken);
+				return response.StatusCode == HttpStatusCode.OK;
 				
 			}
 		}

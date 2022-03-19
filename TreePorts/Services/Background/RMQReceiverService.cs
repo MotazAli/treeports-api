@@ -37,15 +37,15 @@ public class RMQReceiverService : BackgroundService
             return Task.CompletedTask;
         }
 
-        ConsumeNewUser();
-        ConsumeUpdateUser();
-        ConsumeDeleteUser();
+        ConsumeNewUser(stoppingToken);
+        ConsumeUpdateUser(stoppingToken);
+        ConsumeDeleteUser(stoppingToken);
 
         return Task.CompletedTask;
     }
 
 
-    private void ConsumeNewUser() 
+    private void ConsumeNewUser(CancellationToken cancellationToken) 
     {
         var queueName = nameof(RabbitMQQueues.CoreServiceNewUser);
         _newUserChannel = _rmqService.consume(queueName);
@@ -66,23 +66,23 @@ public class RMQReceiverService : BackgroundService
 
                     if (userData.UserTypeId == (int)UserTypes.Admin)
                     {
-                        await HandleSavingAdminUser(_unitOfWork, userData);
+                        await HandleSavingAdminUser(_unitOfWork, userData,cancellationToken);
                     }
 
                     if (userData.UserTypeId == (int)UserTypes.Support)
                     {
-                        await HandleSavingSupportUser(_unitOfWork, userData);
+                        await HandleSavingSupportUser(_unitOfWork, userData,cancellationToken);
                     }
 
                     if (userData.UserTypeId == (int)UserTypes.Captain)
                     {
 
-                        await HandleSavingCaptainUser(_unitOfWork, userData);
+                        await HandleSavingCaptainUser(_unitOfWork, userData,cancellationToken);
                     }
 
                     if (userData.UserTypeId == (int)UserTypes.Agent)
                     {
-                        await HandleSavingAgentUser(_unitOfWork, userData);
+                        await HandleSavingAgentUser(_unitOfWork, userData,cancellationToken);
                     }
 
                     var result = await _unitOfWork.Save();
@@ -98,7 +98,7 @@ public class RMQReceiverService : BackgroundService
 
     }
 
-    private void ConsumeUpdateUser()
+    private void ConsumeUpdateUser(CancellationToken cancellationToken)
     {
         var queueName = nameof(RabbitMQQueues.CoreServiceUpdateUser);
         _updateUserChannel = _rmqService.consume(queueName);
@@ -119,23 +119,23 @@ public class RMQReceiverService : BackgroundService
 
                     if (userData.UserTypeId == (int)UserTypes.Admin)
                     {
-                        await HandleUpdateAdminUser(_unitOfWork, userData);
+                        await HandleUpdateAdminUser(_unitOfWork, userData,cancellationToken);
                     }
 
                     if (userData.UserTypeId == (int)UserTypes.Support)
                     {
-                        await HandleUpdateSupportUser(_unitOfWork, userData);
+                        await HandleUpdateSupportUser(_unitOfWork, userData,cancellationToken);
                     }
 
                     if (userData.UserTypeId == (int)UserTypes.Captain)
                     {
 
-                        await HandleUpdateCaptainUser(_unitOfWork, userData);
+                        await HandleUpdateCaptainUser(_unitOfWork, userData,cancellationToken);
                     }
 
                     if (userData.UserTypeId == (int)UserTypes.Agent)
                     {
-                        await HandleUpdateAgentUser(_unitOfWork, userData);
+                        await HandleUpdateAgentUser(_unitOfWork, userData,cancellationToken);
                     }
 
                     var result = await _unitOfWork.Save();
@@ -148,7 +148,7 @@ public class RMQReceiverService : BackgroundService
                              consumer: consumer);
     }
 
-    private void ConsumeDeleteUser()
+    private void ConsumeDeleteUser(CancellationToken cancellationToken)
     {
         var queueName = nameof(RabbitMQQueues.CoreServiceDeleteUser);
         _deleteUserChannel = _rmqService.consume(queueName);
@@ -169,23 +169,23 @@ public class RMQReceiverService : BackgroundService
 
                     if (userData.UserTypeId == (int)UserTypes.Admin)
                     {
-                        await HandleDeleteAdminUser(_unitOfWork, userData);
+                        await HandleDeleteAdminUser(_unitOfWork, userData,cancellationToken);
                     }
 
                     if (userData.UserTypeId == (int)UserTypes.Support)
                     {
-                        await HandleDeleteSupportUser(_unitOfWork, userData);
+                        await HandleDeleteSupportUser(_unitOfWork, userData,cancellationToken);
                     }
 
                     if (userData.UserTypeId == (int)UserTypes.Captain)
                     {
 
-                        await HandleDeleteCaptainUser(_unitOfWork, userData);
+                        await HandleDeleteCaptainUser(_unitOfWork, userData,cancellationToken);
                     }
 
                     if (userData.UserTypeId == (int)UserTypes.Agent)
                     {
-                        await HandleDeleteAgentUser(_unitOfWork, userData);
+                        await HandleDeleteAgentUser(_unitOfWork, userData,cancellationToken);
                     }
 
                     var result = await _unitOfWork.Save();
@@ -301,10 +301,10 @@ public class RMQReceiverService : BackgroundService
     }
 
 
-    private async Task HandleSavingCaptainUser(IUnitOfWork _unitOfWork, RabbitMQUser userData) 
+    private async Task HandleSavingCaptainUser(IUnitOfWork _unitOfWork, RabbitMQUser userData, CancellationToken cancellationToken) 
     {
         var user = ConvertRabbitMQUserToCaptainUser(userData);
-        var insertedUser = await _unitOfWork.CaptainRepository.InsertCaptainUserAsync(user);
+        var insertedUser = await _unitOfWork.CaptainRepository.InsertCaptainUserAsync(user,cancellationToken);
         var result = await _unitOfWork.Save();
 
         if (result <= 0) return;
@@ -320,7 +320,7 @@ public class RMQReceiverService : BackgroundService
             CreationDate = DateTime.Now
         };
 
-        var userAccount = await _unitOfWork.CaptainRepository.InsertCaptainUserAccountAsync(account);
+        var userAccount = await _unitOfWork.CaptainRepository.InsertCaptainUserAccountAsync(account,cancellationToken);
         CaptainUserCurrentStatus userStatus_Review = new CaptainUserCurrentStatus()
         {
             CaptainUserAccountId = userAccount.Id,
@@ -328,7 +328,7 @@ public class RMQReceiverService : BackgroundService
             IsCurrent = true,
             CreationDate = DateTime.Now
         };
-        var insertedUserCurrentStatusResult = await _unitOfWork.CaptainRepository.InsertCaptainUserCurrentStatusAsync(userStatus_Review);
+        var insertedUserCurrentStatusResult = await _unitOfWork.CaptainRepository.InsertCaptainUserCurrentStatusAsync(userStatus_Review,cancellationToken);
         result = await _unitOfWork.Save();
 
         if (result <= 0) return;
@@ -340,7 +340,7 @@ public class RMQReceiverService : BackgroundService
 
 
 
-    private async Task HandleSavingAdminUser(IUnitOfWork _unitOfWork, RabbitMQUser userData)
+    private async Task HandleSavingAdminUser(IUnitOfWork _unitOfWork, RabbitMQUser userData, CancellationToken cancellationToken)
     {
         var user = ConvertRabbitMQUserToAdminUser(userData);
         byte[] passwordHash, passwordSalt;
@@ -357,7 +357,7 @@ public class RMQReceiverService : BackgroundService
         if (user.AdminUserAccounts == null) user.AdminUserAccounts = new List<AdminUserAccount>();
         user.AdminUserAccounts.Add(account);
         //user.CurrentStatusId = (long)userData.Status.StatusTypeId;
-        user = await _unitOfWork.AdminRepository.InsertAdminUserAsync(user);
+        user = await _unitOfWork.AdminRepository.InsertAdminUserAsync(user,cancellationToken);
         var result = await _unitOfWork.Save();
         if (result <= 0) return;
 
@@ -370,7 +370,7 @@ public class RMQReceiverService : BackgroundService
         };
 
 
-        var insertStatusResult = await _unitOfWork.AdminRepository.InsertAdminCurrentStatusAsync(adminCurrentStatus);
+        var insertStatusResult = await _unitOfWork.AdminRepository.InsertAdminCurrentStatusAsync(adminCurrentStatus,cancellationToken);
         result = await _unitOfWork.Save();
         if (result == 0) return;
 
@@ -383,7 +383,7 @@ public class RMQReceiverService : BackgroundService
 
 
 
-    private async Task HandleSavingSupportUser(IUnitOfWork _unitOfWork, RabbitMQUser userData)
+    private async Task HandleSavingSupportUser(IUnitOfWork _unitOfWork, RabbitMQUser userData, CancellationToken cancellationToken)
     {
         var user = ConvertRabbitMQUserToSupportUser(userData);
         //user.Email = user.Email.ToLower();
@@ -401,7 +401,7 @@ public class RMQReceiverService : BackgroundService
 
         if (user.SupportUserAccounts == null) user.SupportUserAccounts = new List<SupportUserAccount>();
         user.SupportUserAccounts.Add(account);
-        user = await _unitOfWork.SupportRepository.InsertSupportUserAsync(user);
+        user = await _unitOfWork.SupportRepository.InsertSupportUserAsync(user,cancellationToken);
         var result = await _unitOfWork.Save();
         if (result == 0) return;
 
@@ -413,7 +413,7 @@ public class RMQReceiverService : BackgroundService
             CreationDate = DateTime.Now,
         };
 
-        var insertStatusResult = await _unitOfWork.SupportRepository.InsertSupportUserCurrentStatusAsync(supportUserCurrentStatus);
+        var insertStatusResult = await _unitOfWork.SupportRepository.InsertSupportUserCurrentStatusAsync(supportUserCurrentStatus,cancellationToken);
         result = await _unitOfWork.Save();
         if (result <= 0) return;
 
@@ -426,12 +426,12 @@ public class RMQReceiverService : BackgroundService
 
 
 
-    private async Task HandleSavingAgentUser(IUnitOfWork _unitOfWork, RabbitMQUser userData)
+    private async Task HandleSavingAgentUser(IUnitOfWork _unitOfWork, RabbitMQUser userData, CancellationToken cancellationToken)
     {
         var agent = ConvertRabbitMQUserToAgentUser(userData);
         agent.StatusTypeId = (long)userData.Status.StatusTypeId;
         agent.Email = agent.Email.ToLower();
-        var insertResult = await _unitOfWork.AgentRepository.InsertAgentAsync(agent);
+        var insertResult = await _unitOfWork.AgentRepository.InsertAgentAsync(agent,cancellationToken);
         var result = await _unitOfWork.Save();
 
         if (result <= 0) return;
@@ -455,8 +455,8 @@ public class RMQReceiverService : BackgroundService
 
         
 
-        var newAgentStatusInsertedResult = await _unitOfWork.AgentRepository.InsertAgentCurrentStatusAsync(newAgentCurrentStatus);
-        var incompleteAgentStatusInsertedResult = await _unitOfWork.AgentRepository.InsertAgentCurrentStatusAsync(incompleteAgentCurrentStatus);
+        var newAgentStatusInsertedResult = await _unitOfWork.AgentRepository.InsertAgentCurrentStatusAsync(newAgentCurrentStatus,cancellationToken);
+        var incompleteAgentStatusInsertedResult = await _unitOfWork.AgentRepository.InsertAgentCurrentStatusAsync(incompleteAgentCurrentStatus,cancellationToken);
 
         result = await _unitOfWork.Save();
         if (result <= 0) return;
@@ -468,12 +468,12 @@ public class RMQReceiverService : BackgroundService
     }
 
 
-    private async Task HandleUpdateAdminUser(IUnitOfWork _unitOfWork, RabbitMQUser userData) 
+    private async Task HandleUpdateAdminUser(IUnitOfWork _unitOfWork, RabbitMQUser userData, CancellationToken cancellationToken) 
     {
         try
         {
             var user = ConvertRabbitMQUserToAdminUser(userData);
-            var userResult = await _unitOfWork.AdminRepository.UpdateAdminUserAsync(user);
+            var userResult = await _unitOfWork.AdminRepository.UpdateAdminUserAsync(user,cancellationToken);
             var result = await _unitOfWork.Save();
             if (result == 0) return;
 
@@ -486,12 +486,12 @@ public class RMQReceiverService : BackgroundService
     }
 
 
-    private async Task HandleUpdateSupportUser(IUnitOfWork _unitOfWork, RabbitMQUser userData)
+    private async Task HandleUpdateSupportUser(IUnitOfWork _unitOfWork, RabbitMQUser userData, CancellationToken cancellationToken)
     {
         try
         {
             var user = ConvertRabbitMQUserToSupportUser(userData);
-            var userResult = await _unitOfWork.SupportRepository.UpdateSupportUserAsync(user);
+            var userResult = await _unitOfWork.SupportRepository.UpdateSupportUserAsync(user,cancellationToken);
             var result = await _unitOfWork.Save();
             if (result == 0) return;
         }
@@ -503,12 +503,12 @@ public class RMQReceiverService : BackgroundService
 
 
 
-    private async Task HandleUpdateAgentUser(IUnitOfWork _unitOfWork, RabbitMQUser userData)
+    private async Task HandleUpdateAgentUser(IUnitOfWork _unitOfWork, RabbitMQUser userData, CancellationToken cancellationToken)
     {
         try
         {
             var user = ConvertRabbitMQUserToAgentUser(userData);
-            var updateResult = await _unitOfWork.AgentRepository.UpdateAgentAsync(user);
+            var updateResult = await _unitOfWork.AgentRepository.UpdateAgentAsync(user,cancellationToken);
             var result = await _unitOfWork.Save();
             if (result == 0) return;
         }
@@ -520,12 +520,12 @@ public class RMQReceiverService : BackgroundService
 
 
 
-    private async Task HandleUpdateCaptainUser(IUnitOfWork _unitOfWork, RabbitMQUser userData)
+    private async Task HandleUpdateCaptainUser(IUnitOfWork _unitOfWork, RabbitMQUser userData, CancellationToken cancellationToken)
     {
         try
         {
             var user = ConvertRabbitMQUserToCaptainUser(userData);
-            var updateResult = await _unitOfWork.CaptainRepository.UpdateCaptainUserAsync(user);
+            var updateResult = await _unitOfWork.CaptainRepository.UpdateCaptainUserAsync(user,cancellationToken);
             var result = await _unitOfWork.Save();
             if (result == 0) return;
         }
@@ -536,12 +536,12 @@ public class RMQReceiverService : BackgroundService
     }
 
 
-    private async Task HandleDeleteAdminUser(IUnitOfWork _unitOfWork, RabbitMQUser userData)
+    private async Task HandleDeleteAdminUser(IUnitOfWork _unitOfWork, RabbitMQUser userData, CancellationToken cancellationToken)
     {
         try
         {
             var user = ConvertRabbitMQUserToAdminUser(userData);
-            var updateResult = await _unitOfWork.AdminRepository.DeleteAdminUserAsync(user.Id);
+            var updateResult = await _unitOfWork.AdminRepository.DeleteAdminUserAsync(user.Id,cancellationToken);
             var result = await _unitOfWork.Save();
             if (result == 0) return;
         }
@@ -551,12 +551,12 @@ public class RMQReceiverService : BackgroundService
         }
     }
 
-    private async Task HandleDeleteSupportUser(IUnitOfWork _unitOfWork, RabbitMQUser userData)
+    private async Task HandleDeleteSupportUser(IUnitOfWork _unitOfWork, RabbitMQUser userData, CancellationToken cancellationToken)
     {
         try
         {
             var user = ConvertRabbitMQUserToSupportUser(userData);
-            var updateResult = await _unitOfWork.SupportRepository.DeleteSupportUserAccountAsync(user.Id);
+            var updateResult = await _unitOfWork.SupportRepository.DeleteSupportUserAccountAsync(user.Id,cancellationToken);
             var result = await _unitOfWork.Save();
             if (result == 0) return;
         }
@@ -566,12 +566,12 @@ public class RMQReceiverService : BackgroundService
         }
     }
 
-    private async Task HandleDeleteAgentUser(IUnitOfWork _unitOfWork, RabbitMQUser userData)
+    private async Task HandleDeleteAgentUser(IUnitOfWork _unitOfWork, RabbitMQUser userData, CancellationToken cancellationToken)
     {
         try
         {
             var user = ConvertRabbitMQUserToAgentUser(userData);
-            var updateResult = await _unitOfWork.AgentRepository.DeleteAgentAsync(user.Id);
+            var updateResult = await _unitOfWork.AgentRepository.DeleteAgentAsync(user.Id,cancellationToken);
             var result = await _unitOfWork.Save();
             if (result == 0) return;
         }
@@ -581,12 +581,12 @@ public class RMQReceiverService : BackgroundService
         }
     }
 
-    private async Task HandleDeleteCaptainUser(IUnitOfWork _unitOfWork, RabbitMQUser userData)
+    private async Task HandleDeleteCaptainUser(IUnitOfWork _unitOfWork, RabbitMQUser userData, CancellationToken cancellationToken)
     {
         try
         {
             var user = ConvertRabbitMQUserToCaptainUser(userData);
-            var updateResult = await _unitOfWork.CaptainRepository.DeleteCaptainUserAccountAsync(user.Id);
+            var updateResult = await _unitOfWork.CaptainRepository.DeleteCaptainUserAccountAsync(user.Id,cancellationToken);
             var result = await _unitOfWork.Save();
             if (result == 0) return;
         }

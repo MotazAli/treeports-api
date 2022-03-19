@@ -4,19 +4,19 @@ using TreePorts.DTO.Records;
 namespace TreePorts.Interfaces.Services;
 public interface IAdminService
 {
-    Task<IEnumerable<AdminUser>> GetAdminsUsersAsync();
-    Task<AdminUserResponse?> GetAdminUserByIdAsync(string id);
-    Task<IEnumerable<AdminUser>> GetAdminsUsersPaginationAsync(FilterParameters parameters);
+    Task<IEnumerable<AdminUser>> GetAdminsUsersAsync(CancellationToken cancellationToken);
+    Task<AdminUserResponse?> GetAdminUserByIdAsync(string id, CancellationToken cancellationToken);
+    Task<IEnumerable<AdminUser>> GetAdminsUsersPaginationAsync(FilterParameters parameters, CancellationToken cancellationToken);
 
-    Task<AdminUserResponse?> AddAdminUserAsync(AdminUserDto user);
-    Task<AdminUserResponse> UpdateAdminUserAsync(string? adminUserAccountId, AdminUserDto adminUserDto);
-    Task<bool> DeleteAdminUserAsync(string? id);
-    Task<AdminUserResponse> Login(LoginUserDto loginUserDto);
-    Task<bool> UploadFileAsync(HttpContext httpContext);
+    Task<AdminUserResponse?> AddAdminUserAsync(AdminUserDto user, CancellationToken cancellationToken);
+    Task<AdminUserResponse> UpdateAdminUserAsync(string? adminUserAccountId, AdminUserDto adminUserDto, CancellationToken cancellationToken);
+    Task<bool> DeleteAdminUserAsync(string? id, CancellationToken cancellationToken);
+    Task<AdminUserResponse> Login(LoginUserDto loginUserDto, CancellationToken cancellationToken);
+    Task<bool> UploadFileAsync(HttpContext httpContext, CancellationToken cancellationToken);
 
-    Task<IEnumerable<AdminResponse>> SearchAsync(FilterParameters parameters);
+    Task<IEnumerable<AdminResponse>> SearchAsync(FilterParameters parameters, CancellationToken cancellationToken);
 
     //Task<object> ReportAsync(FilterParameters reportParameters);
-    Task<string> SendFirebaseNotification(FBNotify fbNotify);
+    Task<string> SendFirebaseNotification(FBNotify fbNotify, CancellationToken cancellationToken);
 
 }

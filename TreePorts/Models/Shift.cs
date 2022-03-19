@@ -5,6 +5,11 @@ namespace TreePorts.Models
 {
     public partial class Shift
     {
+        public Shift()
+        {
+            CaptainUserShifts = new HashSet<CaptainUserShift>();
+        }
+
         public long Id { get; set; }
         public string? StartHour { get; set; }
         public string? StartMinutes { get; set; }
@@ -22,5 +27,9 @@ namespace TreePorts.Models
         public long? ModifiedByType { get; set; }
         public DateTime? CreationDate { get; set; }
         public DateTime? ModificationDate { get; set; }
+
+        public virtual City? City { get; set; }
+        public virtual Country? Country { get; set; }
+        public virtual ICollection<CaptainUserShift> CaptainUserShifts { get; set; }
     }
 }

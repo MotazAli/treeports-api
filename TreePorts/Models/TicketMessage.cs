@@ -14,5 +14,8 @@ namespace TreePorts.Models
         public long? ModifiedBy { get; set; }
         public DateTime? CreationDate { get; set; }
         public DateTime? ModificationDate { get; set; }
+
+        public virtual TicketAssignment? TicketAssign { get; set; }
+        public virtual UserType? UserType { get; set; }
     }
 }

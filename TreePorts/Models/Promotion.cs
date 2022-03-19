@@ -5,6 +5,11 @@ namespace TreePorts.Models
 {
     public partial class Promotion
     {
+        public Promotion()
+        {
+            CaptainUserPromotions = new HashSet<CaptainUserPromotion>();
+        }
+
         public long Id { get; set; }
         public string? Name { get; set; }
         public string? Descriptions { get; set; }
@@ -19,5 +24,8 @@ namespace TreePorts.Models
         public long? ModifiedByType { get; set; }
         public DateTime? CreationDate { get; set; }
         public DateTime? ModificationDate { get; set; }
+
+        public virtual PromotionType? PromotionType { get; set; }
+        public virtual ICollection<CaptainUserPromotion> CaptainUserPromotions { get; set; }
     }
 }

@@ -5,6 +5,11 @@ namespace TreePorts.Models
 {
     public partial class BoxType
     {
+        public BoxType()
+        {
+            CaptainUserBoxes = new HashSet<CaptainUserBox>();
+        }
+
         public long Id { get; set; }
         public string? Type { get; set; }
         public string? ArabicType { get; set; }
@@ -14,5 +19,7 @@ namespace TreePorts.Models
         public long? ModifiedByType { get; set; }
         public DateTime? CreationDate { get; set; }
         public DateTime? ModificationDate { get; set; }
+
+        public virtual ICollection<CaptainUserBox> CaptainUserBoxes { get; set; }
     }
 }

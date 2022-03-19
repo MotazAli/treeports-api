@@ -5,6 +5,11 @@ namespace TreePorts.Models
 {
     public partial class DepositType
     {
+        public DepositType()
+        {
+            Bookkeepings = new HashSet<Bookkeeping>();
+        }
+
         public long Id { get; set; }
         public string? Type { get; set; }
         public string? ArabicType { get; set; }
@@ -14,5 +19,7 @@ namespace TreePorts.Models
         public long? ModifiedByType { get; set; }
         public DateTime? CreationDate { get; set; }
         public DateTime? ModificationDate { get; set; }
+
+        public virtual ICollection<Bookkeeping> Bookkeepings { get; set; }
     }
 }

@@ -1,20 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.Caching.Memory;
-using Newtonsoft.Json;
+﻿using Microsoft.AspNetCore.Mvc;
 using TreePorts.DTO;
 using TreePorts.DTO.Records;
-using TreePorts.Hubs;
-using TreePorts.Models;
-using TreePorts.Utilities;
 
 namespace TreePorts.Controllers
 {
@@ -36,11 +22,11 @@ namespace TreePorts.Controllers
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SystemSetting))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetSystemSetting()
+        public async Task<IActionResult> GetSystemSetting(CancellationToken cancellationToken)
         {
             try 
             {
-                return  Ok( await _systemService.GetSystemSettingAsync());
+                return  Ok( await _systemService.GetSystemSettingAsync(cancellationToken));
             } 
             catch (Exception e) 
             {
@@ -54,11 +40,11 @@ namespace TreePorts.Controllers
         [HttpGet("Vehicles")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Vehicle>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetVehicles()
+        public async Task<IActionResult> GetVehicles(CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _systemService.GetVehiclesAsync());
+                return Ok(await _systemService.GetVehiclesAsync(cancellationToken));
             }
             catch (Exception e)
             {
@@ -71,11 +57,11 @@ namespace TreePorts.Controllers
         [HttpGet("BoxTypes")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<BoxType>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetBoxTypes()
+        public async Task<IActionResult> GetBoxTypes(CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _systemService.GetBoxTypesAsync());
+                return Ok(await _systemService.GetBoxTypesAsync(cancellationToken));
             }
             catch (Exception e)
             {
@@ -89,11 +75,11 @@ namespace TreePorts.Controllers
         [HttpGet("Shifts")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Shift>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetShifts()
+        public async Task<IActionResult> GetShifts(CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _systemService.GetShiftsAsync());
+                return Ok(await _systemService.GetShiftsAsync(cancellationToken));
             }
             catch (Exception e)
             {
@@ -108,11 +94,11 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Shift>))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetAndroidVersionsPaging([FromQuery] FilterParameters parameters ) // [FromQuery(Name ="page")] int? page , [FromQuery(Name = "objects")] int? objects)//[FromBody] Pagination pagination)
+        public async Task<IActionResult> GetAndroidVersionsPaging([FromQuery] FilterParameters parameters, CancellationToken cancellationToken) // [FromQuery(Name ="page")] int? page , [FromQuery(Name = "objects")] int? objects)//[FromBody] Pagination pagination)
         {
             try
             {
-                return Ok(await _systemService.GetAndroidVersionsPagingAsync(parameters));
+                return Ok(await _systemService.GetAndroidVersionsPagingAsync(parameters,cancellationToken));
             }
             catch (Exception e)
             {
@@ -125,11 +111,11 @@ namespace TreePorts.Controllers
         [HttpGet("Androids/Current")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AndroidVersion))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetCurrentAndroidVersion()
+        public async Task<IActionResult> GetCurrentAndroidVersion(CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _systemService.GetCurrentAndroidVersionAsync());
+                return Ok(await _systemService.GetCurrentAndroidVersionAsync(cancellationToken));
             }
             catch (Exception e)
             {
@@ -143,11 +129,11 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<AndroidVersion>))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetAndroidVersions()
+        public async Task<IActionResult> GetAndroidVersions(CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _systemService.GetAndroidVersionsAsync());
+                return Ok(await _systemService.GetAndroidVersionsAsync(cancellationToken));
             }
             catch (Exception e)
             {
@@ -161,11 +147,11 @@ namespace TreePorts.Controllers
         [HttpGet("Androids/{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AndroidVersion))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> AndroidVersions(long id)
+        public async Task<IActionResult> AndroidVersions(long id, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _systemService.GetAndroidVersionByIdAsync(id));
+                return Ok(await _systemService.GetAndroidVersionByIdAsync(id,cancellationToken));
             }
             catch (Exception e)
             {
@@ -182,11 +168,11 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AndroidVersion))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> AddAndroidVersion([FromBody] AndroidVersion androidVersion)
+        public async Task<IActionResult> AddAndroidVersion([FromBody] AndroidVersion androidVersion, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _systemService.AddAndroidVersionAsync(androidVersion));
+                return Ok(await _systemService.AddAndroidVersionAsync(androidVersion,cancellationToken));
             }
             catch (Exception e)
             {
@@ -201,11 +187,11 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AndroidVersion))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> UpdateAndroidVersions(long id,[FromBody] AndroidVersion androidVersion)
+        public async Task<IActionResult> UpdateAndroidVersions(long id,[FromBody] AndroidVersion androidVersion, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _systemService.UpdateAndroidVersionsAsync(id,androidVersion));
+                return Ok(await _systemService.UpdateAndroidVersionsAsync(id,androidVersion,cancellationToken));
             }
             catch (Exception e)
             {
@@ -221,11 +207,11 @@ namespace TreePorts.Controllers
         [HttpPost("Androids/UploadFile")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> UploadAndroidFile()
+        public async Task<IActionResult> UploadAndroidFile(CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _systemService.UploadAndroidFileAsync(HttpContext));
+                return Ok(await _systemService.UploadAndroidFileAsync(HttpContext,cancellationToken));
             }
             catch (Exception e)
             {
@@ -243,12 +229,12 @@ namespace TreePorts.Controllers
         [HttpPost("Promotions/UploadFile")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> UploadPromotionFile()
+        public async Task<IActionResult> UploadPromotionFile(CancellationToken cancellationToken)
         {
             try
             {
                 
-                return Ok(await _systemService.UploadPromotionFileAsync(HttpContext));
+                return Ok(await _systemService.UploadPromotionFileAsync(HttpContext,cancellationToken));
             }
             catch (Exception e)
             {
@@ -266,11 +252,11 @@ namespace TreePorts.Controllers
         [HttpGet("Countries/Prices")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetCountriesPrices()
+        public async Task<IActionResult> GetCountriesPrices(CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _systemService.GetCountriesPricesAsync());
+                return Ok(await _systemService.GetCountriesPricesAsync(cancellationToken));
             }
             catch (Exception e)
             {
@@ -282,11 +268,11 @@ namespace TreePorts.Controllers
         [HttpGet("Countries/Prices/{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetCountryPriceById(long id)
+        public async Task<IActionResult> GetCountryPriceById(long id, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _systemService.GetCountryPriceByIdAsync(id));
+                return Ok(await _systemService.GetCountryPriceByIdAsync(id,cancellationToken));
             }
             catch (Exception e)
             {
@@ -299,11 +285,11 @@ namespace TreePorts.Controllers
         [HttpGet("Countries/{id}/Prices")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<CountryPrice>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetCountryPricesByCountryId(long id)
+        public async Task<IActionResult> GetCountryPricesByCountryId(long id, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _systemService.GetCountryPricesByCountryIdAsync(id));
+                return Ok(await _systemService.GetCountryPricesByCountryIdAsync(id,cancellationToken));
             }
             catch (Exception e)
             {
@@ -317,11 +303,11 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CountryPrice))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> AddCountryPrice([FromBody] CountryPrice countryPrice)
+        public async Task<IActionResult> AddCountryPrice([FromBody] CountryPrice countryPrice, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _systemService.AddCountryPriceAsync(HttpContext,countryPrice));
+                return Ok(await _systemService.AddCountryPriceAsync(HttpContext,countryPrice,cancellationToken));
             }
             catch (Exception e)
             {
@@ -333,11 +319,11 @@ namespace TreePorts.Controllers
         [HttpDelete("Countries/Prices/{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> DeleteCountriesPricesById(long id)
+        public async Task<IActionResult> DeleteCountriesPricesById(long id, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _systemService.DeleteCountriesPricesAsync(id));
+                return Ok(await _systemService.DeleteCountriesPricesAsync(id,cancellationToken));
             }
             catch (Exception e)
             {
@@ -352,11 +338,11 @@ namespace TreePorts.Controllers
         [HttpPost("Shifts/Dates")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Shift>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetShiftsByDate([FromBody] Shift shift)
+        public async Task<IActionResult> GetShiftsByDate([FromBody] Shift shift, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _systemService.GetShiftsByShiftDateAsync(shift));
+                return Ok(await _systemService.GetShiftsByShiftDateAsync(shift,cancellationToken));
             }
             catch (Exception e)
             {
@@ -368,11 +354,11 @@ namespace TreePorts.Controllers
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SystemSetting))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetSystemSettingById(long id)
+        public async Task<IActionResult> GetSystemSettingById(long id, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _systemService.GetSystemSettingByIdAsync(id));
+                return Ok(await _systemService.GetSystemSettingByIdAsync(id,cancellationToken));
             }
             catch (Exception e)
             {
@@ -385,10 +371,10 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SystemSetting))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> AddSystemSetting([FromBody] SystemSetting setting)
+        public async Task<IActionResult> AddSystemSetting([FromBody] SystemSetting setting, CancellationToken cancellationToken)
         {
             try {
-                return Ok(await _systemService.AddSystemSettingAsync(setting,HttpContext));
+                return Ok(await _systemService.AddSystemSettingAsync(setting,HttpContext,cancellationToken));
             } catch (Exception e) {
                 return NoContent();// new ObjectResult(e.Message) { StatusCode = 666 };
             }
@@ -405,11 +391,11 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CityPrice))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> AddCityPrice([FromBody] CityPrice cityPrice)
+        public async Task<IActionResult> AddCityPrice([FromBody] CityPrice cityPrice, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _systemService.AddCityPriceAsync(cityPrice,HttpContext));
+                return Ok(await _systemService.AddCityPriceAsync(cityPrice,HttpContext,cancellationToken));
             }
             catch (Exception e)
             {
@@ -423,12 +409,12 @@ namespace TreePorts.Controllers
         [HttpGet("Countries/Cities/Prices")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetCitiesPrices()
+        public async Task<IActionResult> GetCitiesPrices(CancellationToken cancellationToken)
         {
             try
             {
                 
-                return Ok(await _systemService.GetCitiesPricesAsync());
+                return Ok(await _systemService.GetCitiesPricesAsync(cancellationToken));
             }
             catch (Exception e)
             {
@@ -441,12 +427,12 @@ namespace TreePorts.Controllers
         [HttpGet("Countries/Cities/Prices/{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetCityPriceById(long id)
+        public async Task<IActionResult> GetCityPriceById(long id, CancellationToken cancellationToken)
         {
             try
             {
                 
-                return Ok(await _systemService.GetCityPriceByIdAsync(id));
+                return Ok(await _systemService.GetCityPriceByIdAsync(id,cancellationToken));
             }
             catch (Exception e)
             {
@@ -459,11 +445,11 @@ namespace TreePorts.Controllers
         [HttpGet("Countries/Cities/{id}/Prices")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<CityPrice>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetCitiesPricesByCityId(long id)
+        public async Task<IActionResult> GetCitiesPricesByCityId(long id, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _systemService.GetCitiesPricesByCityIdAsync(id));
+                return Ok(await _systemService.GetCitiesPricesByCityIdAsync(id,cancellationToken));
             }
             catch (Exception e)
             {
@@ -475,12 +461,12 @@ namespace TreePorts.Controllers
         [HttpDelete("Countries/Cities/Prices/{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> DeleteCityPriceById(long id)
+        public async Task<IActionResult> DeleteCityPriceById(long id, CancellationToken cancellationToken)
         {
             try
             {
                 
-                return Ok(await _systemService.DeleteCityPriceByIdAsync(id));
+                return Ok(await _systemService.DeleteCityPriceByIdAsync(id,cancellationToken));
             }
             catch (Exception e)
             {
@@ -497,7 +483,7 @@ namespace TreePorts.Controllers
         {
             try
             {
-                return Ok(await _systemService.GetRejectPerTypesAsync());
+                return Ok(await _systemService.GetRejectPerTypesAsync(cancellationToken));
             }
             catch (Exception e)
             {
@@ -511,11 +497,11 @@ namespace TreePorts.Controllers
         [HttpGet("Ignore/Types")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<IgnorPerType>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> IgnorePerTypes()
+        public async Task<IActionResult> IgnorePerTypes(CancellationToken cancellationToken)
         {
             try
             {
-                 return Ok(await _systemService.IgnorePerTypesAsync());
+                 return Ok(await _systemService.IgnorePerTypesAsync(cancellationToken));
             }
             catch (Exception e)
             {
@@ -529,11 +515,11 @@ namespace TreePorts.Controllers
         [HttpGet("Penalties/Types")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<PenaltyPerType>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> PenaltyPerTypes()
+        public async Task<IActionResult> PenaltyPerTypes(CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _systemService.PenaltyPerTypesAsync());
+                return Ok(await _systemService.PenaltyPerTypesAsync(cancellationToken));
             }
             catch (Exception e)
             {
@@ -545,11 +531,11 @@ namespace TreePorts.Controllers
         [HttpGet("Promotions")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Promotion>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetPromotions()
+        public async Task<IActionResult> GetPromotions(CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _systemService.GetPromotionsAsync());
+                return Ok(await _systemService.GetPromotionsAsync(cancellationToken));
             }
             catch (Exception e)
             {
@@ -561,11 +547,11 @@ namespace TreePorts.Controllers
         [HttpGet("Promotions/Current")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Promotion))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetCurrentPromotion()
+        public async Task<IActionResult> GetCurrentPromotion(CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _systemService.GetCurrentPromotionAsync());
+                return Ok(await _systemService.GetCurrentPromotionAsync(cancellationToken));
             }
             catch (Exception e)
             {
@@ -577,11 +563,11 @@ namespace TreePorts.Controllers
         [HttpGet("Promotions/{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Promotion))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> Promotions(long id)
+        public async Task<IActionResult> Promotions(long id, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _systemService.GetPromotionByIdAsync(id));
+                return Ok(await _systemService.GetPromotionByIdAsync(id,cancellationToken));
             }
             catch (Exception e)
             {
@@ -594,12 +580,12 @@ namespace TreePorts.Controllers
         [HttpGet("Promotions/Paging")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Promotion>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetPromotionsPaging([FromQuery] FilterParameters parameters)//[FromQuery(Name ="page")] int? page, [FromQuery(Name = "objects")] int? objects)//[FromBody] Pagination pagination)
+        public async Task<IActionResult> GetPromotionsPaging([FromQuery] FilterParameters parameters, CancellationToken cancellationToken)//[FromQuery(Name ="page")] int? page, [FromQuery(Name = "objects")] int? objects)//[FromBody] Pagination pagination)
         {
             try
             {
 
-                return Ok(await _systemService.GetPromotionsPaginationAsync(parameters));
+                return Ok(await _systemService.GetPromotionsPaginationAsync(parameters,cancellationToken));
             }
             catch (Exception e)
             {
@@ -614,11 +600,11 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Promotion))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> AddPromotion([FromBody] Promotion promotion)
+        public async Task<IActionResult> AddPromotion([FromBody] Promotion promotion, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _systemService.AddPromotionAsync(promotion));
+                return Ok(await _systemService.AddPromotionAsync(promotion,cancellationToken));
             }
             catch (Exception e)
             {
@@ -631,12 +617,12 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Promotion))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> UpdatePromotion(long id , [FromBody] Promotion promotion)
+        public async Task<IActionResult> UpdatePromotion(long id , [FromBody] Promotion promotion, CancellationToken cancellationToken)
         {
             try
             {
 
-                return Ok(await _systemService.UpdatePromotionAsync(id,promotion));
+                return Ok(await _systemService.UpdatePromotionAsync(id,promotion,cancellationToken));
             }
             catch (Exception e)
             {
@@ -649,11 +635,11 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> DeletePromotionById(long id)
+        public async Task<IActionResult> DeletePromotionById(long id, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _systemService.DeletePromotionById(id));
+                return Ok(await _systemService.DeletePromotionById(id,cancellationToken));
             }
             catch (Exception e)
             {
@@ -667,11 +653,11 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> PublishPromotionById(long id)
+        public async Task<IActionResult> PublishPromotionById(long id, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _systemService.PublishPromotionByIdAsync(id));
+                return Ok(await _systemService.PublishPromotionByIdAsync(id,cancellationToken));
 
                
             }
@@ -687,11 +673,11 @@ namespace TreePorts.Controllers
         [HttpGet("Promotions/Types")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<PromotionType>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> PromotionTypes()
+        public async Task<IActionResult> PromotionTypes(CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _systemService.PromotionTypesAsync());
+                return Ok(await _systemService.PromotionTypesAsync(cancellationToken));
             }
             catch (Exception e)
             {
@@ -703,11 +689,11 @@ namespace TreePorts.Controllers
         [HttpGet("Promotions/Types/{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PromotionType))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetPromotionTypeById(long id)
+        public async Task<IActionResult> GetPromotionTypeById(long id, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _systemService.GetPromotionTypeByIdAsync(id));
+                return Ok(await _systemService.GetPromotionTypeByIdAsync(id,cancellationToken));
             }
             catch (Exception e)
             {
@@ -720,11 +706,11 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PromotionType))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> AddPromotionType([FromBody] PromotionType promotionType)
+        public async Task<IActionResult> AddPromotionType([FromBody] PromotionType promotionType, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _systemService.AddPromotionTypeAsync(promotionType));
+                return Ok(await _systemService.AddPromotionTypeAsync(promotionType,cancellationToken));
             }
             catch (Exception e)
             {
@@ -737,12 +723,12 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PromotionType))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> UpdatePromotionType(long id,[FromBody] PromotionType promotionType)
+        public async Task<IActionResult> UpdatePromotionType(long id,[FromBody] PromotionType promotionType, CancellationToken cancellationToken)
         {
             try
             {
 
-                return Ok(await _systemService.UpdatePromotionTypeAsync(id,promotionType));
+                return Ok(await _systemService.UpdatePromotionTypeAsync(id,promotionType,cancellationToken));
             }
             catch (Exception e)
             {
@@ -755,11 +741,11 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> DeletePromotionType(long id)
+        public async Task<IActionResult> DeletePromotionType(long id, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _systemService.DeletePromotionTypeAsync(id));
+                return Ok(await _systemService.DeletePromotionTypeAsync(id,cancellationToken));
             }
             catch (Exception e)
             {
@@ -770,11 +756,11 @@ namespace TreePorts.Controllers
         [HttpPost("Upload")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> Upload()
+        public async Task<IActionResult> Upload(CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _systemService.UploadAsync(HttpContext));
+                return Ok(await _systemService.UploadAsync(HttpContext,cancellationToken));
             }
             catch (Exception e)
             {
@@ -792,11 +778,11 @@ namespace TreePorts.Controllers
         [HttpGet("Penalties/Captains/{id}/Ignore/Current")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CaptainUserIgnoredPenalty))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetCurrentUserIgnoredRequestsPenalty(string id)
+        public async Task<IActionResult> GetCurrentUserIgnoredRequestsPenalty(string id, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _systemService.GetCurrentUserIgnoredRequestsPenaltyByCaptainUserAccountIdAsync(id));
+                return Ok(await _systemService.GetCurrentUserIgnoredRequestsPenaltyByCaptainUserAccountIdAsync(id,cancellationToken));
             }
             catch (Exception e)
             {
@@ -828,12 +814,12 @@ namespace TreePorts.Controllers
         [HttpGet("Penalties/Captains/{Id}/Ignore")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<CaptainUserIgnoredPenalty>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetUserIgnoredRequestsPenalties(string? Id)
+        public async Task<IActionResult> GetUserIgnoredRequestsPenalties(string? Id, CancellationToken cancellationToken)
         {
 
             try
             {
-                return Ok(await _systemService.GetUserIgnoredRequestsPenaltiesByCaptainUserAccountIdAsync(Id??""));
+                return Ok(await _systemService.GetUserIgnoredRequestsPenaltiesByCaptainUserAccountIdAsync(Id??"",cancellationToken));
             }
             catch (Exception e)
             {
@@ -894,11 +880,11 @@ namespace TreePorts.Controllers
         [HttpGet("Penilties/Status/Types")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<PenaltyStatusType>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetPeniltyStatusTypes()
+        public async Task<IActionResult> GetPeniltyStatusTypes(CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _systemService.GetPeniltyStatusTypesAsync());
+                return Ok(await _systemService.GetPeniltyStatusTypesAsync(cancellationToken));
             }
             catch (Exception e)
             {
@@ -918,11 +904,11 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> DeleteSystemSetting(long id)
+        public async Task<IActionResult> DeleteSystemSetting(long id, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _systemService.DeleteSystemSettingAsync(id));
+                return Ok(await _systemService.DeleteSystemSettingAsync(id,cancellationToken));
             }
             catch (Exception e)
             {
@@ -936,12 +922,12 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> AddContactMessage([FromBody] ContactMessage contactMessage)
+        public async Task<IActionResult> AddContactMessage([FromBody] ContactMessage contactMessage, CancellationToken cancellationToken)
         {
             try
             {
 
-                return Ok(await _systemService.AddContactMessageAsync(contactMessage));
+                return Ok(await _systemService.AddContactMessageAsync(contactMessage,cancellationToken));
             }
             catch (Exception e)
             {
@@ -957,12 +943,12 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> ChangeUserStatus([FromBody] StatusAction statusAction)
+        public async Task<IActionResult> ChangeUserStatus([FromBody] StatusAction statusAction, CancellationToken cancellationToken)
         {
 
             try
             {
-                return Ok(await _systemService.ChangeUserStatusAsync(statusAction,HttpContext));
+                return Ok(await _systemService.ChangeUserStatusAsync(statusAction,HttpContext,cancellationToken));
                 
             }
             catch (Exception e)
@@ -979,12 +965,12 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> AddUserMessageHubToken([FromBody] UserHubToken userHubToken)
+        public async Task<IActionResult> AddUserMessageHubToken([FromBody] UserHubToken userHubToken, CancellationToken cancellationToken)
         {
 
             try
             {
-                return Ok(await _systemService.AddUserMessageHubTokenAsync(userHubToken));
+                return Ok(await _systemService.AddUserMessageHubTokenAsync(userHubToken,cancellationToken));
                 
             }
             catch (Exception e)
@@ -1002,12 +988,12 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> ForgotPassword([FromBody] ResetPassword resetPassword)
+        public async Task<IActionResult> ForgotPassword([FromBody] ResetPassword resetPassword, CancellationToken cancellationToken)
         {
             try
             {
 
-                return Ok(await _systemService.ForgotPasswordAsync(resetPassword));
+                return Ok(await _systemService.ForgotPasswordAsync(resetPassword, cancellationToken));
                 
 
             }
@@ -1026,12 +1012,12 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> SendFirebaseNotification([FromBody] FBNotify fbNotify)
+        public async Task<IActionResult> SendFirebaseNotification([FromBody] FBNotify fbNotify, CancellationToken cancellationToken)
         {
             
             try
             {
-                return Ok(await _systemService.SendFirebaseNotificationAsync(fbNotify));
+                return Ok(await _systemService.SendFirebaseNotificationAsync(fbNotify,cancellationToken));
             }
             catch (Exception e)
             {

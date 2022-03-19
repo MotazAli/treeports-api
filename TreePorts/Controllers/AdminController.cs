@@ -23,12 +23,12 @@ namespace TreePorts.Controllers
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<AdminUser>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetAdminsUsers()
+        public async Task<IActionResult> GetAdminsUsers(CancellationToken cancellationToken)
         {
 
             try
             {
-                return Ok(await _adminService.GetAdminsUsersAsync());
+                return Ok(await _adminService.GetAdminsUsersAsync(cancellationToken));
                 
             }
             catch (Exception e)
@@ -42,12 +42,12 @@ namespace TreePorts.Controllers
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AdminUser))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetAdminUser(string? id)
+        public async Task<IActionResult> GetAdminUser(string? id, CancellationToken cancellationToken)
         {
             try
             {
                 
-                return Ok(await _adminService.GetAdminUserByIdAsync(id ?? ""));
+                return Ok(await _adminService.GetAdminUserByIdAsync(id ?? "",cancellationToken));
 
             }
             catch (Exception e)
@@ -62,11 +62,11 @@ namespace TreePorts.Controllers
         [HttpGet("Paging")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<AdminUser>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> AdminsUsersPagination([FromQuery] FilterParameters parameters)//[FromQuery] FilterParameters parameters)
+        public async Task<IActionResult> AdminsUsersPagination([FromQuery] FilterParameters parameters, CancellationToken cancellationToken)//[FromQuery] FilterParameters parameters)
         {
             try
             {
-                return Ok(await _adminService.GetAdminsUsersPaginationAsync(parameters));
+                return Ok(await _adminService.GetAdminsUsersPaginationAsync(parameters,cancellationToken));
             }
             catch (Exception e)
             {
@@ -80,11 +80,11 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> Post([FromBody] AdminUserDto user)
+        public async Task<IActionResult> Post([FromBody] AdminUserDto user, CancellationToken cancellationToken)
         {
             try {
                 
-                return Ok(await _adminService.AddAdminUserAsync(user));
+                return Ok(await _adminService.AddAdminUserAsync(user,cancellationToken));
             } catch (Exception e) {
                 return NoContent();// new ObjectResult(e.Message) { StatusCode = 666 };
             }
@@ -99,11 +99,11 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AdminUser))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
-        public async Task<IActionResult> Put(string? id , [FromBody] AdminUserDto user)
+        public async Task<IActionResult> Put(string? id , [FromBody] AdminUserDto user, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _adminService.UpdateAdminUserAsync(id,user));
+                return Ok(await _adminService.UpdateAdminUserAsync(id,user,cancellationToken));
             }
             catch (Exception e)
             {
@@ -115,11 +115,11 @@ namespace TreePorts.Controllers
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> Delete(string? id)
+        public async Task<IActionResult> Delete(string? id, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _adminService.DeleteAdminUserAsync(id));
+                return Ok(await _adminService.DeleteAdminUserAsync(id, cancellationToken));
             }
             catch (Exception e)
             {
@@ -135,11 +135,11 @@ namespace TreePorts.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AdminUserAccount))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> Login([FromBody] LoginUserDto user)
+        public async Task<IActionResult> Login([FromBody] LoginUserDto user, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _adminService.Login(user));
+                return Ok(await _adminService.Login(user, cancellationToken));
             }
             catch (Exception e)
             {
@@ -154,11 +154,11 @@ namespace TreePorts.Controllers
         [HttpPost("Upload")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> Upload()
+        public async Task<IActionResult> Upload(CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _adminService.UploadFileAsync(HttpContext));
+                return Ok(await _adminService.UploadFileAsync(HttpContext, cancellationToken));
             }
             catch (Exception e)
             {
@@ -173,11 +173,11 @@ namespace TreePorts.Controllers
         [HttpGet("Search")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<AdminResponse>))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> Search([FromQuery] FilterParameters parameters)
+        public async Task<IActionResult> Search([FromQuery] FilterParameters parameters, CancellationToken cancellationToken)
         {
             try
             {
-                return Ok(await _adminService.SearchAsync(parameters)); 
+                return Ok(await _adminService.SearchAsync(parameters, cancellationToken)); 
             }
             catch (Exception e)
             {
@@ -214,11 +214,11 @@ namespace TreePorts.Controllers
         [HttpPost("SendFirebaseNotification")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> SendFirebaseNotification([FromQuery] FBNotify fbNotify)
+        public async Task<IActionResult> SendFirebaseNotification([FromQuery] FBNotify fbNotify, CancellationToken cancellationToken)
         {
             try
             {
-                 return Ok(await _adminService.SendFirebaseNotification(fbNotify));
+                 return Ok(await _adminService.SendFirebaseNotification(fbNotify, cancellationToken));
             }
             catch (Exception e)
             {

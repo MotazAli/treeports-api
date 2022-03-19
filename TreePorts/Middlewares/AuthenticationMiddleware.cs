@@ -1,16 +1,6 @@
-﻿using System;
-using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using System.IdentityModel.Tokens.Jwt;
 using Microsoft.Extensions.Caching.Memory;
 using TreePorts.DTO;
-using TreePorts.Interfaces.Repositories;
-using TreePorts.Models;
-using TreePorts.Utilities;
 
 namespace TreePorts.Utilities
 {
@@ -164,7 +154,7 @@ namespace TreePorts.Utilities
             if (userType.ToLower() == "driver")
             {
 
-                var users = await unitOfWork.CaptainRepository.GetCaptainUsersAccountsByAsync(u => u.Token == token);
+                var users = await unitOfWork.CaptainRepository.GetCaptainUsersAccountsByAsync(u => u.Token == token,default);
                 var user = users.FirstOrDefault();
                 if (user != null && user.Id != "" && isValidStatus(user.StatusTypeId)) 
                 {
@@ -175,7 +165,7 @@ namespace TreePorts.Utilities
             }
             else if (userType.ToLower() == "agent")
             {
-                var users = await unitOfWork.AgentRepository.GetAgentsByAsync(u => u.Token == token);
+                var users = await unitOfWork.AgentRepository.GetAgentsByAsync(u => u.Token == token, default);
                 var user = users.FirstOrDefault();
                 if (user != null && user.Id != "" && isValidStatus(user.StatusTypeId))
                 {
@@ -186,7 +176,7 @@ namespace TreePorts.Utilities
             }
             else if (userType.ToLower() == "admin")
             {
-                var users = await unitOfWork.AdminRepository.GetAdminUserAccountByAsync(u => u.Token == token);
+                var users = await unitOfWork.AdminRepository.GetAdminUserAccountByAsync(u => u.Token == token, default);
                 var user = users.FirstOrDefault();
                 if (user != null && user.Id != "" && isValidStatus(user.StatusTypeId))
                 {
@@ -197,7 +187,7 @@ namespace TreePorts.Utilities
             }
             else if (userType.ToLower() == "support")
             {
-                var users = await unitOfWork.SupportRepository.GetSupportUsersAccountsByAsync(u => u.Token == token);
+                var users = await unitOfWork.SupportRepository.GetSupportUsersAccountsByAsync(u => u.Token == token, default);
                 var user = users.FirstOrDefault();
                 if (user != null && user.Id != "" && isValidStatus(user.StatusTypeId))
                 {

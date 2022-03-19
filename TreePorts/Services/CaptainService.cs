@@ -22,11 +22,11 @@ public class CaptainService : ICaptainService
 
 
 
-    public async Task<IEnumerable<CaptainUser>> GetCaptainUsersAsync()
+    public async Task<IEnumerable<CaptainUser>> GetCaptainUsersAsync(CancellationToken cancellationToken)
     {
         try
         {
-            return await _unitOfWork.CaptainRepository.GetCaptainUsersAsync();
+            return await _unitOfWork.CaptainRepository.GetCaptainUsersAsync(cancellationToken);
         }
         catch (Exception e)
         {
@@ -35,22 +35,22 @@ public class CaptainService : ICaptainService
     }
 
 
-    public async Task<CaptainUserVechicleResponse> GetCaptainUserAccountByCaptainUserAccountIdAsync(string captainUserAccountId)
+    public async Task<CaptainUserVechicleResponse> GetCaptainUserAccountByCaptainUserAccountIdAsync(string captainUserAccountId, CancellationToken cancellationToken)
     {
 
-        var captainUserAccount = await _unitOfWork.CaptainRepository.GetCaptainUserAccountByIdAsync(captainUserAccountId);
+        var captainUserAccount = await _unitOfWork.CaptainRepository.GetCaptainUserAccountByIdAsync(captainUserAccountId,cancellationToken);
         if (captainUserAccount == null) throw new NotFoundException($"User with account id {captainUserAccountId} not found");
 
-        var captainUser = await _unitOfWork.CaptainRepository.GetCaptainUserByIdAsync(captainUserAccount?.CaptainUserId ?? "");
+        var captainUser = await _unitOfWork.CaptainRepository.GetCaptainUserByIdAsync(captainUserAccount?.CaptainUserId ?? "",cancellationToken);
         if (captainUser == null) throw new NotFoundException($"User with account id {captainUserAccountId} not found");
 
         List<CaptainUserAccountVehicle> captainUserAccountVehicles = new();
-        var captainUserVehicles = await _unitOfWork.CaptainRepository.GetCaptainUsersVehiclesByAsync(v => v.CaptainUserAccountId == captainUserAccountId);
+        var captainUserVehicles = await _unitOfWork.CaptainRepository.GetCaptainUsersVehiclesByAsync(v => v.CaptainUserAccountId == captainUserAccountId,cancellationToken);
 
         List<CaptainUserVehicleBox> captainUserVehicleBoxs = new();
         foreach (CaptainUserVehicle captainUserVehicle in captainUserVehicles)
         {
-            var userBoxs = await _unitOfWork.CaptainRepository.GetCaptainUsersBoxesByAsync(b => b.CaptainUserVehicleId == captainUserVehicle.Id);
+            var userBoxs = await _unitOfWork.CaptainRepository.GetCaptainUsersBoxesByAsync(b => b.CaptainUserVehicleId == captainUserVehicle.Id,cancellationToken);
             CaptainUserVehicleBox captainUserVehicleBox = new(CaptainUserVehicle: captainUserVehicle, CaptainUserBoxs: userBoxs);
             captainUserVehicleBoxs.Add(captainUserVehicleBox);
         }
@@ -65,14 +65,14 @@ public class CaptainService : ICaptainService
     }
 
 
-    public async Task<CaptainUserVechicleResponse> GetCaptainUserByCaptainUserIdAsync(string captainUserId)
+    public async Task<CaptainUserVechicleResponse> GetCaptainUserByCaptainUserIdAsync(string captainUserId, CancellationToken cancellationToken)
     {
 
-        var captainUser = await _unitOfWork.CaptainRepository.GetCaptainUserByIdAsync(captainUserId);
+        var captainUser = await _unitOfWork.CaptainRepository.GetCaptainUserByIdAsync(captainUserId,cancellationToken);
         if (captainUser == null) throw new NotFoundException($"User with id {captainUserId} not found");
 
 
-        var captainUserAccounts = await _unitOfWork.CaptainRepository.GetCaptainUsersAccountsByAsync(c => c.CaptainUserId == captainUserId);
+        var captainUserAccounts = await _unitOfWork.CaptainRepository.GetCaptainUsersAccountsByAsync(c => c.CaptainUserId == captainUserId,cancellationToken);
         if (captainUserAccounts == null) throw new NotFoundException($"User with id {captainUserId} not found");
 
         //var birthCountry = await _unitOfWork.CountryRepository.GetCountryByIdAsync(captainUser?.CountryId ?? 0);
@@ -94,12 +94,12 @@ public class CaptainService : ICaptainService
         List<CaptainUserAccountVehicle> captainUserAccountVehicles = new();
         foreach (CaptainUserAccount captain in captainUserAccounts)
         {
-            var captainUserVehicles = await _unitOfWork.CaptainRepository.GetCaptainUsersVehiclesByAsync(v => v.CaptainUserAccountId == captain.Id);
+            var captainUserVehicles = await _unitOfWork.CaptainRepository.GetCaptainUsersVehiclesByAsync(v => v.CaptainUserAccountId == captain.Id,cancellationToken);
 
             List<CaptainUserVehicleBox> captainUserVehicleBoxs = new();
             foreach (CaptainUserVehicle captainUserVehicle in captainUserVehicles)
             {
-                var userBoxs = await _unitOfWork.CaptainRepository.GetCaptainUsersBoxesByAsync(b => b.CaptainUserVehicleId == captainUserVehicle.Id);
+                var userBoxs = await _unitOfWork.CaptainRepository.GetCaptainUsersBoxesByAsync(b => b.CaptainUserVehicleId == captainUserVehicle.Id,cancellationToken);
                 CaptainUserVehicleBox captainUserVehicleBox = new(CaptainUserVehicle: captainUserVehicle, CaptainUserBoxs: userBoxs);
                 captainUserVehicleBoxs.Add(captainUserVehicleBox);
             }
@@ -118,7 +118,7 @@ public class CaptainService : ICaptainService
 
 
 
-    public async Task<IEnumerable<CaptainUserAccount>> GetUsersPagingAsync(FilterParameters parameters)
+    public async Task<IEnumerable<CaptainUserAccount>> GetUsersPagingAsync(FilterParameters parameters, CancellationToken cancellationToken)
     {
         try
         {
@@ -126,7 +126,7 @@ public class CaptainService : ICaptainService
             var skip = (parameters.NumberOfObjectsPerPage * (parameters.Page - 1));
             var take = parameters.NumberOfObjectsPerPage;
 
-            var result = await _unitOfWork.CaptainRepository.GetActiveCaptainUsersAccountsPaginationAsync(skip, take);
+            var result = await _unitOfWork.CaptainRepository.GetActiveCaptainUsersAccountsPaginationAsync(skip, take,cancellationToken);
 
             /*var total = query.Count();
             var result = Utility.Pagination(query, parameters.NumberOfObjectsPerPage, parameters.Page).ToList();
@@ -171,7 +171,7 @@ public class CaptainService : ICaptainService
 
 
 
-    public async Task<IEnumerable<CaptainUserAccount>> GetNewCaptainsUsersAsync(FilterParameters parameters)//[FromBody] Pagination pagination, [FromQuery] FilterParameters parameters)
+    public async Task<IEnumerable<CaptainUserAccount>> GetNewCaptainsUsersAsync(FilterParameters parameters, CancellationToken cancellationToken)//[FromBody] Pagination pagination, [FromQuery] FilterParameters parameters)
     {
         try
         {
@@ -190,7 +190,7 @@ public class CaptainService : ICaptainService
 
             var skip = (parameters.NumberOfObjectsPerPage * (parameters.Page - 1));
             var take = parameters.NumberOfObjectsPerPage;
-            var result = await _unitOfWork.CaptainRepository.GetReviewingCaptainUsersAccountsPaginationAsync(skip, take);
+            var result = await _unitOfWork.CaptainRepository.GetReviewingCaptainUsersAccountsPaginationAsync(skip, take,cancellationToken);
 
             return result;
 
@@ -210,12 +210,12 @@ public class CaptainService : ICaptainService
 
 
 
-    public async Task<object> GetDirectionsMapAsync(string origin, string destination, string mode)
+    public async Task<object> GetDirectionsMapAsync(string origin, string destination, string mode, CancellationToken cancellationToken)
     {
 
         try
         {
-            return await Utility.getDirectionsFromGoogleMap(origin, destination, mode);
+            return await Utility.getDirectionsFromGoogleMap(origin, destination, mode,cancellationToken);
         }
         catch (Exception e)
         {
@@ -292,10 +292,10 @@ public class CaptainService : ICaptainService
 
 
 
-    public async Task<CaptainUserResponse> AddCaptainAsync(HttpContext httpContext, CaptainUserDto captainUserDto)
+    public async Task<CaptainUserResponse> AddCaptainAsync(HttpContext httpContext, CaptainUserDto captainUserDto, CancellationToken cancellationToken)
     {
 
-        var users = await _unitOfWork.CaptainRepository.GetCaptainUsersAccountsByAsync(u => u.Mobile == captainUserDto.Mobile);
+        var users = await _unitOfWork.CaptainRepository.GetCaptainUsersAccountsByAsync(u => u.Mobile == captainUserDto.Mobile,cancellationToken);
         if (users != null && users.Count() > 0) throw new InvalidException("Mobile already registered before");
 
         // user.UserAccounts.FirstOrDefault().StatusTypeId = (long)StatusTypes.Reviewing;               
@@ -304,6 +304,15 @@ public class CaptainService : ICaptainService
         //UserCurrentStatus userStatus_Review = new UserCurrentStatus() { StatusTypeId = (long)StatusTypes.Reviewing, CreationDate = DateTime.Now, IsCurrent = true };
         //user.UserCurrentStatus.Add(userStatus_New);
         //user.UserCurrentStatus.Add(userStatus_Review);
+
+        CaptainUserAccount account = new()
+        {
+            Id = Guid.NewGuid().ToString(),
+            //CaptainUserId = insertedUser.Id,
+            Mobile = captainUserDto?.Mobile,
+            StatusTypeId = (long)StatusTypes.Reviewing,
+            CreationDate = DateTime.Now
+        };
 
         CaptainUser captainUser = new() {
             BirthDate =  captainUserDto?.BirthDate,
@@ -324,13 +333,14 @@ public class CaptainService : ICaptainService
             ResidenceCountryId = captainUserDto?.ResidenceCountryId,
             StcPay = captainUserDto?.StcPay,
             VehiclePlateNumber = captainUserDto?.VehiclePlateNumber,
-            VehicleRegistrationImage = captainUserDto?.VehicleRegistrationImage
+            VehicleRegistrationImage = captainUserDto?.VehicleRegistrationImage,
+            CaptainUserAccounts = new List<CaptainUserAccount>() { account }
         };
 
 
         captainUser = convertAndSaveUserImages(captainUser);
-        var insertedUser = await _unitOfWork.CaptainRepository.InsertCaptainUserAsync(captainUser);
-        var result = await _unitOfWork.Save();
+        var insertedUser = await _unitOfWork.CaptainRepository.InsertCaptainUserAsync(captainUser,cancellationToken);
+        var result = await _unitOfWork.Save(cancellationToken);
         if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
 
@@ -339,24 +349,25 @@ public class CaptainService : ICaptainService
 
         //var status = new StatusType { Id = (long)StatusTypes.Reviewing };
 
-        CaptainUserAccount account = new()
+        /*CaptainUserAccount account = new()
         {
             CaptainUserId = insertedUser.Id,
             Mobile = insertedUser.Mobile,
             StatusTypeId = (long)StatusTypes.Reviewing,
             CreationDate = DateTime.Now
-        };
+        }
+
         var userAccount = await _unitOfWork.CaptainRepository.InsertCaptainUserAccountAsync(account);
         result = await _unitOfWork.Save();
         if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
-
+        ;*/
 
         string modifierID = "";
         string modifierType = "";
         Utility.getRequestUserIdFromToken(httpContext, out modifierID, out modifierType);
-        CaptainUserCurrentStatus userStatus_Review = new CaptainUserCurrentStatus()
+        CaptainUserCurrentStatus userStatus_Review = new ()
         {
-            CaptainUserAccountId = userAccount.Id,
+            CaptainUserAccountId = insertedUser.CaptainUserAccounts?.FirstOrDefault()?.Id,
             StatusTypeId = (long)StatusTypes.Reviewing,
             IsCurrent = true,
             CreatedBy = modifierID,
@@ -364,15 +375,15 @@ public class CaptainService : ICaptainService
             ModificationDate = DateTime.Now
         };
 
-        var insertedResult = await _unitOfWork.CaptainRepository.InsertCaptainUserCurrentStatusAsync(userStatus_Review);
-        result = await _unitOfWork.Save(); 
+        var insertedResult = await _unitOfWork.CaptainRepository.InsertCaptainUserCurrentStatusAsync(userStatus_Review,cancellationToken);
+        result = await _unitOfWork.Save(cancellationToken); 
         if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
 
         var message = insertedUser.Id.ToString();
-        _ = _HubContext.Clients.All.SendAsync("ReviewingDriverNotify", message);
+        _ = _HubContext.Clients.All.SendAsync("ReviewingDriverNotify", message,cancellationToken);
 
-        return new( CaptainUser:captainUser , CaptainUserAccount:userAccount );
+        return new( CaptainUser: insertedUser, CaptainUserAccount: insertedUser.CaptainUserAccounts.FirstOrDefault());
 
 
     }
@@ -459,11 +470,11 @@ public class CaptainService : ICaptainService
 
 
 
-    public async Task<CaptainUserResponse> LoginAsync(LoginCaptainUserDto loginCaptain)
+    public async Task<CaptainUserResponse> LoginAsync(LoginCaptainUserDto loginCaptain, CancellationToken cancellationToken)
     {
 
 
-        var accounts = await _unitOfWork.CaptainRepository.GetCaptainUsersAccountsByAsync(d => d.Mobile == loginCaptain.Mobile);
+        var accounts = await _unitOfWork.CaptainRepository.GetCaptainUsersAccountsByAsync(d => d.Mobile == loginCaptain.Mobile,cancellationToken);
         var account = accounts.FirstOrDefault();
         if (account == null) throw new UnauthorizedException("Unauthorized");
 
@@ -477,7 +488,7 @@ public class CaptainService : ICaptainService
 
 
 
-        var user = await _unitOfWork.CaptainRepository.GetCaptainUserByIdAsync(account.CaptainUserId);
+        var user = await _unitOfWork.CaptainRepository.GetCaptainUserByIdAsync(account.CaptainUserId,cancellationToken);
 
         if (!account.Token.HasValue())
         {
@@ -485,8 +496,8 @@ public class CaptainService : ICaptainService
             var token = Utility.GenerateToken(account.Id, $"{user.FirstName} {user.LastName}" , "Captain", null);
             account.Token = token;
             //account.StatusTypeId = (long)StatusTypes.Incomplete;
-            account = await _unitOfWork.CaptainRepository.UpdateCaptainUserAccountAsync(account);
-            var result = await _unitOfWork.Save();
+            account = await _unitOfWork.CaptainRepository.UpdateCaptainUserAccountAsync(account,cancellationToken);
+            var result = await _unitOfWork.Save(cancellationToken);
             if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
             //account.User = user;
@@ -501,16 +512,16 @@ public class CaptainService : ICaptainService
 
 
     //we don't use that any more , we use the method in the system controller
-    public async Task<bool> ChangePasswordAsync(DriverPhone driver)
+    public async Task<bool> ChangePasswordAsync(DriverPhone driver, CancellationToken cancellationToken)
     {
 
 
-        var accounts = await _unitOfWork.CaptainRepository.GetCaptainUsersAccountsByAsync(d => d.Mobile == driver.Mobile);
+        var accounts = await _unitOfWork.CaptainRepository.GetCaptainUsersAccountsByAsync(d => d.Mobile == driver.Mobile,cancellationToken);
         var account = accounts.FirstOrDefault();
         if (account == null) throw new UnauthorizedException("Unauthorized");
 
-        var user = await _unitOfWork.CaptainRepository.GetCaptainUserByIdAsync(account.CaptainUserId);
-        var country = await _unitOfWork.CountryRepository.GetCountryByIdAsync((long)user.CountryId);
+        var user = await _unitOfWork.CaptainRepository.GetCaptainUserByIdAsync(account.CaptainUserId,cancellationToken);
+        var country = await _unitOfWork.CountryRepository.GetCountryByIdAsync((long)user.CountryId, cancellationToken);
 
         byte[] passwordHash, passwordSalt;
         var password = Utility.GeneratePassword();
@@ -523,12 +534,12 @@ public class CaptainService : ICaptainService
 
         var message = "Welcome to Sender, your password reset, the password is " + password;
         var phone = country.Code + account.Mobile;
-        var responseResult = Utility.SendSMS(message, phone);
+        _ = Utility.SendSMSAsync(message, phone);
         //if (!responseResult)
         //    return new ObjectResult("Server not available") { StatusCode = 707 };
 
-        var updatedUser = await _unitOfWork.CaptainRepository.UpdateCaptainUserAccountAsync(account);
-        var result = await _unitOfWork.Save();
+        var updatedUser = await _unitOfWork.CaptainRepository.UpdateCaptainUserAccountAsync(account,cancellationToken);
+        var result = await _unitOfWork.Save(cancellationToken);
 
         if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
@@ -563,7 +574,7 @@ public class CaptainService : ICaptainService
 
 
 
-    public async Task<bool> UploadAsync(HttpContext httpContext)
+    public async Task<bool> UploadAsync(HttpContext httpContext, CancellationToken cancellationToken)
     {
         try
         {
@@ -604,7 +615,7 @@ public class CaptainService : ICaptainService
                     string filePath = _hostingEnvironment.ContentRootPath + "/Assets/Images/Drivers/" + UserID + "/" + file.Name + "/" + file.FileName;
                     using (var fileStream = new FileStream(filePath, FileMode.Create))
                     {
-                        await file.CopyToAsync(fileStream);
+                        await file.CopyToAsync(fileStream,cancellationToken);
                     }
                 }
             }
@@ -675,11 +686,11 @@ public class CaptainService : ICaptainService
 
 
 
-    public async Task<object> AcceptRegisterCaptainByIdAsync(string captainUserAccountId, HttpContext httpContext)
+    public async Task<object> AcceptRegisterCaptainByIdAsync(string captainUserAccountId, HttpContext httpContext, CancellationToken cancellationToken)
     {
 
 
-        var userAccount = await _unitOfWork.CaptainRepository.GetCaptainUserAccountByIdAsync(captainUserAccountId);
+        var userAccount = await _unitOfWork.CaptainRepository.GetCaptainUserAccountByIdAsync(captainUserAccountId,cancellationToken);
         if (userAccount == null) throw new NotFoundException($"User with id {captainUserAccountId} not found");
 
         //var userAccount = usersAccounts.FirstOrDefault();
@@ -694,14 +705,14 @@ public class CaptainService : ICaptainService
         userAccount.PasswordSalt = passwordSalt;
         userAccount.Password = password;
 
-        var user = await _unitOfWork.CaptainRepository.GetCaptainUserByIdAsync(userAccount.CaptainUserId);
+        var user = await _unitOfWork.CaptainRepository.GetCaptainUserByIdAsync(userAccount.CaptainUserId,cancellationToken);
 
 
 
         //string modifierID = -1;
         //string modifierType = "";
         Utility.getRequestUserIdFromToken(httpContext, out string modifierID, out string modifierType);
-        CaptainUserCurrentStatus userCurrentStatus = new CaptainUserCurrentStatus()
+        CaptainUserCurrentStatus userCurrentStatus = new ()
         {
             CaptainUserAccountId = userAccount.Id,
             StatusTypeId = (long)StatusTypes.Working,
@@ -734,9 +745,9 @@ public class CaptainService : ICaptainService
         //var updateResult = await _unitOfWork.CaptainRepository.UpdateUser(user);
 
 
-        var userCurrentStatusInsertedResult = await _unitOfWork.CaptainRepository.InsertCaptainUserCurrentStatusAsync(userCurrentStatus);
-        userAccount = await _unitOfWork.CaptainRepository.UpdateCaptainUserAccountAsync(userAccount);
-        var result = await _unitOfWork.Save();
+        var userCurrentStatusInsertedResult = await _unitOfWork.CaptainRepository.InsertCaptainUserCurrentStatusAsync(userCurrentStatus,cancellationToken);
+        userAccount = await _unitOfWork.CaptainRepository.UpdateCaptainUserAccountAsync(userAccount,cancellationToken);
+        var result = await _unitOfWork.Save(cancellationToken);
         if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
 
@@ -747,7 +758,7 @@ public class CaptainService : ICaptainService
 
 
         var message2 = userAccount?.Id;
-        _ = _HubContext.Clients.All.SendAsync("WorkingDriverNotify", message2);
+        _ = _HubContext.Clients.All.SendAsync("WorkingDriverNotify", message2,cancellationToken);
         return new { Result = true, Password = password };
 
 
@@ -761,13 +772,13 @@ public class CaptainService : ICaptainService
 
 
 
-    public async Task<object> UpdateCaptainUserAsync(string? captainUserAccountId, CaptainUserDto captainUserDto)
+    public async Task<object> UpdateCaptainUserAsync(string? captainUserAccountId, CaptainUserDto captainUserDto, CancellationToken cancellationToken)
     {
 
         if (captainUserAccountId == null || captainUserAccountId == "") throw new InvalidException($"No User Id provided"); 
         if (captainUserDto == null) throw new NoContentException("NoContent");
 
-        var captainUserAccount = await _unitOfWork.CaptainRepository.GetCaptainUserAccountByIdAsync(captainUserAccountId);
+        var captainUserAccount = await _unitOfWork.CaptainRepository.GetCaptainUserAccountByIdAsync(captainUserAccountId,cancellationToken);
         if (captainUserAccount == null) throw new NotFoundException($"User account with id {captainUserAccountId} not found");
 
 
@@ -798,8 +809,8 @@ public class CaptainService : ICaptainService
 
 
         captainUser = convertAndSaveUserImages(captainUser);
-        var updateResult = await _unitOfWork.CaptainRepository.UpdateCaptainUserAsync(captainUser);
-        var result = await _unitOfWork.Save();
+        var updateResult = await _unitOfWork.CaptainRepository.UpdateCaptainUserAsync(captainUser,cancellationToken);
+        var result = await _unitOfWork.Save(cancellationToken);
         if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
         return new { Result = true, Message = "Updated successfuly" };
@@ -808,12 +819,12 @@ public class CaptainService : ICaptainService
 
 
 
-    public async Task<bool> UpdateCaptainCurrentLocationAsync(CaptainUserCurrentLocation userCurrentLocation)
+    public async Task<bool> UpdateCaptainCurrentLocationAsync(CaptainUserCurrentLocation userCurrentLocation, CancellationToken cancellationToken)
     {
 
-        var insertedResult = await _unitOfWork.CaptainRepository.InsertCaptainUserCurrentLocationAsync(userCurrentLocation);
+        var insertedResult = await _unitOfWork.CaptainRepository.InsertCaptainUserCurrentLocationAsync(userCurrentLocation,cancellationToken);
 
-        var result = await _unitOfWork.Save();
+        var result = await _unitOfWork.Save(cancellationToken);
         if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
         return true;
@@ -824,13 +835,13 @@ public class CaptainService : ICaptainService
 
 
 
-    public async Task<bool> DeleteCaptainUserAccountAsync(string captainUserAccountId)
+    public async Task<bool> DeleteCaptainUserAccountAsync(string captainUserAccountId, CancellationToken cancellationToken)
     {
 
 
-        var userAccount = await _unitOfWork.CaptainRepository.DeleteCaptainUserAccountAsync(captainUserAccountId);
+        var userAccount = await _unitOfWork.CaptainRepository.DeleteCaptainUserAccountAsync(captainUserAccountId,cancellationToken);
 
-        var result = await _unitOfWork.Save();
+        var result = await _unitOfWork.Save(cancellationToken);
         if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
         return true;
@@ -877,18 +888,19 @@ public class CaptainService : ICaptainService
 */
 
 
-    public async Task<object> GetOrdersPaymentsByCaptainUserAccountIdAsync(string captainUserAccountId)
+    public async Task<object> GetOrdersPaymentsByCaptainUserAccountIdAsync(string captainUserAccountId, CancellationToken cancellationToken)
     {
         try
         {
             var payments = await _unitOfWork.CaptainRepository
                 .GetCaptainUsersPaymentsByAsync(p => 
                 p.CaptainUserAccountId == captainUserAccountId && 
-                p.PaymentStatusTypeId == (long)PaymentStatusTypes.Complete);
+                p.PaymentStatusTypeId == (long)PaymentStatusTypes.Complete,
+                cancellationToken);
 
             var orderIds = payments.Select(p => p.OrderId).ToList();
 
-            var userPaidOrders = await _unitOfWork.OrderRepository.GetPaidOrdersByAsync(p => orderIds.Contains(p.OrderId) && p.Type == (long)PaymentTypes.WalletCredit);
+            var userPaidOrders = await _unitOfWork.OrderRepository.GetPaidOrdersByAsync(p => orderIds.Contains(p.OrderId) && p.Type == (long)PaymentTypes.WalletCredit,cancellationToken);
 
 
             return new { UserPayments = payments, PaidOrders = userPaidOrders };
@@ -903,7 +915,7 @@ public class CaptainService : ICaptainService
 
 
 
-    public async Task<object> GetBookkeepingPagingByCaptainUserAccountIdAsync(string? captainUserAccountId, FilterParameters parameters)// , [FromBody] Pagination pagination)
+    public async Task<object> GetBookkeepingPagingByCaptainUserAccountIdAsync(string? captainUserAccountId, FilterParameters parameters, CancellationToken cancellationToken)// , [FromBody] Pagination pagination)
     {
 
         if (captainUserAccountId == null || captainUserAccountId == "") throw new InvalidException("No account Id provided");
@@ -923,7 +935,7 @@ public class CaptainService : ICaptainService
 
         var skip = (parameters.NumberOfObjectsPerPage * (parameters.Page - 1));
         var take = parameters.NumberOfObjectsPerPage;
-        var payments = await _unitOfWork.PaymentRepository.GetBookkeepingPaginationByAsync(p => p.CaptainUserAccountId == captainUserAccountId, skip, take);
+        var payments = await _unitOfWork.PaymentRepository.GetBookkeepingPaginationByAsync(p => p.CaptainUserAccountId == captainUserAccountId, skip, take,cancellationToken);
 
         return payments;
 
@@ -933,14 +945,14 @@ public class CaptainService : ICaptainService
 
 
 
-    public async Task<IEnumerable<Bookkeeping>> GetBookkeepingByCaptainUserAccountIdAsync(string captainUserAccountId)
+    public async Task<IEnumerable<Bookkeeping>> GetBookkeepingByCaptainUserAccountIdAsync(string captainUserAccountId, CancellationToken cancellationToken)
     {
         try
         {
 
             /*var skip = (pagination.NumberOfObjectsPerPage * (pagination.Page));
             var take = pagination.NumberOfObjectsPerPage;*/
-            var payments = await _unitOfWork.PaymentRepository.GetBookkeepingByAsync(p => p.CaptainUserAccountId == captainUserAccountId);
+            var payments = await _unitOfWork.PaymentRepository.GetBookkeepingByAsync(p => p.CaptainUserAccountId == captainUserAccountId,cancellationToken);
 
             return payments;
 
@@ -954,11 +966,11 @@ public class CaptainService : ICaptainService
 
 
 
-    public async Task<decimal> GetUntransferredBookkeepingByCaptainUserAccountIdAsync(string captainUserAccountId)
+    public async Task<decimal> GetUntransferredBookkeepingByCaptainUserAccountIdAsync(string captainUserAccountId, CancellationToken cancellationToken)
     {
         try
         {
-            var payments = await _unitOfWork.PaymentRepository.UntransferredBookkeepingByAsync(p => p.CaptainUserAccountId == captainUserAccountId && p.Value > 0);
+            var payments = await _unitOfWork.PaymentRepository.UntransferredBookkeepingByAsync(p => p.CaptainUserAccountId == captainUserAccountId && p.Value > 0,cancellationToken);
             if (payments == null || payments?.Count <= 0) return 0;
 
             var total = payments?.Sum(p => p.Value);
@@ -974,7 +986,7 @@ public class CaptainService : ICaptainService
 
 
 
-    public async Task<IEnumerable<Order>> GetAllOrdersAssignmentsByCaptainUserAccountIdAsync(string captainUserAccountId, FilterParameters parameters)//[FromBody] Pagination pagination)
+    public async Task<IEnumerable<Order>> GetAllOrdersAssignmentsByCaptainUserAccountIdAsync(string captainUserAccountId, FilterParameters parameters, CancellationToken cancellationToken)//[FromBody] Pagination pagination)
     {
         try
         {
@@ -988,17 +1000,18 @@ public class CaptainService : ICaptainService
             var take = parameters.NumberOfObjectsPerPage;
             //var result = orders.Skip(skip).Take(take).ToList();
 
-            var orderAssignments = await _unitOfWork.OrderRepository.GetOrdersAssignmentsByAsync(p => p.CaptainUserAccountId == captainUserAccountId);
+            var orderAssignments = await _unitOfWork.OrderRepository.GetOrdersAssignmentsByAsync(p => p.CaptainUserAccountId == captainUserAccountId,cancellationToken);
             var orderIds = orderAssignments.Select(a => a.OrderId).ToList();
             var OrdersStatus = await _unitOfWork.OrderRepository
                 .GetOrderCurrentStatusesByAsync(s => 
                 orderIds.Contains(s.OrderId) &&
             ( s.OrderStatusTypeId == (long)OrderStatusTypes.Dropped || 
-            s.OrderStatusTypeId == (long)OrderStatusTypes.Delivered ));
+            s.OrderStatusTypeId == (long)OrderStatusTypes.Delivered ),
+            cancellationToken);
 
             var realOrdersIDs = OrdersStatus.Skip(skip).Take(take).Select(o => o.OrderId);
 
-            var orders = await _unitOfWork.OrderRepository.GetOrdersByAsync(o => realOrdersIDs.Contains(o.Id));
+            var orders = await _unitOfWork.OrderRepository.GetOrdersByAsync(o => realOrdersIDs.Contains(o.Id),cancellationToken);
 
             return orders;
 
@@ -1011,12 +1024,12 @@ public class CaptainService : ICaptainService
     }
 
 
-    public async Task<CaptainUserShift> AddCaptainUserShiftAsync(CaptainUserShift userShift)
+    public async Task<CaptainUserShift> AddCaptainUserShiftAsync(CaptainUserShift userShift, CancellationToken cancellationToken)
     {
         try
         {
-            var insertResult = await _unitOfWork.CaptainRepository.InsertCaptainUserShiftAsync(userShift);
-            var result = await _unitOfWork.Save();
+            var insertResult = await _unitOfWork.CaptainRepository.InsertCaptainUserShiftAsync(userShift,cancellationToken);
+            var result = await _unitOfWork.Save(cancellationToken);
             if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
             return insertResult;
@@ -1029,16 +1042,16 @@ public class CaptainService : ICaptainService
     }
 
 
-    public async Task<CaptainUserShift> DeleteCaptainUserShiftAsync(string captainUserAccountId, long shiftId)
+    public async Task<CaptainUserShift> DeleteCaptainUserShiftAsync(string captainUserAccountId, long shiftId, CancellationToken cancellationToken)
     {
 
 
-        var userShifts = await _unitOfWork.CaptainRepository.GetCaptainUsersShiftsByAsync(s => s.CaptainUserAccountId == captainUserAccountId && s.ShiftId == shiftId); //&& s.CreationDate >= DateTime.Now);
+        var userShifts = await _unitOfWork.CaptainRepository.GetCaptainUsersShiftsByAsync(s => s.CaptainUserAccountId == captainUserAccountId && s.ShiftId == shiftId,cancellationToken); //&& s.CreationDate >= DateTime.Now);
         var oldUserShift = userShifts.FirstOrDefault();
         if (oldUserShift == null) throw new NotFoundException("the target shift not found");
 
-        var deleteResult = await _unitOfWork.CaptainRepository.DeleteCaptainUserShiftAsync(oldUserShift.Id);
-        var result = await _unitOfWork.Save();
+        var deleteResult = await _unitOfWork.CaptainRepository.DeleteCaptainUserShiftAsync(oldUserShift.Id,cancellationToken);
+        var result = await _unitOfWork.Save(cancellationToken);
         if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
         return deleteResult;
@@ -1047,12 +1060,12 @@ public class CaptainService : ICaptainService
 
 
 
-    public async Task<CaptainUserShift?> GetCaptainUsershiftAsync(string captainUserAccountId, long shiftId)//[FromBody] UserShift userShift)
+    public async Task<CaptainUserShift?> GetCaptainUsershiftAsync(string captainUserAccountId, long shiftId, CancellationToken cancellationToken)//[FromBody] UserShift userShift)
     {
 
         try
         {
-            var userShifts = await _unitOfWork.CaptainRepository.GetCaptainUsersShiftsByAsync(s => s.CaptainUserAccountId == captainUserAccountId && s.ShiftId == shiftId); //&& s.CreationDate >= DateTime.Now);
+            var userShifts = await _unitOfWork.CaptainRepository.GetCaptainUsersShiftsByAsync(s => s.CaptainUserAccountId == captainUserAccountId && s.ShiftId == shiftId,cancellationToken); //&& s.CreationDate >= DateTime.Now);
             var result = userShifts.FirstOrDefault();
 
             return result;
@@ -1066,13 +1079,13 @@ public class CaptainService : ICaptainService
 
 
 
-    public async Task<object> GetShiftsAndUserShiftsByDateAsync(string captainUserAccountId, Shift shift)
+    public async Task<object> GetShiftsAndUserShiftsByDateAsync(string captainUserAccountId, Shift shift, CancellationToken cancellationToken)
     {
         try
         {
-            var resultShiftsOftheDay = await _unitOfWork.SystemRepository.GetShiftsByShiftDateAsync(shift);
+            var resultShiftsOftheDay = await _unitOfWork.SystemRepository.GetShiftsByShiftDateAsync(shift,cancellationToken);
             var shiftsOftheDay_IDs = resultShiftsOftheDay.Select(s => s.Id).ToList();
-            var userShifts = await _unitOfWork.CaptainRepository.GetCaptainUsersShiftsByAsync(s => s.CaptainUserAccountId == captainUserAccountId && shiftsOftheDay_IDs.Contains(s.ShiftId ?? 0));
+            var userShifts = await _unitOfWork.CaptainRepository.GetCaptainUsersShiftsByAsync(s => s.CaptainUserAccountId == captainUserAccountId && shiftsOftheDay_IDs.Contains(s.ShiftId ?? 0),cancellationToken);
 
             return new { shifts = resultShiftsOftheDay, userShifts = userShifts };
         }
@@ -1086,20 +1099,20 @@ public class CaptainService : ICaptainService
     //set active or incative to captain 
     //Active is if captain is currently working and ready to take orders
     //Inactive is if captain is don't want to take orders and stopped using the app 
-    public async Task<CaptainUserActivity> CaptainUserActivitiesAsync(CaptainUserActivity userActivity)
+    public async Task<CaptainUserActivity> CaptainUserActivitiesAsync(CaptainUserActivity userActivity, CancellationToken cancellationToken)
     {
 
 
         if (userActivity.StatusTypeId == (long)StatusTypes.Inactive)
         {
             var updateDriverLocationResult =
-            await _unitOfWork.CaptainRepository.DeleteCaptainUserCurrentLocationByCaptainUserAccountIdAsync(userActivity.CaptainUserAccountId ?? "");
+            await _unitOfWork.CaptainRepository.DeleteCaptainUserCurrentLocationByCaptainUserAccountIdAsync(userActivity.CaptainUserAccountId ?? "",cancellationToken);
 
 
         }
 
-        var updateResult = await _unitOfWork.CaptainRepository.InsertCaptainUserActivityAsync(userActivity);
-        var result = await _unitOfWork.Save();
+        var updateResult = await _unitOfWork.CaptainRepository.InsertCaptainUserActivityAsync(userActivity,cancellationToken);
+        var result = await _unitOfWork.Save(cancellationToken);
         if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
 
@@ -1225,11 +1238,11 @@ public class CaptainService : ICaptainService
     /**/
 
 
-    public async Task<object> ChartsAsync()
+    public async Task<object> ChartsAsync(CancellationToken cancellationToken)
     {
         try
         {
-            var reportData = _unitOfWork.CaptainRepository.UserReportCount();
+            var reportData = _unitOfWork.CaptainRepository.UserReportCount(cancellationToken);
             return reportData;
         }
         catch (Exception e)
@@ -1240,26 +1253,28 @@ public class CaptainService : ICaptainService
     }
 
 
-    public async Task<object> CheckBonusPerMonthAsync(BonusCheckDto bonusCheckDto)
+    public async Task<object> CheckBonusPerMonthAsync(BonusCheckDto bonusCheckDto, CancellationToken cancellationToken)
     {
 
         /// Check Bonus
         var userOrdersAssignedPerMonth = await _unitOfWork.OrderRepository.GetOrdersAssignmentsByAsync(a =>
             a.CaptainUserAccountId == bonusCheckDto.captainUserAccountId &&
             a.CreationDate.Value.Month == bonusCheckDto.date.Month &&
-            a.CreationDate.Value.Month == bonusCheckDto.date.Month);
+            a.CreationDate.Value.Month == bonusCheckDto.date.Month,
+            cancellationToken);
 
         var orderIds = userOrdersAssignedPerMonth.Select(a => a.OrderId).ToList();
         var ordersStatus = await _unitOfWork.OrderRepository.GetOrderCurrentStatusesByAsync(s =>
             orderIds.Contains(s.OrderId) &&
-            (s.OrderStatusTypeId == (long)OrderStatusTypes.Dropped));
+            (s.OrderStatusTypeId == (long)OrderStatusTypes.Dropped),
+            cancellationToken);
         var ordersCount = ordersStatus.Count();
         // var order = await _unitOfWork.OrderRepository.GetOrderByID((long)orderIds[0]);
 
         var anyOrderAssign = userOrdersAssignedPerMonth.FirstOrDefault();
-        var userAccount = await _unitOfWork.CaptainRepository.GetCaptainUserAccountByIdAsync(anyOrderAssign.CaptainUserAccountId);
-        var user = await _unitOfWork.CaptainRepository.GetCaptainUserByIdAsync(userAccount.CaptainUserId);
-        var bonusPerCountry = await _unitOfWork.CaptainRepository.GetBonusByCountryAsync(user.ResidenceCountryId);
+        var userAccount = await _unitOfWork.CaptainRepository.GetCaptainUserAccountByIdAsync(anyOrderAssign.CaptainUserAccountId,cancellationToken);
+        var user = await _unitOfWork.CaptainRepository.GetCaptainUserByIdAsync(userAccount.CaptainUserId,cancellationToken);
+        var bonusPerCountry = await _unitOfWork.CaptainRepository.GetBonusByCountryAsync(user.ResidenceCountryId,cancellationToken);
 
 
         var userBonus = new CaptainUserBonus();
@@ -1272,8 +1287,8 @@ public class CaptainService : ICaptainService
                 CreationDate = DateTime.Now,
                 Amount = bonusPerCountry.BonusPerMonth
             };
-            var insertedBonus = await _unitOfWork.CaptainRepository.InsertCaptainUserBonusAsync(userBonus);
-            var result = await _unitOfWork.Save();
+            var insertedBonus = await _unitOfWork.CaptainRepository.InsertCaptainUserBonusAsync(userBonus,cancellationToken);
+            var result = await _unitOfWork.Save(cancellationToken);
             if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
             return new
@@ -1294,23 +1309,23 @@ public class CaptainService : ICaptainService
     }
 
 
-    public async Task<object> CheckBonusPerYearAsync(BonusCheckDto bonusCheckDto)
+    public async Task<object> CheckBonusPerYearAsync(BonusCheckDto bonusCheckDto, CancellationToken cancellationToken)
     {
 
         /// Check Bonus
         var userOrdersAssignedPerYear = await _unitOfWork.OrderRepository.GetOrdersAssignmentsByAsync(a => a.CaptainUserAccountId == bonusCheckDto.captainUserAccountId &&
-                                 a.CreationDate.Value.Year == bonusCheckDto.date.Year);
+                                 a.CreationDate.Value.Year == bonusCheckDto.date.Year,cancellationToken);
 
         var orderIds = userOrdersAssignedPerYear.Select(a => a.OrderId).ToList();
         var ordersStatus = await _unitOfWork.OrderRepository.GetOrderCurrentStatusesByAsync(s => orderIds.Contains(s.OrderId) &&
-       (s.OrderStatusTypeId == (long)OrderStatusTypes.Dropped));
+       (s.OrderStatusTypeId == (long)OrderStatusTypes.Dropped),cancellationToken);
         var ordersCount = ordersStatus.Count();
         //var order = await _unitOfWork.OrderRepository.GetOrderByID((long)orderIds[0]);
 
         var anyOrderAssign = userOrdersAssignedPerYear.FirstOrDefault();
-        var userAccount = await _unitOfWork.CaptainRepository.GetCaptainUserAccountByIdAsync(anyOrderAssign.CaptainUserAccountId);
-        var user = await _unitOfWork.CaptainRepository.GetCaptainUserByIdAsync(userAccount.CaptainUserId);
-        var bonusPerCountry = await _unitOfWork.CaptainRepository.GetBonusByCountryAsync(user.ResidenceCountryId);
+        var userAccount = await _unitOfWork.CaptainRepository.GetCaptainUserAccountByIdAsync(anyOrderAssign.CaptainUserAccountId,cancellationToken);
+        var user = await _unitOfWork.CaptainRepository.GetCaptainUserByIdAsync(userAccount.CaptainUserId,cancellationToken);
+        var bonusPerCountry = await _unitOfWork.CaptainRepository.GetBonusByCountryAsync(user.ResidenceCountryId,cancellationToken);
 
         var userBonus = new CaptainUserBonus();
         if (ordersCount >= bonusPerCountry.OrdersPerYear)
@@ -1322,8 +1337,8 @@ public class CaptainService : ICaptainService
                 CreationDate = DateTime.Now,
                 Amount = bonusPerCountry.BonusPerYear
             };
-            var insertedBonus = await _unitOfWork.CaptainRepository.InsertCaptainUserBonusAsync(userBonus);
-            var result = await _unitOfWork.Save();
+            var insertedBonus = await _unitOfWork.CaptainRepository.InsertCaptainUserBonusAsync(userBonus, cancellationToken);
+            var result = await _unitOfWork.Save(cancellationToken);
             if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
             return new { Bonus = userBonus, Message = "User Delivered about " + ordersCount + " Orders in Year " + bonusCheckDto.date.Year };
@@ -1338,13 +1353,13 @@ public class CaptainService : ICaptainService
 
 
 
-    public async Task<string> SendFirebaseNotificationAsync(FBNotify fbNotify)
+    public async Task<string> SendFirebaseNotificationAsync(FBNotify fbNotify, CancellationToken cancellationToken)
     {
         try
         {
             var result = await Task.Run(() => {
                 return FirebaseNotification.SendNotificationToTopic(FirebaseTopics.Captains, fbNotify.Title, fbNotify.Message);
-            });
+            },cancellationToken);
             return result;
         }
         catch (Exception e)
@@ -1357,11 +1372,11 @@ public class CaptainService : ICaptainService
 
 
 
-    public async Task<IEnumerable<NearCaptainUser>> GetCaptainsUsersNearToLocationAsync(Location location)
+    public async Task<IEnumerable<NearCaptainUser>> GetCaptainsUsersNearToLocationAsync(Location location, CancellationToken cancellationToken)
     {
         try
         {
-            return await _unitOfWork.CaptainRepository.GetCaptainsUsersNearToLocationAsync(location.Lat, location.Lng);
+            return await _unitOfWork.CaptainRepository.GetCaptainsUsersNearToLocationAsync(location.Lat, location.Lng,cancellationToken);
 
         }
         catch (Exception e)

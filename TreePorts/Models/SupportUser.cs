@@ -31,6 +31,10 @@ namespace TreePorts.Models
         public DateTime? CreationDate { get; set; }
         public DateTime? ModificationDate { get; set; }
 
+        public virtual City? City { get; set; }
+        public virtual Country? Country { get; set; }
+        public virtual City? ResidenceCity { get; set; }
+        public virtual Country? ResidenceCountry { get; set; }
         public virtual ICollection<SupportUserAccount> SupportUserAccounts { get; set; }
     }
 }

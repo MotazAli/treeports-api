@@ -20,11 +20,11 @@ public class SupportService : ISupportService
     }
 
 
-    public async Task<IEnumerable<Ticket>> GetTicketsAsyncs()
+    public async Task<IEnumerable<Ticket>> GetTicketsAsyncs(CancellationToken cancellationToken)
     {
         try
         {
-            return await _unitOfWork.SupportRepository.GetTicketsAsync();
+            return await _unitOfWork.SupportRepository.GetTicketsAsync(cancellationToken);
         }
         catch (Exception e)
         {
@@ -32,11 +32,11 @@ public class SupportService : ISupportService
         }
     }
 
-    public async Task<Ticket?> GetTicketByIdAsync(long id)
+    public async Task<Ticket?> GetTicketByIdAsync(long id, CancellationToken cancellationToken)
     {
         try
         {
-            return await _unitOfWork.SupportRepository.GetTicketByIdAsync(id);
+            return await _unitOfWork.SupportRepository.GetTicketByIdAsync(id,cancellationToken);
         }
         catch (Exception e)
         {
@@ -47,13 +47,13 @@ public class SupportService : ISupportService
 
 
 
-    public async Task<SupportUser> GetSupportAccountUserBySupportUserAccountIdAsync(string supportUserAccountId)
+    public async Task<SupportUser> GetSupportAccountUserBySupportUserAccountIdAsync(string supportUserAccountId, CancellationToken cancellationToken)
     {
 
 
         try
         {
-            var user = await _unitOfWork.SupportRepository.GetSupportUserByIdAsync(supportUserAccountId);
+            var user = await _unitOfWork.SupportRepository.GetSupportUserByIdAsync(supportUserAccountId,cancellationToken);
 
             if (user.SupportUserAccounts?.Count > 0)
             {
@@ -61,7 +61,7 @@ public class SupportService : ISupportService
             }
             else
             {
-                var userAccounts = await _unitOfWork.SupportRepository.GetSupportUsersAccountsByAsync(u => u.SupportUserId == user.Id);
+                var userAccounts = await _unitOfWork.SupportRepository.GetSupportUsersAccountsByAsync(u => u.SupportUserId == user.Id,cancellationToken);
                 var userAccount = userAccounts.FirstOrDefault();
                 //if (userAccount?.StatusTypeId != null)
                 //    user.CurrentStatusId = (long)userAccount.StatusTypeId;
@@ -78,13 +78,13 @@ public class SupportService : ISupportService
 
 
 
-    public async Task<object> GetSupportUsersAccountsAsync(FilterParameters parameters)
+    public async Task<object> GetSupportUsersAccountsAsync(FilterParameters parameters, CancellationToken cancellationToken)
     {
         try
         {
-            var users = await _unitOfWork.SupportRepository.GetSupportUsersAsync();
+            var users = await _unitOfWork.SupportRepository.GetSupportUsersAsync(cancellationToken);
             var total = users.Count;
-            var result = Utility.Pagination(users, parameters.NumberOfObjectsPerPage, parameters.Page).ToList();
+            var result = await Utility.Pagination(users, parameters.NumberOfObjectsPerPage, parameters.Page).ToListAsync(cancellationToken);
             var totalPages = (int)Math.Ceiling(total / (double)parameters.NumberOfObjectsPerPage);
 
             return new { Users = result, Total = total, Page = parameters.Page, TotaPages = totalPages };
@@ -98,22 +98,22 @@ public class SupportService : ISupportService
 
 
 
-    public async Task<bool> AddTicketAsync(Ticket ticket)
+    public async Task<bool> AddTicketAsync(Ticket ticket, CancellationToken cancellationToken)
     {
-        var savedSupport = await _unitOfWork.SupportRepository.InsertTicketAsync(ticket);
-        var result = await _unitOfWork.Save();
+        var savedSupport = await _unitOfWork.SupportRepository.InsertTicketAsync(ticket,cancellationToken);
+        var result = await _unitOfWork.Save(cancellationToken);
         if (result == 0)
             throw new ServiceUnavailableException("Service Unavailable");
 
 
 
-        var AllReadySupportUsers = await _unitOfWork.SupportRepository.GetSupportUsersWorkingStateByAsync(u => u.StatusTypeId == (long)SupportStatusTypes.Ready && u.IsCurrent == true);
+        var AllReadySupportUsers = await _unitOfWork.SupportRepository.GetSupportUsersWorkingStateByAsync(u => u.StatusTypeId == (long)SupportStatusTypes.Ready && u.IsCurrent == true, cancellationToken);
         var ReadySupportUser = AllReadySupportUsers.OrderByDescending(s => s.CreationDate).FirstOrDefault();
 
 
         if (ReadySupportUser == null)
         {
-            AllReadySupportUsers = await _unitOfWork.SupportRepository.GetSupportUsersWorkingStateByAsync(u => u.StatusTypeId == (long)SupportStatusTypes.Progress && u.IsCurrent == true);
+            AllReadySupportUsers = await _unitOfWork.SupportRepository.GetSupportUsersWorkingStateByAsync(u => u.StatusTypeId == (long)SupportStatusTypes.Progress && u.IsCurrent == true,cancellationToken);
             ReadySupportUser = AllReadySupportUsers.OrderByDescending(s => s.CreationDate).FirstOrDefault();
         }
 
@@ -136,23 +136,23 @@ public class SupportService : ISupportService
             CreationDate = DateTime.Now
         };
 
-        var insertResult = await _unitOfWork.SupportRepository.InsertSupportUserWorkingStateAsync(supportUserWorkingState);
+        var insertResult = await _unitOfWork.SupportRepository.InsertSupportUserWorkingStateAsync(supportUserWorkingState,cancellationToken);
         //newSupportUserStatus = await _unitOfWork.SupportRepository.InsertSupportUserStatuse(newSupportUserStatus);
-        ticketAssign = await _unitOfWork.SupportRepository.InsertTicketAssignmentAsync(ticketAssign);
-        var saveResult = await _unitOfWork.Save();
+        ticketAssign = await _unitOfWork.SupportRepository.InsertTicketAssignmentAsync(ticketAssign,cancellationToken);
+        var saveResult = await _unitOfWork.Save(cancellationToken);
         if (saveResult == 0)
             throw new ServiceUnavailableException("Service Unavalible");
 
 
 
-        var supportUsersMessageHub = await _unitOfWork.SupportRepository.GetSupportUsersMessageHubByAsync(u => u.SupportUserAccountId == ReadySupportUser.SupportUserAccountId);
+        var supportUsersMessageHub = await _unitOfWork.SupportRepository.GetSupportUsersMessageHubByAsync(u => u.SupportUserAccountId == ReadySupportUser.SupportUserAccountId,cancellationToken);
         var supportUserMessageHub = supportUsersMessageHub.FirstOrDefault();
         if (supportUserMessageHub != null && supportUserMessageHub.Id > 0)
         {
             // var notificationReuslt = await Utility.SendFirebaseNotification(_hostingEnvironment, "newSupportRequest", supportAssign.Id.ToString(), supportUserMessageHub.ConnectionId);
             // if(notificationReuslt == null) return new ObjectResult("No support available") { StatusCode = 707 };
             //await Utility.SendFirebaseNotification(_hostingEnvironment, "newSupportRequest", supportAssign.Id.ToString(), supportUserMessageHub.ConnectionId);
-            await _HubContext.Clients.Client(supportUserMessageHub.ConnectionId).SendAsync("newSupportRequest", ticketAssign.Id.ToString());
+            await _HubContext.Clients.Client(supportUserMessageHub.ConnectionId).SendAsync("newSupportRequest", ticketAssign.Id.ToString(),cancellationToken);
         }
 
         return true;
@@ -163,7 +163,7 @@ public class SupportService : ISupportService
 
 
 
-    public async Task<TicketAssignment> GetTicketAssignedByCaptainUserAccountIdAsync(string captainUserAccountId)
+    public async Task<TicketAssignment?> GetTicketAssignedByCaptainUserAccountIdAsync(string captainUserAccountId, CancellationToken cancellationToken)
     {
 
         
@@ -174,7 +174,7 @@ public class SupportService : ISupportService
             var allAssigned = await _unitOfWork.SupportRepository.GetTicketsAssignmentsByAsync(
                                          a => a.CaptainUserAccountId == captainUserAccountId &&
                                          (a.TicketStatusTypeId == (long)SupportStatusTypes.New ||
-                                         a.TicketStatusTypeId == (long)SupportStatusTypes.Progress));
+                                         a.TicketStatusTypeId == (long)SupportStatusTypes.Progress),cancellationToken);
             return  allAssigned.FirstOrDefault();
             //if (assigned == null) throw new NotFoundException("No running ticket support for that captain ");
 
@@ -190,16 +190,16 @@ public class SupportService : ISupportService
 
 
 
-    public async Task<IEnumerable<TicketAssignment>> GetTicketsAssignedBySupportUserAccountIdAsync(string supportUserAccountId)
+    public async Task<IEnumerable<TicketAssignment>> GetTicketsAssignedBySupportUserAccountIdAsync(string supportUserAccountId, CancellationToken cancellationToken)
     {
         try
         {
             var assigned = await _unitOfWork.SupportRepository.GetTicketsAssignmentsByAsync(
                                              a => a.SupportUserAccountId == supportUserAccountId &&
                                              (a.TicketStatusTypeId == (long)SupportStatusTypes.New ||
-                                             a.TicketStatusTypeId == (long)SupportStatusTypes.Progress));
+                                             a.TicketStatusTypeId == (long)SupportStatusTypes.Progress),cancellationToken);
 
-            var result = assigned.OrderByDescending(a => a.CreationDate).ToList();
+            var result = assigned.OrderByDescending(a => a.CreationDate);
 
             return result;
         }
@@ -236,17 +236,17 @@ public class SupportService : ISupportService
 
 
 
-    public async Task<bool> UpdateTicketAsync(long ticketId, Ticket ticket)
+    public async Task<bool> UpdateTicketAsync(long ticketId, Ticket ticket, CancellationToken cancellationToken)
     {
 
-        ticket = await _unitOfWork.SupportRepository.UpdateTicketAsync(ticket);
+        ticket = await _unitOfWork.SupportRepository.UpdateTicketAsync(ticket,cancellationToken);
         if(ticket == null) throw new ServiceUnavailableException("Service Unavalible");
 
-        var allTicketAssgins = await _unitOfWork.SupportRepository.GetTicketsAssignmentsByAsync(a => a.TicketId == ticket.Id);
+        var allTicketAssgins = await _unitOfWork.SupportRepository.GetTicketsAssignmentsByAsync(a => a.TicketId == ticket.Id,cancellationToken);
         var ticketAssgin = allTicketAssgins.FirstOrDefault();
         ticketAssgin.TicketStatusTypeId = ticket.TicketStatusTypeId;
-        ticketAssgin = await _unitOfWork.SupportRepository.UpdateTicketAssignmentAsync(ticketAssgin);
-        var result = await _unitOfWork.Save();
+        ticketAssgin = await _unitOfWork.SupportRepository.UpdateTicketAssignmentAsync(ticketAssgin,cancellationToken);
+        var result = await _unitOfWork.Save(cancellationToken);
         if (result == 0) throw new ServiceUnavailableException("Service Unavalible");
 
         return true;
@@ -255,16 +255,16 @@ public class SupportService : ISupportService
 
 
 
-    public async Task<bool> UpdateTicketAssignmentByTicketIdAsync(long ticketId, TicketAssignment ticketAssign)
+    public async Task<bool> UpdateTicketAssignmentByTicketIdAsync(long ticketId, TicketAssignment ticketAssign, CancellationToken cancellationToken)
     {
 
 
-        var oldSupport = await _unitOfWork.SupportRepository.GetTicketByIdAsync(ticketAssign.TicketId ?? 0);
+        var oldSupport = await _unitOfWork.SupportRepository.GetTicketByIdAsync(ticketAssign.TicketId ?? 0,cancellationToken);
         //var supportAssgin = allSupportAssgins.FirstOrDefault();
         oldSupport.TicketStatusTypeId = ticketAssign.TicketStatusTypeId;
         var ticketAssigns = await _unitOfWork.SupportRepository.GetTicketsAssignmentsByAsync(s => s.SupportUserAccountId == ticketAssign.SupportUserAccountId &&
         (s.TicketStatusTypeId == (long)SupportStatusTypes.New ||
-        s.TicketStatusTypeId == (long)SupportStatusTypes.Progress));
+        s.TicketStatusTypeId == (long)SupportStatusTypes.Progress),cancellationToken);
 
         if (ticketAssigns == null || ticketAssigns.Count <= 0)
         {
@@ -276,13 +276,13 @@ public class SupportService : ISupportService
                 CreationDate = DateTime.Now
             };
 
-            var insertRresult = await _unitOfWork.SupportRepository.InsertSupportUserWorkingStateAsync(supportUserWorkingState);
+            var insertRresult = await _unitOfWork.SupportRepository.InsertSupportUserWorkingStateAsync(supportUserWorkingState,cancellationToken);
 
         }
-        ticketAssign = await _unitOfWork.SupportRepository.UpdateTicketAssignmentAsync(ticketAssign);
-        oldSupport = await _unitOfWork.SupportRepository.UpdateTicketAsync(oldSupport);
+        var ticketAssignUpdated = await _unitOfWork.SupportRepository.UpdateTicketAssignmentAsync(ticketAssign,cancellationToken);
+        oldSupport = await _unitOfWork.SupportRepository.UpdateTicketAsync(oldSupport,cancellationToken);
 
-        var result = await _unitOfWork.Save();
+        var result = await _unitOfWork.Save(cancellationToken);
         if (result == 0) throw new ServiceUnavailableException("Service Unavalible");
 
         return true;
@@ -290,12 +290,12 @@ public class SupportService : ISupportService
     }
 
 
-    public async Task<IEnumerable<SupportUser>> GetSupportUsersAccountsAsync()
+    public async Task<IEnumerable<SupportUser>> GetSupportUsersAccountsAsync(CancellationToken cancellationToken)
     {
         try
         {
 
-            return await _unitOfWork.SupportRepository.GetSupportUsersAsync();
+            return await _unitOfWork.SupportRepository.GetSupportUsersAsync(cancellationToken);
         }
         catch (Exception e)
         {
@@ -305,12 +305,12 @@ public class SupportService : ISupportService
     }
 
 
-    public async Task<IEnumerable<SupportType>> GetTicketTypesAsync()
+    public async Task<IEnumerable<SupportType>> GetTicketTypesAsync(CancellationToken cancellationToken)
     {
         try
         {
 
-            return await _unitOfWork.SupportRepository.GetSupportTypesAsync();
+            return await _unitOfWork.SupportRepository.GetSupportTypesAsync(cancellationToken);
         }
         catch (Exception e)
         {
@@ -342,22 +342,22 @@ public class SupportService : ISupportService
 
 
 
-    public async Task<SupportUser?> UpdateSupportUserAccountAsync(long supportUserAccountId, SupportUser user)
+    public async Task<SupportUser?> UpdateSupportUserAccountAsync(long supportUserAccountId, SupportUser user, CancellationToken cancellationToken)
     {
 
-        var userResult = await _unitOfWork.SupportRepository.UpdateSupportUserAsync(user);
-        var result = await _unitOfWork.Save();
+        var userResult = await _unitOfWork.SupportRepository.UpdateSupportUserAsync(user,cancellationToken);
+        var result = await _unitOfWork.Save(cancellationToken);
         if (result == 0) throw new ServiceUnavailableException("Service Unavalible");
 
         return userResult;
     }
 
 
-    public async Task<bool> DeleteSupportUserAccountAsync(string supportUserAccountId)
+    public async Task<bool> DeleteSupportUserAccountAsync(string supportUserAccountId, CancellationToken cancellationToken)
     {
 
-        var userResult = await _unitOfWork.SupportRepository.DeleteSupportUserAccountAsync(supportUserAccountId);
-        var result = await _unitOfWork.Save();
+        var userResult = await _unitOfWork.SupportRepository.DeleteSupportUserAccountAsync(supportUserAccountId,cancellationToken);
+        var result = await _unitOfWork.Save(cancellationToken);
         if (result == 0) throw new ServiceUnavailableException("Service Unavalible");
 
         return true;
@@ -440,10 +440,10 @@ public class SupportService : ISupportService
 
 
 
-    public async Task<SupportUserResponse> AddSupportUserAccountAsync(SupportUserDto supportUserDto)
+    public async Task<SupportUserResponse> AddSupportUserAccountAsync(SupportUserDto supportUserDto, CancellationToken cancellationToken)
     {
 
-        var oldUser = await _unitOfWork.SupportRepository.GetSupportUserAccountByEmailAsync(supportUserDto.Email.ToLower());
+        var oldUser = await _unitOfWork.SupportRepository.GetSupportUserAccountByEmailAsync(supportUserDto.Email.ToLower(),cancellationToken);
         if (oldUser != null) throw new InvalidException("User already registered");
 
         SupportUser supportUser = new()
@@ -463,8 +463,8 @@ public class SupportService : ISupportService
             ResidenceCityId = supportUserDto?.ResidenceCityId,
         };
 
-        supportUser = await _unitOfWork.SupportRepository.InsertSupportUserAsync(supportUser);
-        var result = await _unitOfWork.Save();
+        supportUser = await _unitOfWork.SupportRepository.InsertSupportUserAsync(supportUser,cancellationToken);
+        var result = await _unitOfWork.Save(cancellationToken);
         if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
 
@@ -484,8 +484,8 @@ public class SupportService : ISupportService
         };
         //user.SupportUserAccounts.Add(account);
 
-        account = await _unitOfWork.SupportRepository.InsertSupportUserAccountAsync(account);
-        result = await _unitOfWork.Save();
+        account = await _unitOfWork.SupportRepository.InsertSupportUserAccountAsync(account,cancellationToken);
+        result = await _unitOfWork.Save(cancellationToken);
         if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
         SupportUserCurrentStatus supportUserCurrentStatus = new()
@@ -496,8 +496,8 @@ public class SupportService : ISupportService
             CreationDate = DateTime.Now,
         };
 
-        var insertStatusResult = await _unitOfWork.SupportRepository.InsertSupportUserCurrentStatusAsync(supportUserCurrentStatus);
-        result = await _unitOfWork.Save();
+        var insertStatusResult = await _unitOfWork.SupportRepository.InsertSupportUserCurrentStatusAsync(supportUserCurrentStatus,cancellationToken);
+        result = await _unitOfWork.Save(cancellationToken);
         if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
 
@@ -530,10 +530,10 @@ public class SupportService : ISupportService
 
 
 
-    public async Task<SupportUserResponse?> LoginAsync(LoginUserDto user)
+    public async Task<SupportUserResponse?> LoginAsync(LoginUserDto user, CancellationToken cancellationToken)
     {
 
-        var account = await _unitOfWork.SupportRepository.GetSupportUserAccountByEmailAsync(user.Email.ToLower());
+        var account = await _unitOfWork.SupportRepository.GetSupportUserAccountByEmailAsync(user.Email.ToLower(),cancellationToken);
 
         if (account == null) throw new UnauthorizedException("Unauthorized");
 
@@ -547,7 +547,7 @@ public class SupportService : ISupportService
         //if (!Utility.VerifyPasswordHash(user.Password, account.PasswordHash, account.PasswordSalt)) return Unauthorized();
 
 
-        var oldUser = await _unitOfWork.SupportRepository.GetSupportUserByIdAsync(account.SupportUserId);
+        var oldUser = await _unitOfWork.SupportRepository.GetSupportUserByIdAsync(account.SupportUserId,cancellationToken);
 
 
         //var country = await _unitOfWork.CountryRepository.GetByID((long)oldUser.CountryId);
@@ -558,7 +558,7 @@ public class SupportService : ISupportService
         //}
 
 
-        var city = await _unitOfWork.CountryRepository.GetCityByIdAsync((long)oldUser.CityId);
+        var city = await _unitOfWork.CountryRepository.GetCityByIdAsync((long)oldUser.CityId,cancellationToken);
         if (city != null)
         {
             oldUser.CityName = city.Name;
@@ -589,8 +589,8 @@ public class SupportService : ISupportService
             CreationDate = DateTime.Now
         };
 
-        var insertResult = await _unitOfWork.SupportRepository.InsertSupportUserWorkingStateAsync(supportUserWorkingState);
-        var result = await _unitOfWork.Save();
+        var insertResult = await _unitOfWork.SupportRepository.InsertSupportUserWorkingStateAsync(supportUserWorkingState,cancellationToken);
+        var result = await _unitOfWork.Save(cancellationToken);
         if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
 
@@ -601,8 +601,8 @@ public class SupportService : ISupportService
             var token = Utility.GenerateToken(oldUser.Id, fullname, "Support", null);
             account.Token = token;
             account.StatusTypeId = (long)StatusTypes.Working;
-            account = await _unitOfWork.SupportRepository.UpdateSupportUserAccountAsync(account);
-            result = await _unitOfWork.Save();
+            account = await _unitOfWork.SupportRepository.UpdateSupportUserAccountAsync(account,cancellationToken);
+            result = await _unitOfWork.Save(cancellationToken);
             if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
         }
 
@@ -614,19 +614,19 @@ public class SupportService : ISupportService
 
 
 
-    public async Task<bool> SendMessageAsync(TicketMessage ticketMessage)
+    public async Task<bool> SendMessageAsync(TicketMessage ticketMessage, CancellationToken cancellationToken)
     {
 
-        var insertMessageResult = await _unitOfWork.SupportRepository.InsertTicketMessageAsync(ticketMessage);
-        var result = await _unitOfWork.Save();
+        var insertMessageResult = await _unitOfWork.SupportRepository.InsertTicketMessageAsync(ticketMessage,cancellationToken);
+        var result = await _unitOfWork.Save(cancellationToken);
         if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
-        var supportAssgin = await _unitOfWork.SupportRepository.GetTicketAssignmentByIdAsync((long)ticketMessage.TicketAssignId);
+        var supportAssgin = await _unitOfWork.SupportRepository.GetTicketAssignmentByIdAsync((long)ticketMessage.TicketAssignId,cancellationToken);
 
 
         if ((bool)ticketMessage.IsUser)
         {
-            var supportUsersHub = await _unitOfWork.SupportRepository.GetSupportUsersMessageHubByAsync(s => s.SupportUserAccountId == supportAssgin.SupportUserAccountId);
+            var supportUsersHub = await _unitOfWork.SupportRepository.GetSupportUsersMessageHubByAsync(s => s.SupportUserAccountId == supportAssgin.SupportUserAccountId,cancellationToken);
             var supportUser = supportUsersHub.FirstOrDefault();
 
             if (supportUser != null && supportUser.Id > 0)
@@ -634,18 +634,18 @@ public class SupportService : ISupportService
                 //await Utility.SendFirebaseNotification(_hostingEnvironment, "newMessage", supportMessage.Message, supportUser.ConnectionId);
 
                 var message = ticketMessage.TicketAssignId.ToString() + ":" + ticketMessage.Message;
-                await _HubContext.Clients.Client(supportUser.ConnectionId).SendAsync("newMessage", message);
+                await _HubContext.Clients.Client(supportUser.ConnectionId).SendAsync("newMessage", message,cancellationToken);
             }
 
         }
         else
         {
 
-            var usersMessageHub = await _unitOfWork.CaptainRepository.GetCaptainUsersMessageHubsByAsync(u => u.CaptainUserAccountId == supportAssgin.CaptainUserAccountId);
+            var usersMessageHub = await _unitOfWork.CaptainRepository.GetCaptainUsersMessageHubsByAsync(u => u.CaptainUserAccountId == supportAssgin.CaptainUserAccountId,cancellationToken);
             var userMessageHub = usersMessageHub.FirstOrDefault();
             if (userMessageHub != null && userMessageHub.Id > 0)
             {
-                Utility.SendFirebaseNotification(_hostingEnvironment, "newMessage", ticketMessage.Message, userMessageHub.ConnectionId);
+                await Utility.SendFirebaseNotification(_hostingEnvironment, "newMessage", ticketMessage.Message, userMessageHub.ConnectionId,cancellationToken);
 
                 //await _HubContext.Clients.Client(userMessageHub.ConnectionId).SendAsync("newMessage", supportMessage.Message);
             }
@@ -660,7 +660,7 @@ public class SupportService : ISupportService
 
 
 
-    public async Task<bool> UploadFileAsync(HttpContext httpContext)
+    public async Task<bool> UploadFileAsync(HttpContext httpContext, CancellationToken cancellationToken)
     {
         try
         {
@@ -701,7 +701,7 @@ public class SupportService : ISupportService
                     string filePath = _hostingEnvironment.ContentRootPath + "/Assets/Images/Supports/" + SupportID + "/" + file.Name + "/" + file.FileName;
                     using (var fileStream = new FileStream(filePath, FileMode.Create))
                     {
-                        await file.CopyToAsync(fileStream);
+                        await file.CopyToAsync(fileStream,cancellationToken);
                     }
                 }
             }
@@ -719,16 +719,16 @@ public class SupportService : ISupportService
 
 
 
-    public async Task<object> GetSupportUsersPagingAsync(Pagination pagination, FilterParameters parameters)
+    public async Task<object> GetSupportUsersPagingAsync(Pagination pagination, FilterParameters parameters, CancellationToken cancellationToken)
     {
         try
         {
            
 
-            var users = await _unitOfWork.SupportRepository.GetSupportUsersAsync();
+            var users = await _unitOfWork.SupportRepository.GetSupportUsersAsync(cancellationToken);
             //var query = _unitOfWork.SupportRepository.GetSupportQuerable();
             var total = users.Count;
-            var result = Utility.Pagination(users, pagination.NumberOfObjectsPerPage, pagination.Page).ToList();
+            var result = await Utility.Pagination(users, pagination.NumberOfObjectsPerPage, pagination.Page).ToListAsync(cancellationToken);
             var totalPages = (int)Math.Ceiling(total / (double)pagination.NumberOfObjectsPerPage);
 
             return new { Supports = result, Total = total, Page = pagination.Page, TotaPages = totalPages };
@@ -770,26 +770,27 @@ public class SupportService : ISupportService
     /* Get Supports Reports */
 
 
-    public async Task<object> SearchAsync(FilterParameters parameters)
+    public async Task<object> SearchAsync(FilterParameters parameters, CancellationToken cancellationToken)
     {
         try
         {
 
-            var result = await Task.Run(() =>
+            var result = await Task.Run(async () =>
             {
                 var query = _unitOfWork.SupportRepository.GetSupportUserQuerable();
                 var skip = (parameters.NumberOfObjectsPerPage * (parameters.Page - 1));
                 var take = parameters.NumberOfObjectsPerPage;
                 var totalResult = 0;
-                var supportUsersResult = Utility.GetFilter2(parameters, query, skip, take, out totalResult);
+                var supportUsersResultQueryable = Utility.GetFilter2(parameters, query, skip, take, out totalResult);
                 if (parameters.StatusSupportTypeId != null)
                 {
-                    supportUsersResult = _unitOfWork.SupportRepository.GetSupportUserByStatusTypeId(parameters.StatusSupportTypeId, supportUsersResult);
+                    supportUsersResultQueryable = _unitOfWork.SupportRepository.GetSupportUserByStatusTypeId(parameters.StatusSupportTypeId, supportUsersResultQueryable);
 
                 }
-                var supportUsers = this.mapper.Map<List<SupportUserResponse>>(supportUsersResult.ToList());
+                var supportUsersResult = await supportUsersResultQueryable.ToListAsync(cancellationToken);
+                var supportUsers = this.mapper.Map<List<SupportUserResponse>>(supportUsersResult);
                 var total = supportUsers.Count();
-                var result = Utility.Pagination(supportUsers, parameters.NumberOfObjectsPerPage, parameters.Page).ToList();
+                var result = await Utility.Pagination(supportUsers, parameters.NumberOfObjectsPerPage, parameters.Page).ToListAsync(cancellationToken);
                 var totalPages = (int)Math.Ceiling(total / (double)parameters.NumberOfObjectsPerPage);
 
                 return new { Supports = result, Total = total, TotalResult = totalResult, Page = parameters.Page, TotalPages = totalPages };
@@ -910,15 +911,15 @@ public class SupportService : ISupportService
 
 
 
-    public async Task<string> SendFirebaseNotificationAsync(FBNotify fbNotify)
+    public async Task<string> SendFirebaseNotificationAsync(FBNotify fbNotify, CancellationToken cancellationToken)
     {
         try
         {
             var result = await Task.Run(async () =>
             {
-                return FirebaseNotification.SendNotificationToTopic(FirebaseTopics.Supports, fbNotify.Title, fbNotify.Message);
+                return await FirebaseNotification.SendNotificationToTopic(FirebaseTopics.Supports, fbNotify.Title, fbNotify.Message);
 
-            });
+            },cancellationToken);
             return result;
 
         }

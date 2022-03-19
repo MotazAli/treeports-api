@@ -21,12 +21,12 @@ public class AdminService : IAdminService
 
 
 
-    public async Task<IEnumerable<AdminUser>> GetAdminsUsersAsync()
+    public async Task<IEnumerable<AdminUser>> GetAdminsUsersAsync(CancellationToken cancellationToken)
     {
 
         try
         {
-            return await _unitOfWork.AdminRepository.GetAdminsUsersAsync();
+            return await _unitOfWork.AdminRepository.GetAdminsUsersAsync(cancellationToken);
         }
         catch (Exception e)
         {
@@ -37,15 +37,15 @@ public class AdminService : IAdminService
     }
 
     // GET: api/Admin/5
-    public async Task<AdminUserResponse?> GetAdminUserByIdAsync(string id)
+    public async Task<AdminUserResponse?> GetAdminUserByIdAsync(string id, CancellationToken cancellationToken)
     {
         try
         {
 
-            var account = await _unitOfWork.AdminRepository.GetAdminUserAccountByIdAsync(id);
+            var account = await _unitOfWork.AdminRepository.GetAdminUserAccountByIdAsync(id,cancellationToken);
             if (account == null) return null;
 
-            var user = await _unitOfWork.AdminRepository.GetAdminUserByIdAsync(account?.AdminUserId);
+            var user = await _unitOfWork.AdminRepository.GetAdminUserByIdAsync(account?.AdminUserId,cancellationToken);
 
             /*if (user?.AdminUserAccounts?.Count > 0)
             { 
@@ -73,7 +73,7 @@ public class AdminService : IAdminService
 
 
     //Paging
-    public async Task<IEnumerable<AdminUser>> GetAdminsUsersPaginationAsync(FilterParameters parameters)//[FromQuery] FilterParameters parameters)
+    public async Task<IEnumerable<AdminUser>> GetAdminsUsersPaginationAsync(FilterParameters parameters, CancellationToken cancellationToken)//[FromQuery] FilterParameters parameters)
     {
         try
         {
@@ -81,7 +81,7 @@ public class AdminService : IAdminService
             var skip = (parameters.NumberOfObjectsPerPage * (parameters.Page - 1));
             var take = parameters.NumberOfObjectsPerPage;
 
-            return await _unitOfWork.AdminRepository.GetAdminsUsersPaginationAsync(skip, take);
+            return await _unitOfWork.AdminRepository.GetAdminsUsersPaginationAsync(skip, take,cancellationToken);
 
             /*var users = await _unitOfWork.AdminRepository.GetAdminsUsersAsync();
             //var query =  _unitOfWork.AdminRepository.GetAllQuerable();
@@ -100,11 +100,11 @@ public class AdminService : IAdminService
 
 
     // POST: Admin
-    public async Task<AdminUserResponse?> AddAdminUserAsync(AdminUserDto adminUserDto)
+    public async Task<AdminUserResponse?> AddAdminUserAsync(AdminUserDto adminUserDto, CancellationToken cancellationToken)
     {
         try
         {
-            var oldUser = await _unitOfWork.AdminRepository.GetAdminUserAccountByEmailAsync(adminUserDto.Email?.ToLower());
+            var oldUser = await _unitOfWork.AdminRepository.GetAdminUserAccountByEmailAsync(adminUserDto.Email?.ToLower(),cancellationToken);
             if (oldUser != null)
                 throw new InvalidException("user already registered"); // Ok("user already registered");
 
@@ -137,8 +137,8 @@ public class AdminService : IAdminService
             }
 
             //insert admin user
-            adminUser = await _unitOfWork.AdminRepository.InsertAdminUserAsync(adminUser);
-            var result = await _unitOfWork.Save();
+            adminUser = await _unitOfWork.AdminRepository.InsertAdminUserAsync(adminUser,cancellationToken);
+            var result = await _unitOfWork.Save(cancellationToken);
             if (result == 0)
                 throw new ServiceUnavailableException("Service Unavailable");
 
@@ -163,8 +163,8 @@ public class AdminService : IAdminService
             };
             //user.AdminUserAccounts.Add(account);
             //user.CurrentStatusId = (long)StatusTypes.Working;
-            account = await _unitOfWork.AdminRepository.InsertAdminUserAccountAsync(account);
-            result = await _unitOfWork.Save();
+            account = await _unitOfWork.AdminRepository.InsertAdminUserAccountAsync(account,cancellationToken);
+            result = await _unitOfWork.Save(cancellationToken);
             if (result == 0)
                 throw new ServiceUnavailableException("Service Unavailable");
 
@@ -180,11 +180,11 @@ public class AdminService : IAdminService
             if (tempImage != "")
             {
                 adminUser = convertAndSaveAdminImages(adminUser);
-                var updatedAdminImageResult = await _unitOfWork.AdminRepository.UpdateAdminUserImageAsync(adminUser);
+                var updatedAdminImageResult = await _unitOfWork.AdminRepository.UpdateAdminUserImageAsync(adminUser,cancellationToken);
             }
 
-            var insertStatusResult = await _unitOfWork.AdminRepository.InsertAdminCurrentStatusAsync(adminCurrentStatus);
-            result = await _unitOfWork.Save();
+            var insertStatusResult = await _unitOfWork.AdminRepository.InsertAdminCurrentStatusAsync(adminCurrentStatus,cancellationToken);
+            result = await _unitOfWork.Save(cancellationToken);
             if (result == 0)
                 throw new ServiceUnavailableException("Service Unavailable");
 
@@ -237,14 +237,14 @@ public class AdminService : IAdminService
 
     // PUT: Admin/AdminUserDate
     //[HttpPut("{id}")]
-    public async Task<AdminUserResponse> UpdateAdminUserAsync(string? adminUserAccountId, AdminUserDto adminUserDto)
+    public async Task<AdminUserResponse> UpdateAdminUserAsync(string? adminUserAccountId, AdminUserDto adminUserDto, CancellationToken cancellationToken)
     {
 
 
         if (adminUserDto == null) throw new NoContentException("No Content");
         if ((adminUserAccountId == null || adminUserAccountId == "")) throw new NoContentException("Admin user {id} not provided in the request path");
 
-        var oldAccount = await _unitOfWork.AdminRepository.GetAdminUserAccountByIdAsync(adminUserAccountId);
+        var oldAccount = await _unitOfWork.AdminRepository.GetAdminUserAccountByIdAsync(adminUserAccountId,cancellationToken);
         if (oldAccount == null)
             throw new InvalidException("user not registered");
 
@@ -252,7 +252,7 @@ public class AdminService : IAdminService
         oldAccount.Email = adminUserDto?.Email;
         oldAccount.AdminTypeId = adminUserDto?.AdminTypeId;
 
-        var oldUser = await _unitOfWork.AdminRepository.GetAdminUserByIdAsync(oldAccount.AdminUserId);
+        var oldUser = await _unitOfWork.AdminRepository.GetAdminUserByIdAsync(oldAccount.AdminUserId,cancellationToken);
         if (oldUser == null)
             throw new InvalidException("user not registered");
 
@@ -283,9 +283,9 @@ public class AdminService : IAdminService
             oldUser = convertAndSaveAdminImages(oldUser);
         }
 
-        var userResult = await _unitOfWork.AdminRepository.UpdateAdminUserAsync(oldUser);
-        var accountResult = await _unitOfWork.AdminRepository.UpdateAdminUserAccountAsync(oldAccount);
-        var result = await _unitOfWork.Save();
+        var userResult = await _unitOfWork.AdminRepository.UpdateAdminUserAsync(oldUser,cancellationToken);
+        var accountResult = await _unitOfWork.AdminRepository.UpdateAdminUserAccountAsync(oldAccount,cancellationToken);
+        var result = await _unitOfWork.Save(cancellationToken);
         if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
         return new AdminUserResponse(UserAccount: accountResult, User: userResult);
@@ -294,11 +294,11 @@ public class AdminService : IAdminService
 
     // DELETE: ApiWithActions/5
     //[HttpDelete("{id}")]
-    public async Task<bool> DeleteAdminUserAsync(string adminUserAccountId)
+    public async Task<bool> DeleteAdminUserAsync(string adminUserAccountId, CancellationToken cancellationToken)
     {
 
-        var userResult = await _unitOfWork.AdminRepository.DeleteAdminUserAsync(adminUserAccountId);
-        var result = await _unitOfWork.Save();
+        var userResult = await _unitOfWork.AdminRepository.DeleteAdminUserAsync(adminUserAccountId,cancellationToken);
+        var result = await _unitOfWork.Save(cancellationToken);
         if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
         return true;
@@ -310,10 +310,10 @@ public class AdminService : IAdminService
     // POST: Admin/Login
     //[AllowAnonymous]
     //[HttpPost("Login")]
-    public async Task<AdminUserResponse> Login(LoginUserDto loginUserDto)
+    public async Task<AdminUserResponse> Login(LoginUserDto loginUserDto, CancellationToken cancellationToken)
     {
 
-        var account = await _unitOfWork.AdminRepository.GetAdminUserAccountByEmailAsync(loginUserDto.Email);
+        var account = await _unitOfWork.AdminRepository.GetAdminUserAccountByEmailAsync(loginUserDto.Email,cancellationToken);
         //var account = accounts.FirstOrDefault();
         if (account == null) throw new UnauthorizedException("Unauthorized");
 
@@ -327,15 +327,15 @@ public class AdminService : IAdminService
 
         //if (!Utility.VerifyPasswordHash(user.Password, account.PasswordHash, account.PasswordSalt)) return Unauthorized();
 
-        var oldUser = await _unitOfWork.AdminRepository.GetAdminUserByIdAsync(account.AdminUserId);
+        var oldUser = await _unitOfWork.AdminRepository.GetAdminUserByIdAsync(account.AdminUserId,  cancellationToken);
         if (!account.Token.HasValue())
         {
             string fullname = $"{oldUser?.FirstName} {oldUser?.LastName}";
             var token = Utility.GenerateToken(account.Id, fullname, "Admin", null);
             account.Token = token;
             account.StatusTypeId = (long)StatusTypes.Working;
-            account = await _unitOfWork.AdminRepository.UpdateAdminUserAccountAsync(account);
-            var result = await _unitOfWork.Save();
+            account = await _unitOfWork.AdminRepository.UpdateAdminUserAccountAsync(account,cancellationToken);
+            var result = await _unitOfWork.Save(cancellationToken);
             if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
             //_ = Utility.UpdateAdminTokenToSupportServiceServer(account);
@@ -349,7 +349,7 @@ public class AdminService : IAdminService
     // POST: Admin
     //[AllowAnonymous]
     //[HttpPost("Upload")]
-    public async Task<bool> UploadFileAsync(HttpContext httpContext)
+    public async Task<bool> UploadFileAsync(HttpContext httpContext, CancellationToken cancellationToken)
     {
         try
         {
@@ -390,7 +390,7 @@ public class AdminService : IAdminService
                     string filePath = _hostingEnvironment.ContentRootPath + "/Assets/Images/Admins/" + UserID + "/" + file.Name + "/" + file.FileName;
                     using (var fileStream = new FileStream(filePath, FileMode.Create))
                     {
-                        await file.CopyToAsync(fileStream);
+                        await file.CopyToAsync(fileStream,cancellationToken);
                     }
                 }
             }
@@ -409,25 +409,20 @@ public class AdminService : IAdminService
 
     /* Search */
     // [HttpGet("Search")]
-    public async Task<IEnumerable<AdminResponse>> SearchAsync(FilterParameters parameters)
+    public async Task<IEnumerable<AdminResponse>> SearchAsync(FilterParameters parameters, CancellationToken cancellationToken)
     {
         try
         {
 
+            var query = _unitOfWork.AdminRepository.GetAllQuerable();
+            var adminResult = Utility.GetFilter(parameters, query);
+            var result = await Utility.Pagination(adminResult, parameters.NumberOfObjectsPerPage, parameters.Page).ToListAsync(cancellationToken);
+            var adminUsers = this.mapper.Map<List<AdminResponse>>(result);
+            /*var total = adminUsers.Count();
+            var totalPages = (int)Math.Ceiling(total / (double)parameters.NumberOfObjectsPerPage);*/
 
-            var taskResult = await Task.Run(() =>
-            {
-                var query = _unitOfWork.AdminRepository.GetAllQuerable();
-                var adminResult = Utility.GetFilter(parameters, query);
-                var result = Utility.Pagination(adminResult, parameters.NumberOfObjectsPerPage, parameters.Page).ToList();
-                var adminUsers = this.mapper.Map<List<AdminResponse>>(result);
-                /*var total = adminUsers.Count();
-                var totalPages = (int)Math.Ceiling(total / (double)parameters.NumberOfObjectsPerPage);*/
-
-                return adminUsers;
-            });
-
-            return taskResult;
+            return adminUsers;
+           
 
 
         }
@@ -513,7 +508,7 @@ public class AdminService : IAdminService
 
     /* SendFirebaseNotification*/
     //[HttpPost("SendFirebaseNotification")]
-    public async Task<string> SendFirebaseNotification(FBNotify fbNotify)
+    public async Task<string> SendFirebaseNotification(FBNotify fbNotify, CancellationToken cancellationToken)
     {
         try
         {
@@ -521,7 +516,7 @@ public class AdminService : IAdminService
             var result = await Task.Run(() =>
             {
                 return FirebaseNotification.SendNotificationToTopic(FirebaseTopics.Admins, fbNotify.Title, fbNotify.Message);
-            });
+            },cancellationToken);
             return result;
         }
         catch (Exception e)

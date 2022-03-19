@@ -23,13 +23,13 @@ public class AgentService : IAgentService
     }
 
     // GET: Agent/5
-    public async Task<IEnumerable<Agent>> GetWorkingAgentsAsync()
+    public async Task<IEnumerable<Agent>> GetWorkingAgentsAsync(CancellationToken cancellationToken)
     {
         try
         {
             var users = await _unitOfWork.AgentRepository.GetAgentsByAsync(a =>  //a.IsBranch == false &&
                                                                                  //a.IsDeleted == false &&
-           a.StatusTypeId == (long)StatusTypes.Working);
+           a.StatusTypeId == (long)StatusTypes.Working,cancellationToken);
 
             return users;
 
@@ -42,11 +42,11 @@ public class AgentService : IAgentService
 
 
     // GET: Agent/GetAative
-    public async Task<IEnumerable<Agent>> GetActiveAgentsAsync()
+    public async Task<IEnumerable<Agent>> GetActiveAgentsAsync(CancellationToken cancellationToken)
     {
         try
         {
-            return await _unitOfWork.AgentRepository.GetActiveAgentsAsync();
+            return await _unitOfWork.AgentRepository.GetActiveAgentsAsync(cancellationToken);
         }
         catch (Exception e)
         {
@@ -64,11 +64,11 @@ public class AgentService : IAgentService
 
 
     // GET: Agent
-    public async Task<Agent> GetAgentByIdAsync(string id)
+    public async Task<Agent> GetAgentByIdAsync(string id, CancellationToken cancellationToken)
     {
         try
         {
-            var user = await _unitOfWork.AgentRepository.GetAgentByIdAsync(id);
+            var user = await _unitOfWork.AgentRepository.GetAgentByIdAsync(id,cancellationToken);
             //if (user?.StatusTypeId != null) { user.CurrentStatusId = (long)user.StatusTypeId; }
 
             return user ?? new Agent();
@@ -82,11 +82,11 @@ public class AgentService : IAgentService
 
 
 
-    public async Task<IEnumerable<AgentType>> GetAgentTypesAsync()
+    public async Task<IEnumerable<AgentType>> GetAgentTypesAsync(CancellationToken cancellationToken)
     {
         try
         {
-            return await _unitOfWork.AgentRepository.GetAgentTypesAsync();
+            return await _unitOfWork.AgentRepository.GetAgentTypesAsync(cancellationToken);
         }
         catch (Exception e)
         {
@@ -96,7 +96,7 @@ public class AgentService : IAgentService
 
 
 
-    public async Task<IEnumerable<Agent>> GetAgentsPagingAsync(FilterParameters parameters)
+    public async Task<IEnumerable<Agent>> GetAgentsPagingAsync(FilterParameters parameters, CancellationToken cancellationToken)
     {
         try
         {
@@ -104,7 +104,7 @@ public class AgentService : IAgentService
             var skip = (parameters.NumberOfObjectsPerPage * (parameters.Page - 1));
             var take = parameters.NumberOfObjectsPerPage;
 
-            return await _unitOfWork.AgentRepository.GetAgentsPagingAsync(skip, take);
+            return await _unitOfWork.AgentRepository.GetAgentsPagingAsync(skip, take,cancellationToken);
 
 
             /* var taskResult = await Task.Run(() => {
@@ -130,11 +130,11 @@ public class AgentService : IAgentService
 
 
 
-    public async Task<IEnumerable<Agent>> GetNewRegisteredAgentsAsync()
+    public async Task<IEnumerable<Agent>> GetNewRegisteredAgentsAsync(CancellationToken cancellationToken)
     {
         try
         {
-            return await _unitOfWork.AgentRepository.GetAgentsByAsync(u => u.StatusTypeId == (long)StatusTypes.Reviewing);
+            return await _unitOfWork.AgentRepository.GetAgentsByAsync(u => u.StatusTypeId == (long)StatusTypes.Reviewing,cancellationToken);
         }
         catch (Exception e)
         {
@@ -144,14 +144,14 @@ public class AgentService : IAgentService
 
 
 
-    public async Task<IEnumerable<Agent>> GetNewRegisteredAgentsPagingAsync(FilterParameters parameters)
+    public async Task<IEnumerable<Agent>> GetNewRegisteredAgentsPagingAsync(FilterParameters parameters, CancellationToken cancellationToken)
     {
         try
         {
 
             var skip = (parameters.NumberOfObjectsPerPage * (parameters.Page - 1));
             var take = parameters.NumberOfObjectsPerPage;
-            return await _unitOfWork.AgentRepository.GetNewRegisteredAgentsPagingAsync(skip, take);
+            return await _unitOfWork.AgentRepository.GetNewRegisteredAgentsPagingAsync(skip, take,cancellationToken);
 
 
             /*var taskResult = await Task.Run(() => {
@@ -182,12 +182,12 @@ public class AgentService : IAgentService
 
 
 
-    public async Task<Agent?> AddAgentAsync(AgentDto agentDto)
+    public async Task<Agent?> AddAgentAsync(AgentDto agentDto, CancellationToken cancellationToken)
     {
         try
         {
             if (agentDto == null) throw new NoContentException("No Content");
-            var oldAgent = await _unitOfWork.AgentRepository.GetAgentByEmailAsync(agentDto.Email?.ToLower() ?? "");
+            var oldAgent = await _unitOfWork.AgentRepository.GetAgentByEmailAsync(agentDto.Email?.ToLower() ?? "",cancellationToken);
             //var oldAgent = agents.FirstOrDefault();
             if (oldAgent != null)
                 throw new InvalidException("User already registered");
@@ -235,8 +235,8 @@ public class AgentService : IAgentService
 
             //agent.StatusTypeId = (long)StatusTypes.Reviewing;
             //agent.Email = agent.Email.ToLower();
-            var insertResult = await _unitOfWork.AgentRepository.InsertAgentAsync(agent);
-            var result = await _unitOfWork.Save();
+            var insertResult = await _unitOfWork.AgentRepository.InsertAgentAsync(agent,cancellationToken);
+            var result = await _unitOfWork.Save(cancellationToken);
             if (result == 0)
                 throw new ServiceUnavailableException("Service Unavailable");
 
@@ -260,13 +260,13 @@ public class AgentService : IAgentService
             if (tempImage != "")
             {
                 insertResult = convertAndSaveAgentImages(insertResult);
-                var updateAgentImageResult = await _unitOfWork.AgentRepository.UpdateAgentImageAsync(insertResult);
+                var updateAgentImageResult = await _unitOfWork.AgentRepository.UpdateAgentImageAsync(insertResult,cancellationToken);
             }
 
-            var newAgentStatusInsertedResult = await _unitOfWork.AgentRepository.InsertAgentCurrentStatusAsync(newAgentCurrentStatus);
-            var incompleteAgentStatusInsertedResult = await _unitOfWork.AgentRepository.InsertAgentCurrentStatusAsync(incompleteAgentCurrentStatus);
+            var newAgentStatusInsertedResult = await _unitOfWork.AgentRepository.InsertAgentCurrentStatusAsync(newAgentCurrentStatus,cancellationToken);
+            var incompleteAgentStatusInsertedResult = await _unitOfWork.AgentRepository.InsertAgentCurrentStatusAsync(incompleteAgentCurrentStatus,cancellationToken);
 
-            result = await _unitOfWork.Save();
+            result = await _unitOfWork.Save(cancellationToken);
             if (result == 0)
                 throw new ServiceUnavailableException("Service Unavailable");
 
@@ -321,17 +321,17 @@ public class AgentService : IAgentService
 
 
 
-    public async Task<string> AcceptRegisterAgentAsync(string id)
+    public async Task<string> AcceptRegisterAgentAsync(string id,CancellationToken cancellationToken)
     {
 
 
-        var agent = await _unitOfWork.AgentRepository.GetAgentByIdAsync(id);
+        var agent = await _unitOfWork.AgentRepository.GetAgentByIdAsync(id,cancellationToken);
         if (agent == null) throw new InvalidException($"No user with Id {id}");
 
-        var country = await _unitOfWork.CountryRepository.GetCountryByIdAsync(agent?.CountryId ?? 0);
+        var country = await _unitOfWork.CountryRepository.GetCountryByIdAsync(agent?.CountryId ?? 0, cancellationToken);
 
         agent.StatusTypeId = (long)StatusTypes.Working;
-        AgentCurrentStatus agentCurrentStatus = new AgentCurrentStatus()
+        AgentCurrentStatus agentCurrentStatus = new ()
         {
             AgentId = agent.Id,
             StatusTypeId = (long)StatusTypes.Working,
@@ -349,14 +349,14 @@ public class AgentService : IAgentService
         var token = Utility.GenerateToken(agent.Id, agent?.Fullname ?? "", "Agent", null);
         agent.Token = token;
 
-        var updateResult = await _unitOfWork.AgentRepository.UpdateAgentAsync(agent);
-        var insertStatus = await _unitOfWork.AgentRepository.InsertAgentCurrentStatusAsync(agentCurrentStatus);
-        var result = await _unitOfWork.Save();
+        var updateResult = await _unitOfWork.AgentRepository.UpdateAgentAsync(agent,cancellationToken);
+        var insertStatus = await _unitOfWork.AgentRepository.InsertAgentCurrentStatusAsync(agentCurrentStatus,cancellationToken);
+        var result = await _unitOfWork.Save( cancellationToken);
         if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
         string smsMessage = "Welcome to Sender, your profile has accepted, please check your email to access your account";
         string phone = country?.Iso + agent.Mobile;
-        Utility.SendSMS(smsMessage, phone);
+        _ = Utility.SendSMSAsync(smsMessage, phone,cancellationToken);
         //EmailMessage emailMessage = new EmailMessage();
         //emailMessage.Sender = new MailboxAddress("Self", _mailService.getNotificationMetadata().Sender);
         //emailMessage.Reciever = new MailboxAddress("Self", agent.Email);
@@ -381,9 +381,9 @@ public class AgentService : IAgentService
                + "<p>Now you can manage your resources by Sender API or through Sender website for agents </p>"
                + "<p><a target='_blank' href='http://agent.sender.world'>visit Sender for agents</a></p>";
 
-        await Utility.sendGridMail(agent.Email, agent.Fullname, "Sender Account Info", Content);
+        await Utility.sendGridMail(agent.Email, agent.Fullname, "Sender Account Info", Content,cancellationToken:cancellationToken);
         var message = agent.Id.ToString();
-        await _HubContext.Clients.All.SendAsync("WorkingAgentNotify", message);
+        await _HubContext.Clients.All.SendAsync("WorkingAgentNotify", message,cancellationToken);
         return password;
 
 
@@ -448,7 +448,7 @@ public class AgentService : IAgentService
 
 
 
-    public async Task<Agent?> UpdateAgentAsync(string? id, AgentDto agentDto)
+    public async Task<Agent?> UpdateAgentAsync(string? id, AgentDto agentDto, CancellationToken cancellationToken)
     {
 
 
@@ -483,8 +483,8 @@ public class AgentService : IAgentService
             agent = convertAndSaveAgentImages(agent);
         }
 
-        var updateResult = await _unitOfWork.AgentRepository.UpdateAgentAsync(agent);
-        var result = await _unitOfWork.Save();
+        var updateResult = await _unitOfWork.AgentRepository.UpdateAgentAsync(agent,cancellationToken);
+        var result = await _unitOfWork.Save(cancellationToken);
         if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
         return updateResult;
@@ -492,13 +492,13 @@ public class AgentService : IAgentService
     }
 
 
-    public async Task<bool> DeleteAgentAsync(string id)
+    public async Task<bool> DeleteAgentAsync(string id, CancellationToken cancellationToken)
     {
 
-        var deleteResult = await _unitOfWork.AgentRepository.DeleteAgentAsync(id);
+        var deleteResult = await _unitOfWork.AgentRepository.DeleteAgentAsync(id, cancellationToken);
         if (deleteResult == null)  return false;
 
-        var result = await _unitOfWork.Save();
+        var result = await _unitOfWork.Save(cancellationToken);
         if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
         return true;
@@ -507,10 +507,10 @@ public class AgentService : IAgentService
 
 
 
-    public async Task<Agent?> LoginAsync(LoginUserDto loginUser)
+    public async Task<Agent?> LoginAsync(LoginUserDto loginUser, CancellationToken cancellationToken)
     {
 
-        var account = await _unitOfWork.AgentRepository.GetAgentByEmailAsync(loginUser.Email.ToLower());
+        var account = await _unitOfWork.AgentRepository.GetAgentByEmailAsync(loginUser.Email.ToLower(),cancellationToken);
         //var account = accounts.FirstOrDefault();
         if (account == null) throw new UnauthorizedException("Unauthorized");
 
@@ -530,8 +530,8 @@ public class AgentService : IAgentService
         {
             var token = Utility.GenerateToken(account.Id, account?.Fullname ?? "", "Agent", null);
             account.Token = token;
-            account = await _unitOfWork.AgentRepository.UpdateAgentTokenAsync(account);
-            var result = await _unitOfWork.Save();
+            account = await _unitOfWork.AgentRepository.UpdateAgentTokenAsync(account,cancellationToken);
+            var result = await _unitOfWork.Save(cancellationToken);
             if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
         }
 
@@ -543,11 +543,11 @@ public class AgentService : IAgentService
     }
 
 
-    public async Task<Agent?> UpdateAgentLoactionAsync(long id, Agent agent)
+    public async Task<Agent?> UpdateAgentLoactionAsync(long id, Agent agent, CancellationToken cancellationToken)
     {
 
-        var updated = await _unitOfWork.AgentRepository.UpdateAgentLocationAsync(agent);
-        var result = await _unitOfWork.Save();
+        var updated = await _unitOfWork.AgentRepository.UpdateAgentLocationAsync(agent,cancellationToken);
+        var result = await _unitOfWork.Save(cancellationToken);
         if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
         return updated;
@@ -556,7 +556,7 @@ public class AgentService : IAgentService
 
 
 
-    public async Task<bool> UploadFileAsync(HttpContext httpContext)
+    public async Task<bool> UploadFileAsync(HttpContext httpContext, CancellationToken cancellationToken)
     {
         try
         {
@@ -597,7 +597,7 @@ public class AgentService : IAgentService
                     string filePath = _hostingEnvironment.ContentRootPath + "/Assets/Images/Agents/" + UserID + "/" + file.Name + "/" + file.FileName;
                     using (var fileStream = new FileStream(filePath, FileMode.Create))
                     {
-                        await file.CopyToAsync(fileStream);
+                        await file.CopyToAsync(fileStream,cancellationToken);
                     }
                 }
             }
@@ -614,7 +614,7 @@ public class AgentService : IAgentService
     }
 
 
-    public async Task<object> ReportAsync(HttpContext httpContext, FilterParameters reportParameters)
+    public async Task<object> ReportAsync(HttpContext httpContext, FilterParameters reportParameters, CancellationToken cancellationToken)
     {
 
         // 1-Check Role and Id
@@ -635,27 +635,21 @@ public class AgentService : IAgentService
 
     }
 
-    public async Task<object> SearchAsync(FilterParameters parameters)
+    public async Task<object> SearchAsync(FilterParameters parameters, CancellationToken cancellationToken)
     {
         try
         {
 
-            var taskResult = await Task.Run(() =>
-            {
+            var query = _unitOfWork.AgentRepository.GetByQuerable().OrderByDescending(a => a.CreationDate);
+            var skip = (parameters.NumberOfObjectsPerPage * (parameters.Page - 1));
+            var take = parameters.NumberOfObjectsPerPage;
+            var totalResult = 0;
+            var agentsResult = await Utility.GetFilter2<Agent>(parameters, query, skip, take, out totalResult).ToListAsync(cancellationToken);
+            var agents = this.mapper.Map<List<AgentResponse>>(agentsResult);
+            var total = query.Count();
+            var totalPages = (int)Math.Ceiling(totalResult / (double)parameters.NumberOfObjectsPerPage);
+            return new { Agents = agents, Total = total, TotalResult = totalResult, Page = parameters.Page, TotalPages = totalPages };
 
-                var query = _unitOfWork.AgentRepository.GetByQuerable().OrderByDescending(a => a.CreationDate);
-                var skip = (parameters.NumberOfObjectsPerPage * (parameters.Page - 1));
-                var take = parameters.NumberOfObjectsPerPage;
-                var totalResult = 0;
-                var agentsResult = Utility.GetFilter2<Agent>(parameters, query, skip, take, out totalResult);
-                var agents = this.mapper.Map<List<AgentResponse>>(agentsResult.ToList());
-                var total = query.Count();
-                var totalPages = (int)Math.Ceiling(totalResult / (double)parameters.NumberOfObjectsPerPage);
-                return new { Agents = agents, Total = total, TotalResult = totalResult, Page = parameters.Page, TotalPages = totalPages };
-
-            });
-
-            return taskResult;
 
         }
         catch (Exception e)
@@ -664,7 +658,7 @@ public class AgentService : IAgentService
         }
     }
 
-    public async Task<object> CreateAgentCouponAsync(AgentCouponDto agentCouponDto)
+    public async Task<object> CreateAgentCouponAsync(AgentCouponDto agentCouponDto, CancellationToken cancellationToken)
     {
 
         var couponCode = Utility.GenerateCoupon(agentCouponDto.CouponLength);
@@ -699,7 +693,7 @@ public class AgentService : IAgentService
         }
 
         List<CouponAssign> couponAssigns = new();
-        var addedCoupon = await _unitOfWork.AgentRepository.InsertCouponAsync(coupon);
+        var addedCoupon = await _unitOfWork.AgentRepository.InsertCouponAsync(coupon,cancellationToken);
         if (agentCouponDto.ListOfAgentIds != null && agentCouponDto.ListOfAgentIds.Length > 0)
         {
 
@@ -729,7 +723,7 @@ public class AgentService : IAgentService
         }
 
 
-        var result = await _unitOfWork.Save();
+        var result = await _unitOfWork.Save(cancellationToken);
         if (result == 0) throw new ServiceUnavailableException("Service Unavailable");
 
         if (agentCouponDto.ListOfAgentIds != null && agentCouponDto.ListOfAgentIds.Length > 0)
@@ -757,7 +751,7 @@ public class AgentService : IAgentService
             foreach (var agentId in agentCouponDto.ListOfAgentIds)
             {
 
-                var isRegistered = await _unitOfWork.HookRepository.GetWebhookByTypeIdAndAgentIdAsync(agentId, (long)WebHookTypes.Coupon);
+                var isRegistered = await _unitOfWork.HookRepository.GetWebhookByTypeIdAndAgentIdAsync(agentId, (long)WebHookTypes.Coupon,cancellationToken);
                 if (isRegistered != null)
                 {
                     Utility.ExecuteWebHook(isRegistered.Url, Utility.ConvertToJson(notifyCoupon));
@@ -787,12 +781,12 @@ public class AgentService : IAgentService
 
 
 
-    public async Task<object> AssignExistingCouponAsync(AssignCouponDto assignCouponDto)
+    public async Task<object> AssignExistingCouponAsync(AssignCouponDto assignCouponDto, CancellationToken cancellationToken)
     {
 
         if (assignCouponDto.CouponId == 0) throw new InvalidException("Please Enter Coupon Id");
 
-        var selectedCoupon = await _unitOfWork.AgentRepository.GetCouponAsync(assignCouponDto.CouponId);
+        var selectedCoupon = await _unitOfWork.AgentRepository.GetCouponAsync(assignCouponDto.CouponId,cancellationToken);
         List<CouponAssign> couponAssigns = new();
         if (assignCouponDto.ListOfAgentIds != null && assignCouponDto.ListOfAgentIds.Length > 0)
         {
@@ -818,7 +812,7 @@ public class AgentService : IAgentService
                 CountryId = assignCouponDto.CountryId
             });
         }
-        var result = await _unitOfWork.Save();
+        var result = await _unitOfWork.Save(cancellationToken);
         if (result == 0) throw new Exception("Service Unavailable");
         if (assignCouponDto.ListOfAgentIds != null && assignCouponDto.ListOfAgentIds.Length > 0)
         {
@@ -846,7 +840,7 @@ public class AgentService : IAgentService
             foreach (var agentId in assignCouponDto.ListOfAgentIds)
             {
 
-                var isRegistered = await _unitOfWork.HookRepository.GetWebhookByTypeIdAndAgentIdAsync(agentId, (long)WebHookTypes.Coupon);
+                var isRegistered = await _unitOfWork.HookRepository.GetWebhookByTypeIdAndAgentIdAsync(agentId, (long)WebHookTypes.Coupon,cancellationToken);
                 if (isRegistered != null)
                 {
                     Utility.ExecuteWebHook(isRegistered.Url, Utility.ConvertToJson(notifyCoupon));
@@ -872,11 +866,11 @@ public class AgentService : IAgentService
 
 
 
-    public async Task<object> ChartAsync()
+    public async Task<object> ChartAsync(CancellationToken cancellationToken)
     {
         try
         {
-            return await _unitOfWork.AgentRepository.AgentReportCountAsync();
+            return await _unitOfWork.AgentRepository.AgentReportCountAsync(cancellationToken);
         }
         catch (Exception e)
         {
@@ -886,16 +880,16 @@ public class AgentService : IAgentService
     }
 
 
-    public async Task<Coupon> CheckCouponAsync(string? agentId, string couponCode, long? countryId)
+    public async Task<Coupon> CheckCouponAsync(string? agentId, string couponCode, long? countryId, CancellationToken cancellationToken)
     {
 
         if (agentId == null || couponCode == null || countryId == null) throw new Exception("NoContent");
 
 
-        var coupon = await _unitOfWork.AgentRepository.GetCouponByCodeAsync(couponCode);
+        var coupon = await _unitOfWork.AgentRepository.GetCouponByCodeAsync(couponCode,cancellationToken);
         if (coupon == null) throw new InvalidException("Invalid Coupon");
 
-        var isValid = await _unitOfWork.AgentRepository.IsValidCouponAsync(couponCode, agentId, countryId);
+        var isValid = await _unitOfWork.AgentRepository.IsValidCouponAsync(couponCode, agentId, countryId,cancellationToken);
         if (!isValid) throw new InvalidException("Invalid Coupon");
 
         return coupon;
@@ -905,11 +899,11 @@ public class AgentService : IAgentService
 
 
 
-    public async Task<object> GetAgentsDeliveryPricesAsync()
+    public async Task<object> GetAgentsDeliveryPricesAsync(CancellationToken cancellationToken)
     {
         try
         {
-            return await _unitOfWork.AgentRepository.GetAgentsDeliveryPricesAsync();
+            return await _unitOfWork.AgentRepository.GetAgentsDeliveryPricesAsync(cancellationToken);
         }
         catch (Exception e)
         {
@@ -919,11 +913,11 @@ public class AgentService : IAgentService
     }
 
 
-    public async Task<object> GetAgentDeliveryPriceByIdAsync(long id)
+    public async Task<object> GetAgentDeliveryPriceByIdAsync(long id, CancellationToken cancellationToken)
     {
         try
         {
-            return await _unitOfWork.AgentRepository.GetAgentDeliveryPriceByIdAsync(id);
+            return await _unitOfWork.AgentRepository.GetAgentDeliveryPriceByIdAsync(id,cancellationToken);
         }
         catch (Exception e)
         {
@@ -933,11 +927,11 @@ public class AgentService : IAgentService
     }
 
 
-    public async Task<IEnumerable<AgentDeliveryPrice>> GetAgentDeliveryPricesByAgentIdAsync(string id)
+    public async Task<IEnumerable<AgentDeliveryPrice>> GetAgentDeliveryPricesByAgentIdAsync(string id, CancellationToken cancellationToken)
     {
         try
         {
-            return await _unitOfWork.AgentRepository.GetAgentDeliveryPriceByAsync(a => a.AgentId == id);
+            return await _unitOfWork.AgentRepository.GetAgentDeliveryPriceByAsync(a => a.AgentId == id,cancellationToken);
         }
         catch (Exception e)
         {
@@ -948,14 +942,14 @@ public class AgentService : IAgentService
 
 
 
-    public async Task<AgentDeliveryPrice> AddAgentDeliveryPriceAsync(AgentDeliveryPrice agentDeliveryPrice)
+    public async Task<AgentDeliveryPrice> AddAgentDeliveryPriceAsync(AgentDeliveryPrice agentDeliveryPrice, CancellationToken cancellationToken)
     {
 
         var insertAgentDeliveryPrice =
-            await _unitOfWork.AgentRepository.InsertAgentDeliveryPriceAsync(agentDeliveryPrice);
+            await _unitOfWork.AgentRepository.InsertAgentDeliveryPriceAsync(agentDeliveryPrice,cancellationToken);
 
 
-        var result = await _unitOfWork.Save();
+        var result = await _unitOfWork.Save(cancellationToken);
         if (result <= 0) throw new ServiceUnavailableException("Service Unavailable");
 
         return insertAgentDeliveryPrice;
@@ -965,13 +959,13 @@ public class AgentService : IAgentService
 
 
 
-    public async Task<AgentDeliveryPrice?> DeleteDeliveryPriceAsync(long id)
+    public async Task<AgentDeliveryPrice?> DeleteDeliveryPriceAsync(long id, CancellationToken cancellationToken)
     {
 
         var deletedAgentDeliveryPrice =
-            await _unitOfWork.AgentRepository.DeleteAgentDeliveryPriceAsync(id);
+            await _unitOfWork.AgentRepository.DeleteAgentDeliveryPriceAsync(id,cancellationToken);
 
-        var result = await _unitOfWork.Save();
+        var result = await _unitOfWork.Save(cancellationToken);
         if (result <= 0) throw new ServiceUnavailableException("Server not available");
         return deletedAgentDeliveryPrice;
 
@@ -981,14 +975,14 @@ public class AgentService : IAgentService
 
 
 
-    public async Task<string> SendFirebaseNotificationAsync(FBNotify fbNotify)
+    public async Task<string> SendFirebaseNotificationAsync(FBNotify fbNotify, CancellationToken cancellationToken)
     {
         try
         {
             string result = await Task.Run(() =>
             {
                 return FirebaseNotification.SendNotificationToTopic(FirebaseTopics.Agents, fbNotify.Title, fbNotify.Message);
-            });
+            },cancellationToken);
 
             return result;
         }

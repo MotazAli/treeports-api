@@ -14,5 +14,8 @@ namespace TreePorts.Models
         public long? ModifiedByType { get; set; }
         public DateTime? CreationDate { get; set; }
         public DateTime? ModificationDate { get; set; }
+
+        public virtual CaptainUserPayment? CaptainUserPayment { get; set; }
+        public virtual PaymentStatusType? PaymentStatusType { get; set; }
     }
 }

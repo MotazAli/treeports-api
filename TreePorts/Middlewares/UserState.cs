@@ -1,9 +1,4 @@
-﻿using System;
-using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
+﻿using System.IdentityModel.Tokens.Jwt;
 using Microsoft.Extensions.Caching.Memory;
 using TreePorts.DTO;
 
@@ -135,25 +130,25 @@ namespace TreePorts.Utilities
             if (userType.ToString() == "Driver")
             {
 
-                var users = await unitOfWork.CaptainRepository.GetCaptainUsersAccountsByAsync(u => u.Token == token);
+                var users = await unitOfWork.CaptainRepository.GetCaptainUsersAccountsByAsync(u => u.Token == token,default);
                 var user = users.FirstOrDefault();
                 if (user != null && isValidStatus(user.StatusTypeId)) return true;
             }
             else if (userType.ToString() == "Agent")
             {
-                var users = await unitOfWork.AgentRepository.GetAgentsByAsync(u => u.Token == token);
+                var users = await unitOfWork.AgentRepository.GetAgentsByAsync(u => u.Token == token,default);
                 var user = users.FirstOrDefault();
                 if (user != null && isValidStatus(user.StatusTypeId)) return true;
             }
             else if (userType.ToString() == "Admin")
             {
-                var users = await unitOfWork.AdminRepository.GetAdminUserAccountByAsync(u => u.Token == token);
+                var users = await unitOfWork.AdminRepository.GetAdminUserAccountByAsync(u => u.Token == token,default);
                 var user = users.FirstOrDefault();
                 if (user != null && isValidStatus(user.StatusTypeId)) return true;
             }
             else if (userType.ToString() == "Support")
             {
-                var users = await unitOfWork.SupportRepository.GetSupportUsersAccountsByAsync(u => u.Token == token);
+                var users = await unitOfWork.SupportRepository.GetSupportUsersAccountsByAsync(u => u.Token == token,default);
                 var user = users.FirstOrDefault();
                 if (user != null && isValidStatus(user.StatusTypeId)) return true;
             }

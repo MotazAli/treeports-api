@@ -1,12 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using TreePorts.DTO;
-using TreePorts.Interfaces.Repositories;
-using TreePorts.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Threading.Tasks;
+﻿using System.Linq.Expressions;
 using TreePorts.Utilities;
 
 namespace TreePorts.Repositories
@@ -19,44 +11,44 @@ namespace TreePorts.Repositories
         {
             _context = context;
         }
-        public async Task<AdminUser?> DeleteAdminUserAsync(string? id)
+        public async Task<AdminUser?> DeleteAdminUserAsync(string? id, CancellationToken cancellationToken )
         {
-            var userAccount = await _context.AdminUserAccounts.Where(u => u.AdminUserId == id).FirstOrDefaultAsync();
+            var userAccount = await _context.AdminUserAccounts.FirstOrDefaultAsync(u => u.AdminUserId == id, cancellationToken);
             if (userAccount == null) return null;
 
             userAccount.IsDeleted = true;
             _context.Entry<AdminUserAccount>(userAccount).State = EntityState.Modified;
-            var user = await _context.AdminUsers.FirstOrDefaultAsync(u => u.Id == id);
+            var user = await _context.AdminUsers.FirstOrDefaultAsync(u => u.Id == id,cancellationToken);
             return user;
         }
 
-        public async Task<AdminCurrentStatus?> DeleteAdminCurrentStatusAsync(string? id)
+        public async Task<AdminCurrentStatus?> DeleteAdminCurrentStatusAsync(string? id, CancellationToken cancellationToken)
         {
-            var oldStatus = await _context.AdminCurrentStatuses.FirstOrDefaultAsync(u => u.AdminUserAccountId == id);
+            var oldStatus = await _context.AdminCurrentStatuses.FirstOrDefaultAsync(u => u.AdminUserAccountId == id,cancellationToken);
             if (oldStatus == null) return null;
 
             _context.AdminCurrentStatuses.Remove(oldStatus);
             return oldStatus;
         }
 
-        public async Task<List<AdminUserMessageHub>> GetAllAdminUsersMessageHubAsync()
+        public async Task<List<AdminUserMessageHub>> GetAllAdminUsersMessageHubAsync(CancellationToken cancellationToken)
         {
-            return await _context.AdminUserMessageHubs.ToListAsync();
+            return await _context.AdminUserMessageHubs.ToListAsync(cancellationToken);
         }
 
-        public async Task<AdminUserMessageHub?> GetAdminUserMessageHubByIdAsync(long id)
+        public async Task<AdminUserMessageHub?> GetAdminUserMessageHubByIdAsync(long id, CancellationToken cancellationToken)
         {
-            return await _context.AdminUserMessageHubs.FirstOrDefaultAsync(h => h.Id == id);
+            return await _context.AdminUserMessageHubs.FirstOrDefaultAsync(h => h.Id == id, cancellationToken);
         }
 
-        public async Task<List<AdminUserMessageHub>> GetAdminUserMessageHubByAsync(Expression<Func<AdminUserMessageHub, bool>> predicate)
+        public async Task<List<AdminUserMessageHub>> GetAdminUserMessageHubByAsync(Expression<Func<AdminUserMessageHub, bool>> predicate, CancellationToken cancellationToken)
         {
-            return await _context.AdminUserMessageHubs.Where(predicate).ToListAsync();
+            return await _context.AdminUserMessageHubs.Where(predicate).ToListAsync(cancellationToken);
         }
 
-        public async Task<AdminUserMessageHub> InsertAdminUserMessageHubAsync(AdminUserMessageHub adminUserMessageHub)
+        public async Task<AdminUserMessageHub> InsertAdminUserMessageHubAsync(AdminUserMessageHub adminUserMessageHub, CancellationToken cancellationToken)
         {
-            var oldUserHub = await _context.AdminUserMessageHubs.FirstOrDefaultAsync(h => h.AdminUserAccountId == adminUserMessageHub.AdminUserAccountId);
+            var oldUserHub = await _context.AdminUserMessageHubs.FirstOrDefaultAsync(h => h.AdminUserAccountId == adminUserMessageHub.AdminUserAccountId, cancellationToken);
             if (oldUserHub != null && oldUserHub.Id > 0)
             {
                 oldUserHub.ConnectionId = adminUserMessageHub.ConnectionId;
@@ -68,14 +60,14 @@ namespace TreePorts.Repositories
             {
                 //SupportUserMessageHub newHub = new UserMessageHub() { UserId = ID, ConnectionId = ConnectionID, CreationDate = DateTime.Now, CreatedBy = 1 };
                 adminUserMessageHub.CreationDate = DateTime.Now;
-                var insertResult = await _context.AdminUserMessageHubs.AddAsync(adminUserMessageHub);
+                var insertResult = await _context.AdminUserMessageHubs.AddAsync(adminUserMessageHub,cancellationToken);
                 return insertResult.Entity;
             }
         }
 
-        public async Task<AdminUserMessageHub?> UpdateAdminUserMessageHubAsync(AdminUserMessageHub adminUserMessageHub)
+        public async Task<AdminUserMessageHub?> UpdateAdminUserMessageHubAsync(AdminUserMessageHub adminUserMessageHub, CancellationToken cancellationToken)
         {
-            var oldUserHub = await _context.AdminUserMessageHubs.FirstOrDefaultAsync(h => h.AdminUserAccountId == adminUserMessageHub.AdminUserAccountId);
+            var oldUserHub = await _context.AdminUserMessageHubs.FirstOrDefaultAsync(h => h.AdminUserAccountId == adminUserMessageHub.AdminUserAccountId,cancellationToken);
             if (oldUserHub == null ) return null;
 
             oldUserHub.AdminUserAccountId = adminUserMessageHub.AdminUserAccountId;
@@ -85,69 +77,69 @@ namespace TreePorts.Repositories
             return oldUserHub;
         }
 
-        public async Task<List<AdminCurrentStatus>> GetAdminCurrentStatusByAsync(Expression<Func<AdminCurrentStatus, bool>> predicate)
+        public async Task<List<AdminCurrentStatus>> GetAdminCurrentStatusByAsync(Expression<Func<AdminCurrentStatus, bool>> predicate, CancellationToken cancellationToken)
         {
-            return await _context.AdminCurrentStatuses.Where(predicate).ToListAsync();
+            return await _context.AdminCurrentStatuses.Where(predicate).ToListAsync(cancellationToken);
         }
 
-        public async Task<AdminCurrentStatus?> GetAdminCurrentStatusByIdAsync(long id)
+        public async Task<AdminCurrentStatus?> GetAdminCurrentStatusByIdAsync(long id, CancellationToken cancellationToken)
         {
-            return await _context.AdminCurrentStatuses.FirstOrDefaultAsync(a => a.Id == id);
+            return await _context.AdminCurrentStatuses.FirstOrDefaultAsync(a => a.Id == id,cancellationToken);
         }
 
-        public async Task<List<AdminCurrentStatus>> GetAdminsCurrentStatusAllAsync()
+        public async Task<List<AdminCurrentStatus>> GetAdminsCurrentStatusAllAsync(CancellationToken cancellationToken)
         {
-            return await _context.AdminCurrentStatuses.ToListAsync();
+            return await _context.AdminCurrentStatuses.ToListAsync(cancellationToken);
         }
 
-        public async Task<List<AdminUser>> GetAdminsUsersAsync()
+        public async Task<List<AdminUser>> GetAdminsUsersAsync(CancellationToken cancellationToken)
         {
-            return await _context.AdminUsers.ToListAsync();
+            return await _context.AdminUsers.ToListAsync(cancellationToken);
         }
 
-        public async Task<List<AdminUser>> GetAdminUserByAsync(Expression<Func<AdminUser, bool>> predicate)
+        public async Task<List<AdminUser>> GetAdminUserByAsync(Expression<Func<AdminUser, bool>> predicate, CancellationToken cancellationToken)
         {
-            return await _context.AdminUsers.Where(predicate).ToListAsync();
+            return await _context.AdminUsers.Where(predicate).ToListAsync(cancellationToken);
         }
 
-        public async Task<List<AdminUserAccount>> GetAdminUserAccountByAsync(Expression<Func<AdminUserAccount, bool>> predicate)
+        public async Task<List<AdminUserAccount>> GetAdminUserAccountByAsync(Expression<Func<AdminUserAccount, bool>> predicate, CancellationToken cancellationToken)
         {
-            return await _context.AdminUserAccounts.Where(predicate).ToListAsync();
+            return await _context.AdminUserAccounts.Where(predicate).ToListAsync(cancellationToken);
         }
 
-        public async Task<AdminUser?> GetAdminUserByIdAsync(string? id)
+        public async Task<AdminUser?> GetAdminUserByIdAsync(string? id, CancellationToken cancellationToken)
         {
-            return await _context.AdminUsers.FirstOrDefaultAsync(u => u.Id == id);
+            return await _context.AdminUsers.FirstOrDefaultAsync(u => u.Id == id,cancellationToken);
         }
 
-        public async Task<AdminUserAccount?> GetAdminUserAccountByIdAsync(string? id) {
-            return await _context.AdminUserAccounts.FirstOrDefaultAsync(u => u.Id == id);
+        public async Task<AdminUserAccount?> GetAdminUserAccountByIdAsync(string? id, CancellationToken cancellationToken) {
+            return await _context.AdminUserAccounts.FirstOrDefaultAsync(u => u.Id == id,cancellationToken);
         }
 
-        public async Task<AdminUserAccount?> GetAdminUserAccountByAdminUserIdAsync(string? id)
+        public async Task<AdminUserAccount?> GetAdminUserAccountByAdminUserIdAsync(string? id, CancellationToken cancellationToken)
         {
-            return await _context.AdminUserAccounts.FirstOrDefaultAsync(u => u.Id == id);
+            return await _context.AdminUserAccounts.FirstOrDefaultAsync(u => u.Id == id,cancellationToken);
         }
 
-        public async Task<AdminUser> InsertAdminUserAsync(AdminUser user)
+        public async Task<AdminUser> InsertAdminUserAsync(AdminUser user, CancellationToken cancellationToken)
         {
             user.Id = Guid.NewGuid().ToString();
             user.CreationDate = DateTime.Now;
-            var result = await _context.AdminUsers.AddAsync(user);
+            var result = await _context.AdminUsers.AddAsync(user,cancellationToken);
             return result.Entity;
         }
 
-        public async Task<AdminUserAccount> InsertAdminUserAccountAsync(AdminUserAccount userAccount)
+        public async Task<AdminUserAccount> InsertAdminUserAccountAsync(AdminUserAccount userAccount, CancellationToken cancellationToken)
         {
             userAccount.Id = Guid.NewGuid().ToString();
             userAccount.CreationDate = DateTime.Now;
-            var result = await _context.AdminUserAccounts.AddAsync(userAccount);
+            var result = await _context.AdminUserAccounts.AddAsync(userAccount,cancellationToken);
             return result.Entity;
         }
 
-        public async Task<AdminCurrentStatus> InsertAdminCurrentStatusAsync(AdminCurrentStatus adminCurrentStatus)
+        public async Task<AdminCurrentStatus> InsertAdminCurrentStatusAsync(AdminCurrentStatus adminCurrentStatus, CancellationToken cancellationToken)
         {
-            var oldStatus = await _context.AdminCurrentStatuses.FirstOrDefaultAsync(a => a.AdminUserAccountId == adminCurrentStatus.AdminUserAccountId && a.IsCurrent == true);
+            var oldStatus = await _context.AdminCurrentStatuses.FirstOrDefaultAsync(a => a.AdminUserAccountId == adminCurrentStatus.AdminUserAccountId && a.IsCurrent == true, cancellationToken);
             if (oldStatus != null)
             {
                 oldStatus.IsCurrent = false;
@@ -158,13 +150,13 @@ namespace TreePorts.Repositories
             }
             adminCurrentStatus.IsCurrent = true;
             adminCurrentStatus.CreationDate = DateTime.Now;
-            var insertResult = await _context.AdminCurrentStatuses.AddAsync(adminCurrentStatus);
+            var insertResult = await _context.AdminCurrentStatuses.AddAsync(adminCurrentStatus,cancellationToken);
             return insertResult.Entity;
         }
 
-        public async Task<AdminUser?> UpdateAdminUserAsync(AdminUser user)
+        public async Task<AdminUser?> UpdateAdminUserAsync(AdminUser user, CancellationToken cancellationToken)
         {
-            var oldUser = await _context.AdminUsers.FirstOrDefaultAsync(u => u.Id == user.Id);
+            var oldUser = await _context.AdminUsers.FirstOrDefaultAsync(u => u.Id == user.Id,cancellationToken);
             if (oldUser == null) return null;
 
 
@@ -195,9 +187,9 @@ namespace TreePorts.Repositories
             return oldUser;
         }
 
-        public async Task<AdminUser?> UpdateAdminUserImageAsync(AdminUser user)
+        public async Task<AdminUser?> UpdateAdminUserImageAsync(AdminUser user, CancellationToken cancellationToken)
         {
-            var oldUser = await _context.AdminUsers.FirstOrDefaultAsync(u => u.Id == user.Id);
+            var oldUser = await _context.AdminUsers.FirstOrDefaultAsync(u => u.Id == user.Id,cancellationToken);
             if (oldUser == null) return null;
 
             oldUser.PersonalImage = user.PersonalImage ?? oldUser.PersonalImage;
@@ -209,9 +201,9 @@ namespace TreePorts.Repositories
         }
 
 
-        private async Task<AdminUserAccount?> UpdateAdminUserAccountEmailProperty(AdminUserAccount adminUserAccount) {
+        private async Task<AdminUserAccount?> UpdateAdminUserAccountEmailProperty(AdminUserAccount adminUserAccount, CancellationToken cancellationToken) {
 
-            var targetAdminUserAccount = await _context.AdminUserAccounts.FirstOrDefaultAsync(u => u.Id == adminUserAccount.Id);
+            var targetAdminUserAccount = await _context.AdminUserAccounts.FirstOrDefaultAsync(u => u.Id == adminUserAccount.Id,cancellationToken);
             if (targetAdminUserAccount == null) return null;
 
             targetAdminUserAccount.Email = targetAdminUserAccount.Email;
@@ -220,9 +212,9 @@ namespace TreePorts.Repositories
 
         }
 
-        public async Task<AdminUserAccount?> UpdateAdminUserAccountAsync(AdminUserAccount account)
+        public async Task<AdminUserAccount?> UpdateAdminUserAccountAsync(AdminUserAccount account, CancellationToken cancellationToken)
         {
-            var oldAccount = await _context.AdminUserAccounts.FirstOrDefaultAsync(a => a.Id == account.Id);
+            var oldAccount = await _context.AdminUserAccounts.FirstOrDefaultAsync(a => a.Id == account.Id,cancellationToken);
             if (oldAccount == null) return null;
 
             oldAccount.AdminTypeId = account.AdminTypeId ?? oldAccount.AdminTypeId;
@@ -241,9 +233,9 @@ namespace TreePorts.Repositories
             return oldAccount;
         }
 
-        public async Task<AdminCurrentStatus?> UpdateAdminUserAccountCurrentStatusAsync(AdminCurrentStatus adminCurrentStatus)
+        public async Task<AdminCurrentStatus?> UpdateAdminUserAccountCurrentStatusAsync(AdminCurrentStatus adminCurrentStatus,CancellationToken cancellationToken)
         {
-            var oldStatus = await _context.AdminCurrentStatuses.FirstOrDefaultAsync(a => a.Id == adminCurrentStatus.Id);
+            var oldStatus = await _context.AdminCurrentStatuses.FirstOrDefaultAsync(a => a.Id == adminCurrentStatus.Id, cancellationToken);
             if (oldStatus == null) throw new NotFoundException("User not found");
 
             oldStatus.AdminUserAccountId = adminCurrentStatus.AdminUserAccountId;
@@ -256,8 +248,8 @@ namespace TreePorts.Repositories
         }
 
 
-        public async Task<AdminUserAccount?> GetAdminUserAccountByEmailAsync(string? email) {
-            return await _context.AdminUserAccounts.FirstOrDefaultAsync(u => u.Email == email);
+        public async Task<AdminUserAccount?> GetAdminUserAccountByEmailAsync(string? email, CancellationToken cancellationToken) {
+            return await _context.AdminUserAccounts.FirstOrDefaultAsync(u => u.Email == email,cancellationToken);
         }
 
 
@@ -268,9 +260,9 @@ namespace TreePorts.Repositories
             return _context.AdminUsers.Where(predicate);
         }
 
-        public async Task<List<AdminUser>> GetAdminsUsersPaginationAsync(int skip, int take) 
+        public async Task<List<AdminUser>> GetAdminsUsersPaginationAsync(int skip, int take, CancellationToken cancellationToken) 
         {
-            return await _context.AdminUsers.OrderByDescending(a => a.CreationDate).Skip(skip).Take(take).ToListAsync();
+            return await _context.AdminUsers.OrderByDescending(a => a.CreationDate).Skip(skip).Take(take).ToListAsync(cancellationToken);
         }
 
 

@@ -1,12 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using TreePorts.DTO;
-using TreePorts.Interfaces.Repositories;
-using TreePorts.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using TreePorts.DTO;
 using System.Linq.Expressions;
-using System.Threading.Tasks;
 
 namespace TreePorts.Repositories
 {
@@ -22,66 +15,66 @@ namespace TreePorts.Repositories
 
         
 
-        public async Task<SupportUserAccount?> GetSupportUserAccountByEmailAsync(string email) {
-            return await _context.SupportUserAccounts.FirstOrDefaultAsync(s => s.Email == email);
+        public async Task<SupportUserAccount?> GetSupportUserAccountByEmailAsync(string email, CancellationToken cancellationToken) {
+            return await _context.SupportUserAccounts.FirstOrDefaultAsync(s => s.Email == email,cancellationToken);
         }
 
-        public async Task<SupportUserAccount?> DeleteSupportUserAccountAsync(string id)
+        public async Task<SupportUserAccount?> DeleteSupportUserAccountAsync(string id, CancellationToken cancellationToken)
         {
-            var userAccount = await this.GetSupportUserAccountBySupportUserIdAsync(id); // _context.SupportUserAccounts.Where(u => u.SupportUserId == ID).FirstOrDefaultAsync();
+            var userAccount = await this.GetSupportUserAccountBySupportUserIdAsync(id,cancellationToken); // _context.SupportUserAccounts.Where(u => u.SupportUserId == ID).FirstOrDefaultAsync(cancellationToken);
             if (userAccount == null) return null;// throw new NotFoundException("User not found");
 
             userAccount.IsDeleted = true;
             _context.Entry<SupportUserAccount>(userAccount).State = EntityState.Modified;
-            var user = await _context.SupportUserAccounts.Where(u => u.Id == id).FirstOrDefaultAsync();
+            var user = await _context.SupportUserAccounts.Where(u => u.Id == id).FirstOrDefaultAsync(cancellationToken);
             return user;
         }
 
 
-        public async Task<SupportUserAccount?> GetSupportUserAccountBySupportUserIdAsync(string id) 
+        public async Task<SupportUserAccount?> GetSupportUserAccountBySupportUserIdAsync(string id, CancellationToken cancellationToken) 
         {
-            return  await  _context.SupportUserAccounts.FirstOrDefaultAsync(u => u.SupportUserId == id);
+            return  await  _context.SupportUserAccounts.FirstOrDefaultAsync(u => u.SupportUserId == id, cancellationToken);
         }
 
-        public async Task<List<Ticket>> GetTicketsAsync()
+        public async Task<List<Ticket>> GetTicketsAsync(CancellationToken cancellationToken)
         {
-            return await _context.Tickets.ToListAsync();
+            return await _context.Tickets.ToListAsync(cancellationToken);
         }
 
-        public async Task<List<TicketAssignment>> GetTicketsAssignmentsAsync()
+        public async Task<List<TicketAssignment>> GetTicketsAssignmentsAsync(CancellationToken cancellationToken)
         {
-            return await _context.TicketAssignments.ToListAsync();
+            return await _context.TicketAssignments.ToListAsync(cancellationToken);
         }
 
-        public async Task<List<TicketMessage>> GetTicketMessagesAsync()
+        public async Task<List<TicketMessage>> GetTicketMessagesAsync(CancellationToken cancellationToken)
         {
-            return await _context.TicketMessages.ToListAsync();
+            return await _context.TicketMessages.ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SupportUser>> GetSupportUsersAsync()
+        public async Task<List<SupportUser>> GetSupportUsersAsync(CancellationToken cancellationToken)
         {
-            return await _context.SupportUsers.ToListAsync();
+            return await _context.SupportUsers.ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SupportUserMessageHub>> GetSupportUsersMessageHubAsync()
+        public async Task<List<SupportUserMessageHub>> GetSupportUsersMessageHubAsync(CancellationToken cancellationToken)
         {
-            return await _context.SupportUserMessageHubs.ToListAsync();
+            return await _context.SupportUserMessageHubs.ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SupportUserCurrentStatus>> GetSupportUsersCurrentStatusAsync()
+        public async Task<List<SupportUserCurrentStatus>> GetSupportUsersCurrentStatusAsync(CancellationToken cancellationToken)
         {
-            return await _context.SupportUserCurrentStatuses.ToListAsync();
+            return await _context.SupportUserCurrentStatuses.ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SupportUserCurrentStatus>> GetSupportUserCurrentStatusBySupportUserIdAndIsCurrentAsync(string supportUserAccountId, bool isCurrent = true)
+        public async Task<List<SupportUserCurrentStatus>> GetSupportUserCurrentStatusBySupportUserIdAndIsCurrentAsync(string supportUserAccountId, bool isCurrent , CancellationToken cancellationToken)
         {
-            return await this.GetSupportUsersCurrentStatusByAsync(u => u.SupportUserAccountId == supportUserAccountId && u.IsCurrent == isCurrent );
+            return await this.GetSupportUsersCurrentStatusByAsync(u => u.SupportUserAccountId == supportUserAccountId && u.IsCurrent == isCurrent,cancellationToken );
 
         }
 
-        public async Task<List<SupportUserWorkingState>> GetSupportUsersWorkingStatesAsync()
+        public async Task<List<SupportUserWorkingState>> GetSupportUsersWorkingStatesAsync(CancellationToken cancellationToken)
         {
-            return await _context.SupportUserWorkingStates.ToListAsync();
+            return await _context.SupportUserWorkingStates.ToListAsync(cancellationToken);
         }
 
        /* public async Task<SupportUserCurrentStatus> GetSupportUserStatusCurrentStateBySupportUserIdAndIsCurrent(long supportUserId, bool isCurrent = true)
@@ -90,7 +83,7 @@ namespace TreePorts.Repositories
             return user.FirstOrDefault();
         }*/
 
-		public async Task<List<Ticket>> GetFilterTicketAsync(FilterParameters parameters, IQueryable<Ticket> tickets)
+		public async Task<List<Ticket>> GetFilterTicketAsync(FilterParameters parameters, IQueryable<Ticket> tickets, CancellationToken cancellationToken)
 		{
             if (parameters.FilterById != null)
             {
@@ -105,7 +98,7 @@ namespace TreePorts.Repositories
             {
                 tickets = tickets.Where(o => o.TicketStatusTypeId == parameters.StatusTypeId);
             }
-            return await tickets.ToListAsync();
+            return await tickets.ToListAsync(cancellationToken);
         }
 
        
@@ -120,139 +113,139 @@ namespace TreePorts.Repositories
             return _context.Tickets.Where(predicate);
         }
 
-		public async Task<List<TicketAssignment>> GetTicketsAssignmentsByAsync(Expression<Func<TicketAssignment, bool>> predicate)
+		public async Task<List<TicketAssignment>> GetTicketsAssignmentsByAsync(Expression<Func<TicketAssignment, bool>> predicate, CancellationToken cancellationToken)
         {
             return await _context.TicketAssignments
                 .Where(predicate)
                 //.Include(s => s.Support)
                 //.Include(s => s.SupportMessages )
                 //.Include(s => s.User)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
         }
 
-        public async Task<TicketAssignment?> GetTicketAssignmentByIdAsync(long id)
+        public async Task<TicketAssignment?> GetTicketAssignmentByIdAsync(long id, CancellationToken cancellationToken)
         {
-            return await _context.TicketAssignments.FirstOrDefaultAsync( s => s.Id == id);
+            return await _context.TicketAssignments.FirstOrDefaultAsync( s => s.Id == id,cancellationToken);
         }
 
-        public async Task<Ticket?> GetTicketByIdAsync(long id)
+        public async Task<Ticket?> GetTicketByIdAsync(long id, CancellationToken cancellationToken)
         {
-            return await _context.Tickets.FirstOrDefaultAsync(s => s.Id == id);
+            return await _context.Tickets.FirstOrDefaultAsync(s => s.Id == id,cancellationToken);
         }
 
-        public async Task<List<TicketMessage>> GetTicketMessagesByAsync(Expression<Func<TicketMessage, bool>> predicate)
+        public async Task<List<TicketMessage>> GetTicketMessagesByAsync(Expression<Func<TicketMessage, bool>> predicate, CancellationToken cancellationToken)
         {
-            return await _context.TicketMessages.Where(predicate).ToListAsync();
+            return await _context.TicketMessages.Where(predicate).ToListAsync(cancellationToken);
         }
 
-        public async Task<TicketMessage?> GetTicketMessageByIdAsync(long id)
+        public async Task<TicketMessage?> GetTicketMessageByIdAsync(long id, CancellationToken cancellationToken)
         {
-            return await _context.TicketMessages.FirstOrDefaultAsync(s => s.Id == id);
+            return await _context.TicketMessages.FirstOrDefaultAsync(s => s.Id == id,cancellationToken);
         }
 
-        public async Task<List<Ticket>> GetTicketsByAsync(Expression<Func<Ticket, bool>> predicate)
+        public async Task<List<Ticket>> GetTicketsByAsync(Expression<Func<Ticket, bool>> predicate, CancellationToken cancellationToken)
         {
-            return await _context.Tickets.Where(predicate).ToListAsync();
+            return await _context.Tickets.Where(predicate).ToListAsync(cancellationToken);
         }
 
-        public async Task<List<TicketStatusType>> GetTicketStatusTypesAsync()
+        public async Task<List<TicketStatusType>> GetTicketStatusTypesAsync(CancellationToken cancellationToken)
         {
-            return await _context.TicketStatusTypes.ToListAsync();
+            return await _context.TicketStatusTypes.ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SupportType>> GetSupportTypesAsync()
+        public async Task<List<SupportType>> GetSupportTypesAsync(CancellationToken cancellationToken)
         {
-            return await _context.SupportTypes.ToListAsync();
+            return await _context.SupportTypes.ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SupportUserAccount>> GetSupportUsersAccountsByAsync(Expression<Func<SupportUserAccount, bool>> predicate)
+        public async Task<List<SupportUserAccount>> GetSupportUsersAccountsByAsync(Expression<Func<SupportUserAccount, bool>> predicate, CancellationToken cancellationToken)
         {
-            return await _context.SupportUserAccounts.Where(predicate).ToListAsync();
+            return await _context.SupportUserAccounts.Where(predicate).ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SupportUser>> GetSupportUsersByAsync(Expression<Func<SupportUser, bool>> predicate)
+        public async Task<List<SupportUser>> GetSupportUsersByAsync(Expression<Func<SupportUser, bool>> predicate, CancellationToken cancellationToken)
         {
-            return await _context.SupportUsers.Where(predicate).ToListAsync();
+            return await _context.SupportUsers.Where(predicate).ToListAsync(cancellationToken);
         }
 
-        public async Task<SupportUser?> GetSupportUserByIdAsync(string id)
+        public async Task<SupportUser?> GetSupportUserByIdAsync(string id, CancellationToken cancellationToken)
         {
-            return await _context.SupportUsers.FirstOrDefaultAsync(s => s.Id == id);
+            return await _context.SupportUsers.FirstOrDefaultAsync(s => s.Id == id,cancellationToken);
         }
 
-        public async Task<List<SupportUserMessageHub>> GetSupportUsersMessageHubByAsync(Expression<Func<SupportUserMessageHub, bool>> predicate)
+        public async Task<List<SupportUserMessageHub>> GetSupportUsersMessageHubByAsync(Expression<Func<SupportUserMessageHub, bool>> predicate, CancellationToken cancellationToken)
         {
-            return await _context.SupportUserMessageHubs.Where(predicate).ToListAsync();
+            return await _context.SupportUserMessageHubs.Where(predicate).ToListAsync(cancellationToken);
         }
 
-        public async Task<SupportUserMessageHub?> GetSupportUserMessageHubByIdAsync(long id)
+        public async Task<SupportUserMessageHub?> GetSupportUserMessageHubByIdAsync(long id, CancellationToken cancellationToken)
         {
-            return await _context.SupportUserMessageHubs.FirstOrDefaultAsync(s => s.Id == id);
+            return await _context.SupportUserMessageHubs.FirstOrDefaultAsync(s => s.Id == id,cancellationToken);
         }
 
-        public async Task<List<SupportUserCurrentStatus>> GetSupportUsersCurrentStatusByAsync(Expression<Func<SupportUserCurrentStatus, bool>> predicate)
+        public async Task<List<SupportUserCurrentStatus>> GetSupportUsersCurrentStatusByAsync(Expression<Func<SupportUserCurrentStatus, bool>> predicate, CancellationToken cancellationToken)
         {
-            return await _context.SupportUserCurrentStatuses.Where(predicate).ToListAsync();
+            return await _context.SupportUserCurrentStatuses.Where(predicate).ToListAsync(cancellationToken);
         }
 
-        public async Task<SupportUserCurrentStatus?> GetSupportUserCurrentStatusByIdAsync(long id)
+        public async Task<SupportUserCurrentStatus?> GetSupportUserCurrentStatusByIdAsync(long id, CancellationToken cancellationToken)
         {
-            return await _context.SupportUserCurrentStatuses.FirstOrDefaultAsync(s => s.Id == id);
+            return await _context.SupportUserCurrentStatuses.FirstOrDefaultAsync(s => s.Id == id,cancellationToken);
         }
 
-        public async Task<List<SupportUserWorkingState>> GetSupportUsersWorkingStateByAsync(Expression<Func<SupportUserWorkingState, bool>> predicate)
+        public async Task<List<SupportUserWorkingState>> GetSupportUsersWorkingStateByAsync(Expression<Func<SupportUserWorkingState, bool>> predicate, CancellationToken cancellationToken)
         {
-            return await _context.SupportUserWorkingStates.Where(predicate).ToListAsync();
+            return await _context.SupportUserWorkingStates.Where(predicate).ToListAsync(cancellationToken);
         }
 
-        public async Task<SupportUserWorkingState?> GetSupportUserWorkingStateByIdAsync(long id)
+        public async Task<SupportUserWorkingState?> GetSupportUserWorkingStateByIdAsync(long id, CancellationToken cancellationToken)
         {
-            return await _context.SupportUserWorkingStates.FirstOrDefaultAsync(s => s.Id == id);
+            return await _context.SupportUserWorkingStates.FirstOrDefaultAsync(s => s.Id == id,cancellationToken);
         }
 
-        public async Task<Ticket> InsertTicketAsync(Ticket ticket)
+        public async Task<Ticket> InsertTicketAsync(Ticket ticket, CancellationToken cancellationToken)
         {
             ticket.TicketStatusTypeId = (long)SupportStatusTypes.New;
             ticket.CreationDate = DateTime.Now;
-            var result = await _context.Tickets.AddAsync(ticket);
+            var result = await _context.Tickets.AddAsync(ticket,cancellationToken);
             return result.Entity;
         }
 
-        public async Task<TicketAssignment> InsertTicketAssignmentAsync(TicketAssignment ticketAssignment)
+        public async Task<TicketAssignment> InsertTicketAssignmentAsync(TicketAssignment ticketAssignment, CancellationToken cancellationToken)
         {
             ticketAssignment.CreationDate = DateTime.Now;
-            var result = await _context.TicketAssignments.AddAsync(ticketAssignment);
+            var result = await _context.TicketAssignments.AddAsync(ticketAssignment,cancellationToken);
             return result.Entity;
         }
 
-        public async Task<TicketMessage> InsertTicketMessageAsync(TicketMessage ticketMessage)
+        public async Task<TicketMessage> InsertTicketMessageAsync(TicketMessage ticketMessage, CancellationToken cancellationToken)
         {
             ticketMessage.CreationDate = DateTime.Now;
-            var result = await _context.TicketMessages.AddAsync(ticketMessage);
+            var result = await _context.TicketMessages.AddAsync(ticketMessage,cancellationToken);
             return result.Entity;
         }
 
-        public async Task<SupportUser> InsertSupportUserAsync(SupportUser user)
+        public async Task<SupportUser> InsertSupportUserAsync(SupportUser user, CancellationToken cancellationToken)
         {
             user.Id = Guid.NewGuid().ToString();
             user.CreationDate = DateTime.Now;
-            var result = await _context.SupportUsers.AddAsync(user);
+            var result = await _context.SupportUsers.AddAsync(user,cancellationToken);
             return result.Entity;
         }
 
 
-        public async Task<SupportUserAccount> InsertSupportUserAccountAsync(SupportUserAccount account)
+        public async Task<SupportUserAccount> InsertSupportUserAccountAsync(SupportUserAccount account, CancellationToken cancellationToken)
         {
             account.Id = Guid.NewGuid().ToString();
             account.CreationDate = DateTime.Now;
-            var result = await _context.SupportUserAccounts.AddAsync(account);
+            var result = await _context.SupportUserAccounts.AddAsync(account,cancellationToken);
             return result.Entity;
         }
 
-        public async Task<SupportUserMessageHub> InsertSupportUserMessageHubAsync(SupportUserMessageHub supportUserMessageHub)
+        public async Task<SupportUserMessageHub> InsertSupportUserMessageHubAsync(SupportUserMessageHub supportUserMessageHub, CancellationToken cancellationToken)
         {
 
-            var oldUserHub = await _context.SupportUserMessageHubs.FirstOrDefaultAsync(h => h.SupportUserAccountId == supportUserMessageHub.SupportUserAccountId);
+            var oldUserHub = await _context.SupportUserMessageHubs.FirstOrDefaultAsync(h => h.SupportUserAccountId == supportUserMessageHub.SupportUserAccountId,cancellationToken);
             if (oldUserHub != null && oldUserHub.Id > 0)
             {
                 oldUserHub.ConnectionId = supportUserMessageHub.ConnectionId;
@@ -264,7 +257,7 @@ namespace TreePorts.Repositories
             {
                 //SupportUserMessageHub newHub = new UserMessageHub() { UserId = ID, ConnectionId = ConnectionID, CreationDate = DateTime.Now, CreatedBy = 1 };
                 supportUserMessageHub.CreationDate = DateTime.Now;
-                var insertResult = await _context.SupportUserMessageHubs.AddAsync(supportUserMessageHub);
+                var insertResult = await _context.SupportUserMessageHubs.AddAsync(supportUserMessageHub,cancellationToken);
                 return insertResult.Entity;
             }
 
@@ -273,9 +266,9 @@ namespace TreePorts.Repositories
             //return result.Entity;
         }
 
-        public async Task<SupportUserCurrentStatus> InsertSupportUserCurrentStatusAsync(SupportUserCurrentStatus supportUserStatus)
+        public async Task<SupportUserCurrentStatus> InsertSupportUserCurrentStatusAsync(SupportUserCurrentStatus supportUserStatus, CancellationToken cancellationToken)
         {
-            var usersOldState = await this.GetSupportUsersCurrentStatusByAsync(s => s.SupportUserAccountId == supportUserStatus.SupportUserAccountId && s.IsCurrent == true );
+            var usersOldState = await this.GetSupportUsersCurrentStatusByAsync(s => s.SupportUserAccountId == supportUserStatus.SupportUserAccountId && s.IsCurrent == true,cancellationToken );
             var userOldState = usersOldState.FirstOrDefault();
             if (userOldState != null) 
             {
@@ -290,9 +283,9 @@ namespace TreePorts.Repositories
             return result.Entity;
         }
 
-        public async Task<SupportUserWorkingState> InsertSupportUserWorkingStateAsync(SupportUserWorkingState supportUserWorkingState)
+        public async Task<SupportUserWorkingState> InsertSupportUserWorkingStateAsync(SupportUserWorkingState supportUserWorkingState, CancellationToken cancellationToken)
         {
-            var oldState = await _context.SupportUserWorkingStates.FirstOrDefaultAsync(w => w.SupportUserAccountId == supportUserWorkingState.SupportUserAccountId && w.IsCurrent == true);
+            var oldState = await _context.SupportUserWorkingStates.FirstOrDefaultAsync(w => w.SupportUserAccountId == supportUserWorkingState.SupportUserAccountId && w.IsCurrent == true,cancellationToken);
             if (oldState != null)
             {
                 oldState.IsCurrent = false;
@@ -305,16 +298,16 @@ namespace TreePorts.Repositories
             supportUserWorkingState.Id = 0;
             supportUserWorkingState.IsCurrent = true;
             supportUserWorkingState.CreationDate = DateTime.Now;
-            var insertResult = await _context.SupportUserWorkingStates.AddAsync(supportUserWorkingState);
+            var insertResult = await _context.SupportUserWorkingStates.AddAsync(supportUserWorkingState,cancellationToken);
             return insertResult.Entity;
 
 
         }
 
-        public async Task<Ticket?> UpdateTicketAsync(Ticket ticket)
+        public async Task<Ticket?> UpdateTicketAsync(Ticket ticket, CancellationToken cancellationToken)
         {
 
-            var oldTicket = await this.GetTicketByIdAsync(ticket.Id);
+            var oldTicket = await this.GetTicketByIdAsync(ticket.Id,cancellationToken);
             if (oldTicket == null) return null;
 
             oldTicket.TicketStatusTypeId = ticket.TicketStatusTypeId ?? oldTicket.TicketStatusTypeId;
@@ -330,9 +323,9 @@ namespace TreePorts.Repositories
             return oldTicket;
         }
 
-        public async Task<TicketAssignment?> UpdateTicketAssignmentAsync(TicketAssignment ticketAssignment)
+        public async Task<TicketAssignment?> UpdateTicketAssignmentAsync(TicketAssignment ticketAssignment, CancellationToken cancellationToken)
         {
-            var oldTicketAssign = await this.GetTicketAssignmentByIdAsync(ticketAssignment.Id);
+            var oldTicketAssign = await this.GetTicketAssignmentByIdAsync(ticketAssignment.Id,cancellationToken);
             if (oldTicketAssign == null) return null;
 
             oldTicketAssign.SupportUserAccountId = ticketAssignment.SupportUserAccountId;
@@ -343,9 +336,9 @@ namespace TreePorts.Repositories
             return ticketAssignment;
         }
 
-        public async Task<TicketMessage?> UpdateTicketMessageAsync(TicketMessage ticketMessage)
+        public async Task<TicketMessage?> UpdateTicketMessageAsync(TicketMessage ticketMessage, CancellationToken cancellationToken)
         {
-            var oldTicketMessage = await this.GetTicketMessageByIdAsync(ticketMessage.Id);
+            var oldTicketMessage = await this.GetTicketMessageByIdAsync(ticketMessage.Id,cancellationToken);
             if (oldTicketMessage == null) return null;
 
             oldTicketMessage.Message = ticketMessage.Message;
@@ -356,9 +349,9 @@ namespace TreePorts.Repositories
             return oldTicketMessage;
         }
 
-        public async Task<SupportUser?> UpdateSupportUserAsync(SupportUser user)
+        public async Task<SupportUser?> UpdateSupportUserAsync(SupportUser user, CancellationToken cancellationToken)
         {
-            var oldUser = await this.GetSupportUserByIdAsync(user.Id);
+            var oldUser = await this.GetSupportUserByIdAsync(user.Id,cancellationToken);
             if (oldUser == null) return null; // throw new NotFoundException("User not found");
 
 
@@ -386,9 +379,9 @@ namespace TreePorts.Repositories
             return oldUser;
         }
 
-        public async Task<SupportUserAccount?> UpdateSupportUserAccountAsync(SupportUserAccount account)
+        public async Task<SupportUserAccount?> UpdateSupportUserAccountAsync(SupportUserAccount account, CancellationToken cancellationToken)
         {
-            var oldSupportUserAccount = await _context.SupportUserAccounts.FirstOrDefaultAsync(u => u.Id == account.Id);
+            var oldSupportUserAccount = await _context.SupportUserAccounts.FirstOrDefaultAsync(u => u.Id == account.Id,cancellationToken);
             if (oldSupportUserAccount == null) return null; // throw new NotFoundException("User not found");
 
             
@@ -406,9 +399,9 @@ namespace TreePorts.Repositories
             return oldSupportUserAccount;
         }
 
-        public async Task<SupportUserMessageHub?> UpdateSupportUserMessageHubAsync(SupportUserMessageHub supportUserMessageHub)
+        public async Task<SupportUserMessageHub?> UpdateSupportUserMessageHubAsync(SupportUserMessageHub supportUserMessageHub, CancellationToken cancellationToken)
         {
-            var oldSupportUserMessageHub = await _context.SupportUserMessageHubs.FirstOrDefaultAsync(u => u.Id == supportUserMessageHub.Id);
+            var oldSupportUserMessageHub = await _context.SupportUserMessageHubs.FirstOrDefaultAsync(u => u.Id == supportUserMessageHub.Id,cancellationToken);
             if (oldSupportUserMessageHub == null) return null;// throw new NotFoundException("User not found");
 
             oldSupportUserMessageHub.ConnectionId = oldSupportUserMessageHub.ConnectionId;
@@ -419,9 +412,9 @@ namespace TreePorts.Repositories
             return oldSupportUserMessageHub;
         }
 
-        public async Task<SupportUserCurrentStatus?> UpdateSupportUserCurrentStatusAsync(SupportUserCurrentStatus supportUserStatus)
+        public async Task<SupportUserCurrentStatus?> UpdateSupportUserCurrentStatusAsync(SupportUserCurrentStatus supportUserStatus, CancellationToken cancellationToken)
         {
-            var oldSupportUserStatus = await _context.SupportUserCurrentStatuses.FirstOrDefaultAsync( s => s.Id == supportUserStatus.Id);
+            var oldSupportUserStatus = await _context.SupportUserCurrentStatuses.FirstOrDefaultAsync( s => s.Id == supportUserStatus.Id,cancellationToken);
             if (oldSupportUserStatus == null) return null;
 
             oldSupportUserStatus.StatusTypeId = supportUserStatus.StatusTypeId;
@@ -432,9 +425,9 @@ namespace TreePorts.Repositories
             return oldSupportUserStatus;
         }
 
-        public async Task<SupportUserWorkingState?> UpdateSupportUserWorkingStateAsync(SupportUserWorkingState supportUserWorkingState)
+        public async Task<SupportUserWorkingState?> UpdateSupportUserWorkingStateAsync(SupportUserWorkingState supportUserWorkingState, CancellationToken cancellationToken)
         {
-            var oldState = await _context.SupportUserWorkingStates.FirstOrDefaultAsync(w => w.SupportUserAccountId == supportUserWorkingState.SupportUserAccountId && w.IsCurrent == true);
+            var oldState = await _context.SupportUserWorkingStates.FirstOrDefaultAsync(w => w.SupportUserAccountId == supportUserWorkingState.SupportUserAccountId && w.IsCurrent == true,cancellationToken);
             if (oldState == null) return null;// throw new NotFoundException("Support working state not found");
 
             oldState.IsCurrent = supportUserWorkingState.IsCurrent;

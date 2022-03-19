@@ -14,5 +14,8 @@ namespace TreePorts.Models
         public long? ModifiedByType { get; set; }
         public DateTime? CreationDate { get; set; }
         public DateTime? ModificationDate { get; set; }
+
+        public virtual CountryPrice? CountryPrice { get; set; }
+        public virtual Order? Order { get; set; }
     }
 }
